@@ -88,30 +88,61 @@ def hard_cut_mask(edge):
     return mask
 
 
-def doorway_jamb(canvas, edge, brick):
-    """Stone jamb at the cut so the interior wall visibly ends at a doorway."""
-    jamb_w = 14
-    # brick texture, scaled to the 2x pixel scale used in the scene
-    column = Image.new("RGBA", (jamb_w, 512), (0, 0, 0, 0))
-    for y in range(0, 512, 64):
-        column.alpha_composite(brick[(y // 64) % 2].crop((0, 0, jamb_w, 64)), (0, y))
-    # darken and outline so it reads as stone, not wall
-    shade = Image.new("RGBA", column.size, (0, 0, 0, 90))
-    column.alpha_composite(shade)
-    canvas.alpha_composite(column, (edge - jamb_w, 0))
-    # a dark threshold line on the floor
-    m4.ImageDraw.Draw(canvas).rectangle([edge - jamb_w, m4.FLOOR_TOP + 52, edge + 2, m4.FLOOR_TOP + 58], fill=(20, 18, 24, 255))
+DOOR_L_WORLD = 840     # left edge of the door, in world x
+DOOR_W = 64
+DOOR_TOP = m4.FLOOR_TOP - 150
+
+
+def draw_wall_patch(canvas, x0, x1, brick, dirt):
+    """Re-tile brick over the area beside the door so no old arch shows through."""
+    if x1 <= x0:
+        return
+    patch = Image.new("RGBA", (x1 - x0, 512), (0, 0, 0, 255))
+    for y in range(0, m4.FLOOR_TOP, 64):
+        for x in range(-64, x1 - x0 + 64, 64):
+            patch.alpha_composite(brick[((x + 64) // 64 + y // 64) % 2], (x, y))
+    for y in range(m4.FLOOR_TOP, 512, 64):
+        for x in range(-64, x1 - x0 + 64, 64):
+            patch.alpha_composite(dirt[((x + 64) // 64) % 2], (x, y))
+    canvas.alpha_composite(patch, (x0, 0))
+
+
+def draw_door(canvas, dl, dr):
+    """Wooden door set into the wall: stone frame, planks, iron bands, handle."""
+    d = m4.ImageDraw.Draw(canvas)
+    top, bottom = DOOR_TOP, GROUND
+    # stone frame and lintel
+    d.rectangle([dl - 8, top - 18, dr + 8, bottom], fill=(92, 86, 84, 255), outline=(40, 38, 42, 255))
+    d.rectangle([dl - 8, top - 18, dr + 8, top - 8], fill=(118, 110, 106, 255))
+    # door panel
+    d.rectangle([dl, top, dr, bottom], fill=(120, 74, 42, 255), outline=(52, 30, 18, 255))
+    for x in range(dl + 8, dr, 10):
+        d.line([(x, top + 2), (x, bottom - 2)], fill=(92, 54, 30, 255))
+    # iron bands
+    for yy in (top + 26, top + 112):
+        d.rectangle([dl + 2, yy, dr - 2, yy + 6], fill=(70, 70, 78, 255))
+    # handle
+    d.ellipse([dr - 14, top + 74, dr - 8, top + 80], fill=(210, 180, 90, 255))
+
+
+def hard_cut_edge(cut_x):
+    return cut_x
 
 
 def frame(i):
     cam = i * WORLD_PER_FRAME
     idx = i % FRAMES_PER_CYCLE
     interior, outdoor = m4.pixel_background(cam)
-    edge = m4.DOOR_X - cam  # screen x of the doorway
-    canvas = Image.composite(outdoor, interior, hard_cut_mask(edge))
+    dl = DOOR_L_WORLD - cam          # screen x, left edge of door
+    dr = dl + DOOR_W                 # screen x, right edge of door
+    cut = dr + 10                    # wall ends just past the door's far jamb
     brick = [m4.load("dcss/walls/brick_brown0.png").resize((64, 64), m4.Image.NEAREST),
              m4.load("dcss/walls/brick_brown1.png").resize((64, 64), m4.Image.NEAREST)]
-    doorway_jamb(canvas, edge, brick)
+    dirt = [m4.load("dcss/floors/grey_dirt0.png").resize((64, 64), m4.Image.NEAREST),
+            m4.load("dcss/floors/grey_dirt1.png").resize((64, 64), m4.Image.NEAREST)]
+    canvas = Image.composite(outdoor, interior, hard_cut_mask(cut))
+    draw_wall_patch(canvas, dr, cut, brick, dirt)
+    draw_door(canvas, dl, dr)
 
     knight = compose(KNIGHT_LAYERS_BEHIND, KNIGHT_LAYERS, KNIGHT_LAYERS_FRONT, idx)
     ranger = compose(RANGER_LAYERS_BEHIND, RANGER_LAYERS, [], (idx + 4) % FRAMES_PER_CYCLE)
