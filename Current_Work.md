@@ -1,4 +1,54 @@
-# Current Work: Character Scene Generation Test
+# Changeling: Knight of a thousand faces
+
+## Project overview
+An HTML browser game. The player downloads a single HTML file and plays it in the browser on a computer or mobile phone. Landscape orientation only, with a full screen toggle.
+
+## Core concept
+Similar to Kirby, one character can take on the powers of many different characters by defeating enemies. Unlike Kirby, the player does not swallow enemies. When an enemy is defeated, it drops a card. Collecting a card adds that character to the player's deck.
+
+## Cards, hand, and deck
+- The player holds a hand of 3 cards at any time. Hand slots fill as the player progresses through the level.
+- When the player collects more cards than there are open hand slots, the extra cards go into the deck in random order.
+- Each card represents a character. Each character card has unique powers and abilities.
+
+## Death and respawn
+- When the player dies, they select one of the 3 cards in their hand.
+- They respawn as that character in the closest safe space to where they died.
+
+## Abilities
+- Each character's ability is activated by a key or button.
+  - Keyboard: A, S, Z, or X.
+  - Gamepad: X, Y, A, or B.
+
+## Discard
+- At any time, the player can discard a card from their hand.
+- At any time, the player can discard the character they are currently playing as.
+
+## Levels and secrets
+- The main level must be completable with any character.
+- Secret levels, power-ups, and character cards are placed in areas reachable only with specific character abilities.
+- This forces the player to cycle through their characters to find one that can reach a given unlockable, if they choose to pursue it.
+
+## Controls
+- Fully playable on a keyboard using the letter keys and the arrow keys.
+- Fully playable on a simple gamepad that has only a directional pad and the A, B, X, and Y buttons.
+
+## Platform and format
+- Delivered as a single downloadable HTML file.
+- Runs in desktop and mobile browsers.
+- Landscape only.
+- Includes a full screen toggle.
+
+## Open questions for the next session
+- Define "closest safe space" (for example, nearest standable tile not overlapping an enemy or hazard).
+- Define how many cards are visible in the deck, or whether the deck is hidden.
+- Choose the character roster and each character's ability.
+- Decide the art source. The sprite methods in the notes below are candidates.
+
+---
+
+## Earlier work: sprite generation tests
+
 
 ## Goal
 Build the same four scenes with three methods, so future agents can compare them:
