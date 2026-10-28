@@ -81,12 +81,37 @@ def place_cell(canvas, cell, cx, base_y):
     canvas.alpha_composite(scaled, (cx - scaled.width // 2, base_y - scaled.height))
 
 
+def hard_cut_mask(edge):
+    """Hard vertical edge at screen x = edge: 0 left of it, 255 right of it."""
+    mask = Image.new("L", (512, 512), 0)
+    mask.paste(255, (edge, 0, 512, 512))
+    return mask
+
+
+def doorway_jamb(canvas, edge, brick):
+    """Stone jamb at the cut so the interior wall visibly ends at a doorway."""
+    jamb_w = 14
+    # brick texture, scaled to the 2x pixel scale used in the scene
+    column = Image.new("RGBA", (jamb_w, 512), (0, 0, 0, 0))
+    for y in range(0, 512, 64):
+        column.alpha_composite(brick[(y // 64) % 2].crop((0, 0, jamb_w, 64)), (0, y))
+    # darken and outline so it reads as stone, not wall
+    shade = Image.new("RGBA", column.size, (0, 0, 0, 90))
+    column.alpha_composite(shade)
+    canvas.alpha_composite(column, (edge - jamb_w, 0))
+    # a dark threshold line on the floor
+    m4.ImageDraw.Draw(canvas).rectangle([edge - jamb_w, m4.FLOOR_TOP + 52, edge + 2, m4.FLOOR_TOP + 58], fill=(20, 18, 24, 255))
+
+
 def frame(i):
     cam = i * WORLD_PER_FRAME
     idx = i % FRAMES_PER_CYCLE
     interior, outdoor = m4.pixel_background(cam)
-    mask = m4.mask_outdoor(cam, m4.BLEND, m4.DOOR_X)
-    canvas = Image.composite(outdoor, interior, mask)
+    edge = m4.DOOR_X - cam  # screen x of the doorway
+    canvas = Image.composite(outdoor, interior, hard_cut_mask(edge))
+    brick = [m4.load("dcss/walls/brick_brown0.png").resize((64, 64), m4.Image.NEAREST),
+             m4.load("dcss/walls/brick_brown1.png").resize((64, 64), m4.Image.NEAREST)]
+    doorway_jamb(canvas, edge, brick)
 
     knight = compose(KNIGHT_LAYERS_BEHIND, KNIGHT_LAYERS, KNIGHT_LAYERS_FRONT, idx)
     ranger = compose(RANGER_LAYERS_BEHIND, RANGER_LAYERS, [], (idx + 4) % FRAMES_PER_CYCLE)
