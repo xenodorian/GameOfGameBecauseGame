@@ -15,7 +15,7 @@ Build the same four scenes with three methods, so future agents can compare them
 | 1. Hugging Face hosted image models | `method_1_huggingface/` | Blocked (invoke disabled) | 0 of 4 |
 | 2. SVG/code, rasterized with resvg | `method_2_svg_code/` | Complete | 4 of 4 |
 | 3. Procedural raster with Pillow | `method_3_pillow/` | Complete | 4 of 4 |
-| Premade asset packs | (none) | Blocked (downloads not allowed) | 0 |
+| 4. Sourced pre-made assets (npm + GitHub) | `method_4_sourced_assets/` | Complete | 4 of 4 |
 
 ## Environment findings (read before retrying)
 - Session shell egress allows PyPI and npm (`registry.npmjs.org`) and GitHub (for git). It does NOT allow `huggingface.co`, `kenney.nl`, or `opengameart.org`. Direct downloads from those hosts fail at the proxy with HTTP 403 or `connect_rejected`.
@@ -47,7 +47,19 @@ Build the same four scenes with three methods, so future agents can compare them
 - **Outputs:** `method_3_pillow/output/*.png` (512x512).
 - **Quality notes:** Pixel scenes are equivalent to Method 2. The HQ knight is blocky and the HQ dungeon has less detail than Method 2. The HQ field is competent but simpler than Method 2's version.
 
-## Premade assets
+
+## Method 4: Sourced pre-made assets (complete)
+- **Reachable sources** (tested this session): PyPI, npm registry, GitHub (git clone and raw). Blocked: kenney.nl, opengameart.org, itch.io, huggingface.co, Wikimedia, Archive.org, jsDelivr, unpkg, GitHub search API.
+- **Used:**
+  - Sprite Foundry Fantasy Heroes HD and 48px (npm, MIT) for character sprites.
+  - Dungeon Crawl Stone Soup tiles (sparse git clone of github.com/crawl/crawl, mostly CC0) for walls, floor, grass, and trees.
+- **Not used:** Kenney Hex Pack and Space Kit (npm, CC0). Wrong genre for these scenes.
+- **Script:** `method_4_sourced_assets/build_scenes.py`. Requires Pillow.
+- **Outputs:** `method_4_sourced_assets/output/*.png` and `grid_2x2.png`.
+- **License caveat:** DCSS tile licenses vary by piece. Per-tile credits must be checked before any commercial use. See `method_4_sourced_assets/README.md`.
+- **Quality:** Best of the four methods. The HD characters are painted art, and the DCSS tiles are consistent.
+
+## Premade assets (earlier attempt, superseded by Method 4)
 - Attempted list: Kenney.nl (CC0), OpenGameArt.org (license varies per asset), itch.io, and Liberated Pixel Cup assets.
 - None were downloaded. Kenney.nl and OpenGameArt are unreachable from this session's shell.
 - Searched npm for CC0 pixel sprite packs. No suitable, verifiable package was found.
