@@ -26,7 +26,7 @@ Build the same four scenes with three methods, so future agents can compare them
 ## Method 1: Hugging Face (blocked)
 - Found candidate Spaces: `mcp-tools/Qwen-Image` (chosen), `mcp-tools/FLUX.1-Krea-dev` (rejected, photorealism-tuned), and `friedpierogi/pixel-art-sprite-generator` (1 like, untested).
 - Prompts for all four scenes are saved in `method_1_huggingface/README.md`, with seeds and a retry procedure.
-- No images were generated. Next step: enable invoke, then run the four prompts.
+- No images were generated. Retried invoke after the first attempt; still blocked with the same `gradio=none` error. The connector setting must be changed outside this session before this method can run.
 
 ## Method 2: SVG/code (complete)
 - **Tooling:** Node.js plus `@resvg/resvg-js@2`, installed from npm into `method_2_svg_code/`.
@@ -50,6 +50,7 @@ Build the same four scenes with three methods, so future agents can compare them
 ## Premade assets
 - Attempted list: Kenney.nl (CC0), OpenGameArt.org (license varies per asset), itch.io, and Liberated Pixel Cup assets.
 - None were downloaded. Kenney.nl and OpenGameArt are unreachable from this session's shell.
+- Searched npm for CC0 pixel sprite packs. No suitable, verifiable package was found.
 - Next step: a user downloads a pack (Kenney's Tiny Dungeon or Tiny Town, for example, both CC0) and attaches it. Then an agent can sort, slice, and combine the sprites.
 
 ## Recommended next steps for other agents
