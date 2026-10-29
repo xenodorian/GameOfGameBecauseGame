@@ -257,6 +257,20 @@ const abilities = [
     check: (p) => p.evaluate(() => __g.dead && __g2.dead), want: true,
   },
   {
+    name: 'mage beam (A) kills grounded grunt and rat king at 60 and 140 px', who: 'mage', key: 'KeyA', wait: 800,
+    setup: (p) => p.evaluate(() => {
+      const list = [];
+      for (const [kind, dx] of [['grunt', 60], ['rat_king', 140]]) {
+        const g = new Enemy(kind, 200 + 18 + dx, kind === 'rat_king' ? 422 : 418);
+        g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0, jumpVy: 0 };
+        Enemies.list().push(g); list.push(g);
+      }
+      window.__g = list[0]; window.__g2 = list[1];
+      __scene.player.x = 200; __scene.player.y = 418; __scene.player.facing = 1;
+    }),
+    check: (p) => p.evaluate(() => __g.dead && __g2.dead), want: true,
+  },
+  {
     name: 'mage float (S) hovers while Up is held', who: 'mage', key: 'KeyS', wait: 300, hold: 'ArrowUp',
     setup: (p) => placeAt(p, 200, 40),
     check: (p) => p.evaluate(() => __scene.player.vy), want: -120,

@@ -2158,7 +2158,8 @@ const Attacks = (() => {
           b.len += step;
         }
       }
-      const rect = { x: b.dir > 0 ? o.x : o.x - b.len, y: o.y - BEAM.half - 1, w: b.len, h: BEAM.half * 2 + 2 };
+      // Hits the body band (just above the head to the feet), not only the drawn axis, so grounded enemies are hit.
+      const rect = { x: b.dir > 0 ? o.x : o.x - b.len, y: b.body.y - 6, w: b.len, h: b.body.h + 6 };
       for (const e of Enemies.list()) {
         if (e.dead || b.hit.has(e) || !overlaps(rect, e)) continue;
         b.hit.add(e);
