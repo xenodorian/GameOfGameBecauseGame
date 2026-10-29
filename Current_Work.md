@@ -355,7 +355,7 @@ Source: Expansion_Plan.md (Phases R, S, V, in order) plus the open items from "O
 - [x] R5: dungeon ground and platform top edge
 - [x] R6: top-left label shows only the character name
 - [x] R7: `_` tile suite check (Opus review 2, Task A)
-- [~] R8: final pass (suite and gates results recorded below; visual pass is in V10)
+- [x] R8: final pass (results recorded below)
 - [x] S1: one reset for a new game
 - [x] S2: logic out of draw (shake offsets moved to Effects.update; PlayScene.time)
 - [x] S3: input edge-case checks and physics check (no substep clamp needed)
@@ -369,4 +369,38 @@ Source: Expansion_Plan.md (Phases R, S, V, in order) plus the open items from "O
 - [~] V7: hit stop, coyote, jump buffer, cooldowns (warlord knockback not done, see log)
 - [~] V8: HUD redesign (touch-button clearance not done, see log)
 - [x] V9: title screen
-- [ ] V10: final visual pass (screenshots and a "Visual check" heading)
+- [~] V10: visual pass (partly done, see Visual check below)
+
+## Build status (2026-10-29, end of this session)
+
+- Suite: `NODE_PATH=$(npm root -g) node game/tests/suite.js`: 49 passed, 0 failed, exit 0.
+- Gates: `python3 game/tools/validate_gates.py` exits 0. "All gate checks passed."
+- Exclusive secrets (game-wide), from the gate output:
+  - knight: level 4 card at col 64 row 15 (cracked-wall vault)
+  - ranger: level 3 card at col 66 row 17; level 6 card at col 91 row 9; level 7 card at col 61 row 9
+  - rat: level 2 card at col 96 row 8; level 5 card at col 104 row 8 (shaft)
+  - weaver: level 7 card at col 29 row 7 (one-tile pillar)
+  - mage: level 3 card at col 76 row 8 (blink over a spike trench)
+- Per-level gate checks (enemy spacing, minimums, main route, secrets) pass for all 8 levels.
+- Build: `game/changeling.html` is 434004 bytes, under 5 MB.
+- Tools added: `game/tools/build_atlases.py` (animation atlases), validator rope fix (ropes stop at the first solid tile).
+
+## Open items after this session
+
+- Expansion_Plan.md is not marked complete. The `EXPANSION COMPLETE` line is not added, because these tasks are partial:
+  - V5: hurt row before the death selection (step 7) not done.
+  - V6: hit sparks, wall particles, blink rings, float sparkles, leap dust, rope sag, bone bridge pattern, ghost outline not done.
+  - V7: warlord knockback not done.
+  - V8: ability bar not moved above touch buttons; selection and complete screens not redesigned.
+  - V10: visual check (below) is partial.
+- Real-device, other-browser, and sound checks remain out of scope, as before.
+
+## Visual check (screenshots from game/tests/screenshots.js, after the last build)
+
+Only the files listed here were opened and looked at.
+- 00_title.png: OK. Title, menu, five walkers, and controls line are readable.
+- l1_start.png: OK. Panel, hand, secrets, banner, and ability bar do not overlap the floor the knight stands on.
+- l8_start.png: OK. Warlord bar, boss arena, and the raised platform's top edge are visible.
+- z_select.png: OK after the label color fix. Card names read clearly.
+- l3_mid.png: taken before the duplicate-name fix. The duplicate name is gone in the build; not re-opened.
+- Not opened: l1_mid, l2 to l7 (start and mid), l4 to l7 mid, the c_* ability shots, z_ending.

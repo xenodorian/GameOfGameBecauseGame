@@ -105,7 +105,7 @@ function drawTitle(ctx, scene) {
     const span = Engine.W + 120;
     const x = ((scene.t * 40 + i * 96) % span) - 60;
     const col = Math.floor(scene.t * 8 + i) % 6;
-    drawFrame(ctx, IMG[ATLAS_KEY[id]], { row: 1, col }, Math.round(x), Engine.H - 52, 1);
+    drawFrame(ctx, IMG[ATLAS_KEY[id]], { row: 1, col }, Math.round(x), Engine.H - 74, 1);
   });
 
   ctx.textAlign = "center";
@@ -781,7 +781,6 @@ class PlayScene {
       this.drawSelect(ctx);
     } else {
       HUD.draw(ctx, -1);
-      this.drawBanner(ctx, CHARACTERS[this.active].name);
       this.drawSignBox(ctx);
       this.drawBanner2(ctx);
       this.drawAbilityBar(ctx);
@@ -893,7 +892,7 @@ class PlayScene {
       ctx.strokeRect(x + 0.5, y + 0.5, 115, 89);
       ctx.lineWidth = 1;
       if (cardId) {
-        ctx.fillStyle = "#111418";
+        ctx.fillStyle = "#f4efe2";
         ctx.font = "13px GameFont, system-ui, sans-serif";
         ctx.textAlign = "center";
         drawText(ctx, CARD_DEFS[cardId].name, x + 58, y + 50);
@@ -1006,7 +1005,7 @@ const HUD = (() => {
   function drawSecrets(ctx, scene) {
     const right = Engine.W - 10;
     const cx = right - 62;
-    const cy = 16;
+    const cy = 44;
     ctx.beginPath();
     for (let i = 0; i < 10; i++) {
       const rad = i % 2 === 0 ? 6 : 2.6;
@@ -1022,7 +1021,7 @@ const HUD = (() => {
     ctx.font = "bold 11px GameFont, system-ui, sans-serif";
     ctx.fillStyle = "#f4efe2";
     ctx.textAlign = "right";
-    drawText(ctx, "Secrets " + scene.secretsFound + " / " + scene.secretsTotal, right, 20);
+    drawText(ctx, "Secrets " + scene.secretsFound + " / " + scene.secretsTotal, right, 48);
     ctx.textAlign = "left";
   }
 
