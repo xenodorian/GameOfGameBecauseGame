@@ -389,6 +389,76 @@ Keep "Greenwood Road" geometry. Put four `i` tiles on air tiles of row 13 (the r
 
 ---
 
+---
+
+## Opus review of Phases A to G (2026-10-29)
+
+Verified on commit 68e8830: rebuild makes no diff, gates exit 0 for all 8 levels, suite 38 of 38 pass, no console errors when loading every level. Screenshots of every level were checked.
+
+Good: all code tasks work. World.load, the validator options, spikes, cracked walls, signs, themes, rat, weaver, mage tint, ability bar, boss, banners, secrets counter, intro, ending, sound, and save all exist and are tested. The validator change for `_` tiles (2716c40) is correct.
+
+Problems found (verified by reading levels.js and the validator output):
+1. Cracked walls appear in zero levels. The feature is unused, and the level 4 sign talks about walls that do not exist.
+2. Spikes: 6 tiles in the whole game. Level 6 was specified as spike-heavy and has none.
+3. Secrets are not gated by the characters the specs asked for. The Ranger reaches 19 of the 20 secrets. No secret is Knight-only, Rat-only, or Mage-only. Cause: the arrow anchor rope can be placed while standing on another rope, so the Ranger can build a staircase to anywhere, in the game and in the validator.
+4. Enemy counts are under spec in level 6 (11, spec 13) and level 7 (11, spec 14).
+5. An archer stands within 5 columns of the exit in level 1 and level 5 (the rule says no).
+6. In dungeon levels, `=` ground and floating platforms are drawn almost black on a dark sky. Platforms are hard to see.
+7. The top-left banner `Knight. Left/Right walk, Up jump, A S Z X abilities.` is always on screen and repeats the ability bar.
+8. E3 asked for a suite check of the `_` tile. It was not added (the existing platform check uses the rope).
+9. Process: D1 to F5 went in as one commit with testing deferred. Tests were added afterward and pass, so no rework is needed, but keep to one task per commit from here.
+
+## Phase R: Review fixes (do these in order, same rules as above)
+
+### [ ] R1: One player platform at a time
+1. In `game/src/abilities.js`, in the `arrow_anchor` and `bone_bridge` cases, empty the platform list before adding the new one: `World.platforms.length = 0;` on the line before `World.addPlatform(...)`.
+2. In `game/tools/validate_gates.py`, a rope or bridge may only be anchored from a tile where the body stands on real ground, not on a rope. In `explore`, change the rope source condition to also require `grid.is_solid(x, y + 1) or rows_char(x, y + 1) == "_"` (write a small helper that reads `grid.rows`). Ropes still stay in the search once made (that is fine).
+3. Add a suite check `rope: placing a second rope removes the first` (place two, assert `World.platforms.length === 1`).
+4. Run the gates. Some secrets will change who can reach them. That is expected; R3 fixes the levels. Do not change levels in this task. If the gates now fail, still commit this task with the note `gates fail until R3` in the commit message (this one exception to the rules is allowed).
+
+### [ ] R2: Validator enforces the level rules
+Add these checks to `check_level` in `validate_gates.py`, each a failure with a clear message:
+1. No enemy marker (`g`, `m`, `j`, `a`, `W`) within 8 columns of `S`.
+2. No archer `a` within 5 columns of `F`.
+3. Minimum enemy counts per level number: 1: 5, 2: 8, 3: 8, 4: 11, 5: 11, 6: 13, 7: 14, 8: 1.
+4. Minimum spike tiles `^` per level number: 1: 0, 2: 4, 3: 0, 4: 6, 5: 2, 6: 10, 7: 6, 8: 0.
+5. Minimum cracked wall tiles `x` per level number: 1 to 3: 0, 4: 4, 5: 4, 6: 4, 7: 4, 8: 0.
+6. Game-wide check, printed after all levels: for each of `knight`, `ranger`, `rat`, `weaver`, at least one secret (`c` or `p`) in the whole game can be reached by that character and by no other character. For `mage`, at least one secret reachable by `mage` and at most one other character. Print a table of which secrets are exclusive to whom.
+Put the numbers in dicts at the top of the file so they are easy to find. Gates will now fail until R3 to R5 are done; commit with `gates fail until R5` in the message.
+
+### [ ] R3: Re-gate secrets in levels 2 to 7
+Work one level per commit (R3a level 2, R3b level 3, and so on). Goal for each level: its secrets need different characters, and by the end the R2 game-wide check passes. Suggested owners:
+- Level 2: one Rat-only, one Weaver-only.
+- Level 3: one Ranger-only, one Weaver-only, one Mage (Mage plus at most one other).
+- Level 4: one Knight-only (behind cracked wall), one Rat-only, one Knight or Mage.
+- Level 5: one Knight-only (cracked wall), one Rat-only, one Weaver-only.
+- Level 6: one Weaver-only, one Ranger-only, one Knight-only.
+- Level 7: one Rat-only, one Weaver-only, one Knight-only.
+How each character is modeled in the validator, so you can design for it:
+- Basic: up 2 rows, across 3 columns.
+- Knight: across 5 (charge). Breaks `x`. Knight-only recipe: a pocket sealed on every side by cracked walls `x` at least 4 tiles thick (thick, so the Mage's blink cannot pass it in the real game), with the secret inside. Make sure nothing can drop into the pocket from above (solid ceiling `#`).
+- Ranger: up 4 (hop). Rope: 3 tiles, one row above the standing row, needs 3 empty tiles in front at that row. Ropes are blocked by anything solid in those 3 tiles.
+- Rat: up 5 (leap). Rat-only recipe: a shaft 1 or 2 columns wide and 5 rows deep, with solid walls on both sides so no rope or bridge fits, and the secret on a ledge at the top of the shaft.
+- Weaver: rope length 5. Weaver-only recipe: a gap 7 or 8 tiles wide at the same height, with a solid ceiling 3 rows above the floor so nobody can jump high, and no ledge to stand on in between. Check with `--map`.
+- Mage: float up 3 then drift 3 across; blink across 6.
+Always confirm with `python3 game/tools/validate_gates.py --map N <name>` for every character, not only the one you want.
+Each new pocket or shaft must be visible from the main route.
+
+### [ ] R4: Spikes, cracked walls, and enemies
+One level per commit. Raise each level to the R2 minimums. Spikes go in beds of 1 to 3 tiles on the main route (jumpable) or at the bottom of pits. Cracked walls guard secrets or short optional side rooms with a `k` card inside. Add enemies to reach the minimum counts, spread out. Move the archer in level 1 and level 5 away from the exit. Gates must pass at the end of each level's commit for that level (use `--level N`).
+
+### [ ] R5: Make dungeon ground and platforms visible
+In `World.draw`, for `=` in dungeon levels: after drawing the darkened dirt, draw a 3 px strip along the top edge of the tile in `#9c8fb0` when the tile above is not solid. Platforms then read as ledges. Take a screenshot of level 8 (the boss arena) with Playwright and look at it: the two platforms must be clearly visible.
+
+### [ ] R6: Remove the redundant top banner
+In `scenes.js` around line 690, the banner `CHARACTERS[this.active].name + ". Left/Right walk, Up jump, A S Z X abilities."` repeats the ability bar. Change it to show only the character name, small, at the top left (`Knight`). Update any suite check that reads that text.
+
+### [ ] R7: `_` tile check
+Add the suite check from E3: `platform tile: knight jumps up through a "_" tile and stands on it`, using `World.setTile` in level 1 to make a row of 3 `_` tiles two tiles above the floor near the spawn.
+
+### [ ] R8: Final pass
+Run all three checks. Record the real suite count and the gates summary (including the exclusive-secret table) in `Current_Work.md`. Then add the line `EXPANSION COMPLETE` as the last line of this file.
+
 ## Decisions log
 
 (Executor agents add one line per decision here: task id, what was unclear, what was chosen.)
@@ -397,5 +467,3 @@ Keep "Greenwood Road" geometry. Put four `i` tiles on air tiles of row 13 (the r
 - E9: a main-route card (k) was added at the quiet start of levels 1 to 4 (columns 5 to 7), so no 20-column stretch is empty.
 - Opus: exit zone stays 4 tiles tall (jumping over the flag completes the level).
 - C1: a rat or weaver card could be selected before C2/C3 existed, which left the active character undefined and froze play. Added their CHARACTERS entries (C2/C3 step 1) with unimplemented ability ids that do nothing.
-
-EXPANSION COMPLETE
