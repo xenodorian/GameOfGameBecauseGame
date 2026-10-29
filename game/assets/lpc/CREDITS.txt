@@ -208,3 +208,8 @@ weapon/sword/longsword
   authors: Johannes Sjölund (wulax), bluecarrot16
   licenses: OGA-BY 3.0, CC-BY-SA 3.0
   https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-extended-weapon-animations
+
+Sound and music code (not LPC art)
+ZzFX by Frank Force, MIT License, Copyright (c) 2019 Frank Force. https://github.com/KilledByAPixel/ZzFX
+ZzFXM by Keith Clark, MIT License, Copyright (c) 2020 Keith Clark. https://github.com/keithclark/ZzFXM
+The songs and sound presets are written for this game and made in code.

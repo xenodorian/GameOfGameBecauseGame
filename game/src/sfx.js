@@ -33,15 +33,19 @@ const Sfx = {
     }
   },
 
+  // Makes the audio context once. Music shares it.
+  init() {
+    if (this.ctx || this.broken) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    this.ctx = new AC();
+    window.addEventListener("keydown", () => this.resume(), { once: true });
+    window.addEventListener("pointerdown", () => this.resume(), { once: true });
+  },
+
   play(name) {
     if (!this.enabled || this.broken) return;
     try {
-      if (!this.ctx) {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        this.ctx = new AC();
-        window.addEventListener("keydown", () => this.resume(), { once: true });
-        window.addEventListener("pointerdown", () => this.resume(), { once: true });
-      }
+      this.init();
       this.resume();
       const t = this.ctx.currentTime;
       switch (name) {

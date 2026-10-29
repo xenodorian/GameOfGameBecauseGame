@@ -224,7 +224,7 @@ Each line is a brief seed. The director or the worker expands it with the templa
 - [ ] E5 Warlord phases, tells, punish window, final hit boss stop (5.6). May split into E5a to E5c.
 
 ### Round 5: sound
-- [ ] A1 ZzFXM player in code (`game/src/music.js`), field and dungeon loops, mute in pause menu.
+- [x] A1 ZzFXM player in code (`game/src/music.js`), field and dungeon loops, mute in pause menu.
 - [ ] A2 Boss loop and stingers (card pickup, level clear, boss down).
 - [ ] A3 ZzFX per-action SFX with a timbre per character; replace the shared "ability" sound.
 

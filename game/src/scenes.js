@@ -296,6 +296,7 @@ class CreditsScene {
       "Character and enemy sprites: Liberated Pixel Cup (LPC) sheets, many authors, CC-BY-SA, GPL, OGA-BY, CC0.",
       "  Full author list and licenses: assets/lpc/CREDITS.txt.",
       "Dungeon Crawl Stone Soup tiles: DCSS team. Mostly CC0; see assets/tiles/LICENSE_DCSS.txt.",
+      "Sound and music: ZzFX by Frank Force and ZzFXM by Keith Clark, MIT. Songs written for this game.",
       "Game code and build: this repository.",
       "Design and code: built with Claude Code",
     ];
@@ -353,6 +354,7 @@ const HIT_DAMAGE = 2;
 class PlayScene {
   constructor(levelIndex = 0, active = "knight") {
     World.load(levelIndex);
+    Music.setTheme(World.level.theme);
     Attacks.reset();
     // Seconds of play. Idle animation and blinks read it; draw never advances it.
     this.time = 0;
@@ -598,11 +600,12 @@ class PlayScene {
   }
 
   updatePause() {
-    this.pauseSel = menuStep(this.pauseSel, 3);
+    this.pauseSel = menuStep(this.pauseSel, 4);
     if (menuBack()) this.mode = "play";
     if (menuConfirm()) {
       if (this.pauseSel === 0) this.mode = "play";
       else if (this.pauseSel === 1) Sfx.enabled = !Sfx.enabled;
+      else if (this.pauseSel === 2) Music.toggle();
       else Engine.setScene(new TitleScene());
     }
   }
@@ -821,7 +824,7 @@ class PlayScene {
       ctx.font = "16px GameFont, system-ui, sans-serif";
       drawText(ctx, "Paused", Engine.W / 2, 110);
       ctx.font = "14px GameFont, system-ui, sans-serif";
-      ["Resume", "Sound: " + (Sfx.enabled ? "On" : "Off"), "Title screen"].forEach((label, i) => {
+      ["Resume", "Sound: " + (Sfx.enabled ? "On" : "Off"), "Music: " + (Music.enabled ? "On" : "Off"), "Title screen"].forEach((label, i) => {
         ctx.fillStyle = i === this.pauseSel ? "#d9a441" : "#e8e4d8";
         drawText(ctx, (i === this.pauseSel ? "> " : "  ") + label, Engine.W / 2, 144 + i * 26);
       });
