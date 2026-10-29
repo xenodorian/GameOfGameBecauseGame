@@ -109,9 +109,8 @@ check('stomp defeats a grunt and drops a card; side contact respawns safely', as
     __r.def = { ...__r.def, speed: 0, chaseSpeed: 0, sight: 0 };
     __scene.player.x = __r.x - 10; __scene.player.y = __r.y;
   });
-  await wait(page, 80);
-  // The side contact is a hit, so the hurt pose shows before the choice opens.
-  await wait(page, 250);
+  // The side contact is a hit, so the hurt pose shows before the choice opens. Wait on the game, not the wall clock.
+  await page.waitForFunction(() => __scene.mode === 'select', null, { timeout: 5000 });
   // The stomped grunt left a card in hand, so the side contact opens the choice first.
   assert.equal(await page.evaluate(() => __scene.mode), 'select');
   await page.keyboard.press('KeyZ'); await wait(page, 80);

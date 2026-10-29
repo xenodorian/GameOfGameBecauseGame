@@ -17,7 +17,7 @@ For a small, fast model. Read `CLAUDE.md` sections 1 and 2 first. Then do the ta
 9. If a task fails 3 times: run `git checkout -- game`, add one line to the Decisions log (`CLAUDE.md` section 9) saying what failed, mark the task `[~]`, move on.
 10. Never ask the user questions.
 
-## V0 [ ]: Fix the stomp check failure
+## V0 [x]: Fix the stomp check failure
 
 The last suite run had 1 failure: `stomp defeats a grunt and drops a card; side contact respawns safely`, message `'play' == 'select'`. The check waits a fixed wall-clock time, but the game clock runs slower in the test browser. Make it wait on the game instead (same idea as the T1 fix).
 
