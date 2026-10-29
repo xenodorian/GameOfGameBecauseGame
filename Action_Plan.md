@@ -255,7 +255,7 @@ This task is the riskiest. Do it only after Tasks 1 to 10 are committed. If it f
 8. Rebuild HTML, run the check routine, run screenshots, look at a knight, ranger, mage shot.
 9. Commit as `T11: add sword, bow, staff, and crown layers`.
 
-## Task 12 [ ]: Close out
+## Task 12 [x]: Close out
 
 1. Run the full check routine on a clean tree. Record the real numbers in the Results log (section 7 of `Claude_Notes.md`).
 2. Update section 5 and section 6 of `Claude_Notes.md` so they list only items still open. Remove items you finished. Keep items you marked `[~]`.
@@ -269,3 +269,5 @@ This task is the riskiest. Do it only after Tasks 1 to 10 are committed. If it f
 - Real devices (gamepad, phone, iOS full screen), other browsers, sound quality checks.
 - New levels, new characters, or any change to level layouts. If you edit `levels.js` by mistake, run `git checkout -- game/src/levels.js`.
 - Anything in the `method_*` folders.
+
+ACTION PLAN COMPLETE

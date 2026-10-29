@@ -53,59 +53,38 @@ Single condensed record of the project. It replaces Current_Work.md, Expansion_P
 
 ## 5. Current state
 
-- Last pushed commit before this cleanup: `94c6008`. Code content last changed in `47287de` (LPC sprites).
-- Checks at that point: gates exit 0. Suite was reported as 49 passed 0 failed in the notes, but a later review ran it and got 48 passed, 1 failed (see 6.1). So the true state is one flaky failing check.
-- `game/changeling.html` is about 434 KB at last record (before LPC swap), under the 5 MB limit.
-- Exclusive secrets (from gate output): knight L4 col 64 row 15; ranger L3 col 66 row 17, L6 col 91 row 9, L7 col 61 row 9; rat L2 col 96 row 8, L5 col 104 row 8; weaver L7 col 29 row 7; mage L3 col 76 row 8.
-- Decisions on spec deviations (accepted): weaver-only secret lives in level 7, not level 2 or 6. Exit zone is 4 tiles tall (jumping over the flag completes the level). Level 2 keyboard-bot check was dropped (the bot is too simple, not the level).
-- The earlier task lists (phases A to G, R, S, V) are mostly done. Partial items are listed in section 6.
+- Last code commit: `9dc906d` (T10 and T11). Earlier: `917548a` (T3 to T6), `51df8f9` (T7 and T8), `48d8983` (T9), `99d5d86` (T1 and T2).
+- Checks at `9dc906d`: gates exit 0; suite 52 passed, 0 failed (section 7).
+- Exclusive secrets (gate output): knight L4 col 64 row 15; ranger L3 col 66 row 17, L6 col 91 row 9, L7 col 61 row 9; rat L2 col 96 row 8, L5 col 104 row 8; weaver L7 col 29 row 7; mage L3 col 76 row 8.
+- Accepted spec deviations: weaver-only secret is in level 7, not level 2 or 6. Exit zone is 4 tiles tall. The level 2 keyboard-bot check was dropped.
+- Character and enemy art: LPC sheets (section 3).
 
-## 6. Open work (known issues and bugs)
+## 6. Open work
 
-### 6.1 Flaky suite check (VERIFIED by a review run)
-- Check: `ability: knight charge (S) dashes`. Fails about 7 of 10 runs in isolation.
-- Cause: suite waits use wall-clock ms, but headless Chromium runs the game clock slower (scene.time was 0.083 s after 100 ms). The check reads state on the same step the charge fires, before vx is set.
-- Fix idea: record `t0 = __scene.time` before the key press, then `page.waitForFunction((t) => __scene.time >= t, t0 + 0.08)` before the check. Do not weaken the assertion.
+Only items still open. Items finished by the Action Plan are removed.
 
-### 6.2 Bugs
-1. Archer is invisible half the time (VERIFIED from sheet pixels). `Enemy.draw` in `enemies.js` uses idle column `floor(animT*3) % 4` but the idle row has 2 frames; walk uses `% 6` but the walk row has 9 frames. Fix: use `ANIM_ROWS.idle[1]` and `ANIM_ROWS.walk[1]` from `anim.js`. Also the code uses literal rows 0 and 1; use `ANIM_ROWS.idle[0]`, `ANIM_ROWS.walk[0]`, `ANIM_ROWS.hurt[0]`.
-2. Enemy facing may be reversed (UNVERIFIED by screenshot; the code supports it). `Enemy.draw` flips the sprite when `dir > 0`, but the LPC sheets face right, so a right-moving enemy is drawn facing left. Likely cause: the rule was written for the old Sprite Foundry art. Check visually, then flip when `dir < 0`.
-3. `build_lpc.py compose()` sorts layers by a hard-coded zPos, not the scanned values. Only mismatch: knight shield background is 3, definitions say 6. Harmless. Low priority.
+### 6.1 Art
+- Weapons are composed but partial (T11). Sword (knight): idle and walk only. Bow (ranger): shoot and hurt only. Staff (mage): walk, thrust, spellcast, and hurt. Each weapon is hidden on animations it lacks. Slash and cast are the gaps that matter most in play.
+- Knight shield has no slash or thrust frames, so it is hidden during those.
+- Ranger has no bow in idle or walk.
+- Fallback animations: zombie walks instead of jumping; skeleton idles instead of jumping. The build prints each fallback.
+- Layer z-order in `build_lpc.py` is hard-coded. Only known mismatch: knight shield background is 3, the definitions say 6. Harmless.
 
-### 6.3 Art gaps
-- Weapons (T11): sword, bow, and staff are composed, but each has only some animations (see the T11 row in section 7). Hidden where missing.
-- Knight shield has no slash or thrust frames, so it is hidden during those animations.
-- Rat king crown: added (T11).
-- Animation fallbacks exist (zombie walks instead of jumping, skeleton idles instead of jumping). The build prints each one.
-- Enemy sprites were checked only from a preview grid and a few screenshots.
-- Credits list every credit entry of each definition file, including unused variants. Keep only entries whose `file` matches a used folder (function `credits_for()` in `build_lpc.py`).
-- LPC weapon paths (generator repo `liberatedpixelcup/Universal-LPC-Spritesheet-Character-Generator`, commit 86160e7, checked 2026-10-28):
-  - sword: `weapon/sword/arming/universal/bg/{anim}/steel.png` (zPos 9) and `.../fg/{anim}/steel.png` (140). 64 px anims: walk, idle, hurt, combat_idle. Slash only exists as 128 px oversize (`attack_slash`), which `build_lpc.py` does not handle, so a sword would be hidden during attacks.
-  - bow: `weapon/ranged/bow/normal/universal/background/{anim}/light.png` (-1) and `.../foreground/{anim}/light.png` (140). Anims: walk, shoot, hurt.
-  - staff: `weapon/magic/simple/background/{anim}/simple.png` (9) and `.../foreground/{anim}/simple.png` (140). Anims: spellcast, thrust, walk, hurt.
-  - crown: `hat/formal/crown/adult/{anim}/crown_gold.png` (130). Not checked on the rat head.
-  - Weapon layers must not use attack fallbacks (a staff thrust over a body slash will not line up).
-  - Get the repo with `git clone --depth 1 --filter=blob:none --sparse <url>` then `git sparse-checkout set sheet_definitions` plus the spritesheets folders used.
+### 6.2 Level design
+- Weaver-only secret: only level 7. Levels 2 and 6 have none (accepted, section 5).
 
-### 6.4 Gameplay and feel not done
-- V5 step 7: hurt frame before the death selection. `beginSelection()` in `scenes.js` (around line 629) sets mode `select` at once. Add a short `dying` mode (`hurtShowT = 0.15`), draw the player on the hurt row, then open the selection. Selection suite checks will need a wait of about 250 ms.
-- V6 effects not done: hit sparks, projectile wall particles, blink rings, float sparkles, leap dust, rope sag, bone bridge pattern, ghost outline.
-  - `Effects` object is in `enemies.js` (about line 220; has bursts, shake, reset).
-  - Spark hit points: the two hit spots in `Attacks.update` (`abilities.js`).
-  - Wall particles: where projectiles hit solid tiles (same function).
-  - Blink rings: `blink(p)` in `abilities.js`. Float sparkles: while `scene.floatT > 0`. Leap dust: the `leap` case and where `landT` is set (`scenes.js` about line 486).
-  - Rope and bridge drawing: `World.drawPlatforms` (`world.js` about line 202); bone bridge platforms use color `#e8e2d0`.
-  - Ghost outline: `PlayScene.drawBody` (`scenes.js` about line 793), currently only sets alpha 0.5.
-- V7 warlord knockback: `Enemies.defeat(enemy)` (`enemies.js` about line 288) has no hit direction. Add a `fromX` argument. Callers: `Attacks.update` (about lines 188 and 202) and the stomp in `checkEnemyContact` (`scenes.js`). In the `hp > 1` branch set `knockT = 0.12` and `knockVx = 160` away from `fromX`; apply it in `Enemy.update` after the stun block.
-- V8 ability bar vs touch buttons: `HUD.drawAbilities` in `scenes.js` puts the bar at `Engine.H - 6`. Touch buttons are a DOM overlay (`#touch .face`, fixed at the bottom, shown when body has class `touch`). Lift the bar by `(canvasRect.bottom - faceRect.top) * Engine.H / canvasRect.height`.
-- V8 selection screen (`drawSelect`, `scenes.js` about line 863) and level complete screen (`draw`, about line 752) are not redesigned. 80 px wide cards are too narrow for names like "Shield bash"; use about 116 px wide. Planned layout: large cards with the idle frame at 2x, name size 12 bold, four ability names size 10 below, gold border and 4 px lift on the highlighted card. Level complete: centered panel with "Level complete", level name, "Secrets found: a of b", "Enter: next level".
-- Level 2 has no weaver-only secret, and level 6 has none either (accepted, see section 5).
+### 6.3 Behavior to be aware of
+- The warlord's spawn point overlaps the arena platform, so horizontal movement snaps it out to the tile edge. Existing behavior, not fixed. The knockback check places the warlord in open air.
+- Level banner covers the top of sprites for the first 2.5 s (by design).
 
-### 6.5 Process and verification gaps
-- V10 visual check is partial. Only these were opened: `00_title`, `l1_start`, `l8_start`, `z_select` (OK), `l3_mid` (before a fix). Not opened: `l1_mid`, `l2` to `l7` start and mid, `c_*` ability shots, `z_ending`. `screenshots.js` has no shot of each enemy type; add one and look at every PNG.
-- The old plan's `EXPANSION COMPLETE` line was never added.
-- Not tested at all: real devices (gamepad, phone, iOS full screen), other browsers, sound quality. Out of scope unless the user asks.
+### 6.4 Not tested
+- Real devices, other browsers, and sound quality. Out of scope unless the user asks.
 - Gamepad and touch are only simulated.
+
+### 6.5 Test hardening (for future readers)
+- `input: Left and Right together stand still` reads its reference position after both keys are held. Pressing Left first let one step move the player 2.17 px.
+- `boss: a hit knocks the warlord back` steps the warlord's update directly, so it does not depend on wall-clock timing.
+- `ability: knight charge (S) dashes` waits on the game clock (T1). This fixed the earlier flake.
 
 ## 7. Results log (agents append real results here)
 
@@ -119,6 +98,7 @@ Single condensed record of the project. It replaces Current_Work.md, Expansion_P
 | 2026-10-29 | with T7 and T8 | exit 0 | 52 passed, 0 failed | selection cards show idle frame and four ability names (card 116 by 140, not 108 tall, so the names fit); level complete panel; hand moved to x 150 so 'Bone Weaver' fits. T8: spark, dust, ring, float sparkles, leap and landing dust, rope sag, bone bridge pattern, ghost outline. Shots z_select, z_complete, c_knight_ab3, c_mage_ab1 checked |
 | 2026-10-29 | T9 | exit 0 | not rerun (no game code changed; last run 52 passed, 0 failed at T8) | CREDITS.txt filtered to used items: 16.5 KB (was larger). Sheets checked pixel-identical before and after |
 | 2026-10-29 | with T10 and T11 | exit 0 | 52 passed, 0 failed | Enemy shots added (5); sign box moved under the level banner; weapons added: knight sword (idle and walk only), ranger bow (shoot and hurt only), mage staff (walk, thrust, spellcast, hurt), rat king crown (all anims). Weapons hidden on animations they lack. Shots checked: knight, ranger, mage |
+| 2026-10-29 | 9dc906d (clean tree, T12) | exit 0 | 52 passed, 0 failed | final check on a clean tree |
 
 ## 8. Decisions log (agents append one line per decision)
 - T10 and T11 were validated together and committed together (the LPC sheets changed in T11 and the HTML needed a rebuild). Deviation.
