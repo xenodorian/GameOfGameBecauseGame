@@ -3,6 +3,8 @@ const CARD_DEFS = {
   knight: { name: "Knight", color: "#8fa6c0" },
   ranger: { name: "Ranger", color: "#6f9c5a" },
   mage: { name: "Mage", color: "#9b7fd1" },
+  rat: { name: "Rat", color: "#a0826d" },
+  weaver: { name: "Bone Weaver", color: "#d8d2c0" },
 };
 
 // Hand fills left to right. Extra cards go into the deck at a random spot.

@@ -211,7 +211,7 @@ Check: `python3 game/tools/validate_gates.py` exits 0. `--show 1` and `--map 1 b
 
 ## Phase C: Two new characters and the ability bar
 
-### [ ] C1: Card defs and drops
+### [~] C1: Card defs and drops (build and gates pass; suite run pending)
 1. `CARD_DEFS` gets `rat: { name: "Rat", color: "#a0826d" }` and `weaver: { name: "Bone Weaver", color: "#d8d2c0" }`.
 2. `ENEMY_DEFS`: `rat_king.card = "rat"`, `archer.card = "weaver"`. Grunt and revenant stay.
 3. Every place that picks a random card must pick from all keys of `CARD_DEFS`. Search for `Math.random() * 3` and for `"random"` in `enemies.js` and `scenes.js` and fix each one to use `Object.keys(CARD_DEFS).length`.

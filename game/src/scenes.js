@@ -325,7 +325,7 @@ class PlayScene {
         if (pickup.t >= 0.3) {
           Hand.collect(pickup.cardId);
           // A power-up also draws one more random card.
-          if (pickup.power) Hand.collect(Object.keys(CARD_DEFS)[Math.floor(Math.random() * 3)]);
+          if (pickup.power) Hand.collect(Object.keys(CARD_DEFS)[Math.floor(Math.random() * Object.keys(CARD_DEFS).length)]);
           pickup.state = "done";
         }
       }

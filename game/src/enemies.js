@@ -29,7 +29,7 @@ const ENEMY_DEFS = {
     speed: 35,
     chaseSpeed: 60,
     sight: 160,
-    card: "ranger",
+    card: "rat",
     jumpVy: -330,
     jumpEvery: 1.4,
   },
@@ -41,7 +41,7 @@ const ENEMY_DEFS = {
     speed: 0,
     chaseSpeed: 0,
     sight: 200,
-    card: "knight",
+    card: "weaver",
     fireEvery: 1.6,
   },
 };
