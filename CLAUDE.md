@@ -154,6 +154,9 @@ Open work:
 - Spec deviations accepted: see section 6.
 - Action Plan v2 V3 and V4: committed together (both touch the rebuilt HTML). Deviation from one task per commit.
 - Action Plan v2: local `main` was 53 commits behind `origin/main` (old history). Kept it at tag `backup-stale-local-main-2`, reset `main` to `origin/main`.
+- Action Plan v3 (X8): the banner moved under the sprites but still draws only in play and dying modes, as before.
+- Action Plan v3: local `main` had 12 commits that `origin/main` lacks (origin was force-updated to `10c28e6`). Local `main` was left as it is. Work went to `origin/main` from a detached HEAD with `git push origin HEAD:main`.
+- Action Plan v3 (X3): `build_lpc.py` `item_folder` returns the whole path when no `{anim}` or `.png` part exists, so override folders can be credited.
 
 ## 10. Environment and licenses
 

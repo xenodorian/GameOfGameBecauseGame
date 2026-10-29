@@ -754,6 +754,8 @@ class PlayScene {
     if (Effects.shakeT > 0) ctx.translate(Effects.shakeX, Effects.shakeY);
     World.drawSigns(ctx, cx, cy);
     World.drawPlatforms(ctx, cx, cy);
+    // Same modes as before (play and dying). The banner now draws under the sprites.
+    if (this.mode === "play" || this.mode === "dying") this.drawBanner2(ctx);
     Attacks.draw(ctx, cx, cy);
 
     for (const enemy of Enemies.list()) {
@@ -813,7 +815,6 @@ class PlayScene {
     } else {
       HUD.draw(ctx, -1);
       this.drawSignBox(ctx);
-      this.drawBanner2(ctx);
       this.drawAbilityBar(ctx);
       this.drawBossBar(ctx);
     }

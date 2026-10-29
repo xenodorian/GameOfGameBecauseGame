@@ -114,7 +114,7 @@ list = World.enemySpawns.map((s) => {
 ```
 Only the warlord is taller than a tile, so nothing else moves. Check routine A to C. Commit. Message `X7: warlord spawns with its feet on the floor`.
 
-## X8 [ ]: Banner under the sprites (G2)
+## X8 [x]: Banner under the sprites (G2)
 
 `game/src/scenes.js`: remove the line `this.drawBanner2(ctx);` from the play-mode HUD branch (about line 816) and add it right after `World.drawPlatforms(ctx, cx, cy);` (about line 756). Sprites and attacks now draw over the banner. Check routine A to C. Commit. Message `X8: level banner draws under sprites`.
 
