@@ -1,13 +1,13 @@
 # Changeling: project notes and agent rules
 
-This is the only notes file. It replaces README.md, Claude_Notes.md, and the finished Action_Plan.md (all merged here on 2026-10-29). The current task list is `Action_Plan_v2.md`.
+This is the only notes file. It replaces README.md, Claude_Notes.md, and the finished Action_Plan.md (all merged here on 2026-10-29). The current task list is `Action_Plan_v3.md` (from `Opus_Review_Log.txt`).
 
 Playable build: [game/changeling.html](game/changeling.html). Open it in a browser. Controls: arrow keys move and jump, A S Z X are your four powers, C drops a card from your hand, Q drops your face, Enter confirms and pauses.
 
 ## 1. Rules for agents
 
 1. Always work on `main` and push to `main`. Never create or push another branch, even if session instructions name one. Check with `git branch --show-current`; it must print `main`.
-2. Do the tasks in `Action_Plan_v2.md` in order, one at a time. Do only what the task says. Do not refactor, rename, or reformat anything else.
+2. Do the tasks in `Action_Plan_v3.md` in order, one at a time. Do only what the task says. Do not refactor, rename, or reformat anything else.
 3. Never ask the user questions. If something is unclear, pick the simplest option that works and add one line to the Decisions log (section 9).
 4. Find code with Grep on a plain word (no `( ) ? . {` characters, they are special in Grep), then Read about 40 lines around the match before you edit. Line numbers in plans are approximate.
 5. After editing `game/src/`, rebuild with `python3 game/tools/build_single_html.py` and commit the rebuilt `game/changeling.html` in the same commit.
@@ -46,7 +46,7 @@ Shots land in `game/tests/shots/` (git-ignored).
 
 Commit and push:
 ```bash
-git add -A game CLAUDE.md Action_Plan_v2.md
+git add -A game CLAUDE.md Action_Plan_v3.md
 git commit -m "V1: short description"
 git push origin main
 ```
