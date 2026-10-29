@@ -658,7 +658,7 @@ class PlayScene {
       if (stomp) {
         Enemies.defeat(enemy, p.x + p.w / 2);
         p.vy = -260;
-      } else if (this.ghostT <= 0) {
+      } else if (this.ghostT <= 0 && enemy.stunT <= 0) {
         this.takeDamage(HIT_DAMAGE);
         return;
       }

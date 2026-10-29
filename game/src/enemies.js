@@ -178,6 +178,16 @@ class Enemy {
       ctx.drawImage(sheet, frame.col * 64, frame.row * 64, 64, 64, sx, sy, dw, dh);
     }
     ctx.restore();
+    // Stunned: three small stars circle over the head.
+    if (this.stunT > 0) {
+      const cx = Math.round(this.x + this.w / 2 - camX);
+      const cy = Math.round(this.y - 4 - camY);
+      for (let i = 0; i < 3; i++) {
+        const a = this.animT * 6 + (i * Math.PI * 2) / 3;
+        ctx.fillStyle = i === 0 ? "#fff6c0" : "#f2d04a";
+        ctx.fillRect(Math.round(cx + Math.cos(a) * 9) - 1, Math.round(cy + Math.sin(a) * 3) - 1, 3, 3);
+      }
+    }
   }
 }
 

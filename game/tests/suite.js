@@ -805,6 +805,33 @@ check('spikes: touching spikes costs 2 HP', async (browser) => {
   await page.close();
 });
 
+check('ability: shield bash stuns a grunt and its neighbour, a second bash defeats the stunned one, stunned deals no damage', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [], active: 'knight' });
+  await page.evaluate(() => {
+    const a = new Enemy('grunt', 224, 418);
+    const b = new Enemy('grunt', 254, 418);
+    for (const g of [a, b]) { g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 }; Enemies.list().push(g); }
+    window.__a = a; window.__b = b;
+    __scene.player.x = 200; __scene.player.y = 418; __scene.player.facing = 1; __scene.player.vx = 0;
+  });
+  const t0 = await page.evaluate(() => __scene.time);
+  await page.keyboard.press('KeyA');
+  await page.waitForFunction((t) => __scene.time >= t, t0 + 0.2);
+  const s1 = await page.evaluate(() => ({ a: __a.stunT, b: __b.stunT, adead: __a.dead, bdead: __b.dead, hp: __scene.hp }));
+  assert.ok(s1.a > 0 && s1.b > 0 && !s1.adead && !s1.bdead, 'both stunned: ' + JSON.stringify(s1));
+  assert.equal(s1.hp, 10, 'stunned enemies deal no contact damage');
+  const t1 = await page.evaluate(() => __scene.time);
+  await page.waitForFunction((t) => __scene.time >= t, t1 + 0.4);
+  await page.keyboard.press('KeyA');
+  await page.waitForFunction((t) => __scene.time >= t, t1 + 0.7);
+  const s2 = await page.evaluate(() => ({ adead: __a.dead, hp: __scene.hp }));
+  assert.equal(s2.adead, true, 'second bash defeats the stunned grunt');
+  assert.equal(s2.hp, 10);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 check('cracked wall: knight shield bash breaks it', async (browser) => {
   const page = await newPage(browser);
   await startPlay(page, { hand: [] });

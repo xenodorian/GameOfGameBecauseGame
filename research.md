@@ -198,7 +198,7 @@ Each line is a brief seed. The director or the worker expands it with the templa
 ### Round 1: make the fantasy work (bugs)
 - [x] B1 Mage beam hits the body band. `abilities.js` updateBeam: hit rect y from player top - 6 to player bottom (keep the drawn beam where it is). Accept: grounded mage kills grounded grunt and rat king at 60 and 140 px. Add a suite check that places the enemy on the ground.
 - [x] B2 Knight charge bowls through. Hitbox in front of the knight while dashing, defeats each enemy once, knight immune to contact during the dash plus 0.15 s. Accept: grunt dies, hp stays 10.
-- [ ] B3 Shield bash payoff. Bash defeats an already stunned enemy; a fresh hit stuns 1.2 s with stars, stuns other enemies within 40 px. Stunned enemies do no contact damage.
+- [x] B3 Shield bash payoff. Bash defeats an already stunned enemy; a fresh hit stuns 1.2 s with stars, stuns other enemies within 40 px. Stunned enemies do no contact damage.
 - [ ] B4 Warlord arrows at body height (warlord arrow spawn y so the arrow centre is at player centre height on flat ground).
 
 ### Round 2: feel

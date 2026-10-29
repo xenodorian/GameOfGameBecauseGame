@@ -103,7 +103,7 @@ const Attacks = (() => {
         hitboxes.push({ ...faceRect(p, 56, 12, 10), ...fx(p), t: 0.15, total: 0.15, kind: "thrust", weapon: weaponHasRow(LPC_KEY[scene.active], ANIM_ROWS.thrust[0]) });
         break;
       case "shield_bash":
-        hitboxes.push({ ...faceRect(p, 22, 30, 0), ...fx(p), t: 0.12, total: 0.12, kind: "bash", stun: 1.2 });
+        hitboxes.push({ ...faceRect(p, 22, 30, 0), ...fx(p), t: 0.12, total: 0.12, kind: "bash", stun: 1.2, hit: new Set() });
         break;
       case "charge":
         scene.dashT = 0.25;
@@ -189,10 +189,29 @@ const Attacks = (() => {
       if (hb.kind === "bash") World.breakCracked(hb.x, hb.y, hb.w, hb.h);
       Enemies.list().forEach((e) => {
         if (e.dead || !overlaps(hb, e)) return;
+        if (hb.hit && hb.hit.has(e)) return;
         hitThisStep = true;
         Effects.spark(e.x + e.w / 2, e.y + e.h / 2, hb.dir);
-        if (hb.stun) e.stunT = hb.stun;
-        else Enemies.defeat(e, hb.x + hb.w / 2);
+        if (hb.stun) {
+          hb.hit.add(e);
+          if (e.stunT > 0) {
+            // Bash on an already stunned enemy defeats it.
+            Enemies.defeat(e, hb.x + hb.w / 2);
+          } else {
+            e.stunT = hb.stun;
+            // Enemies within 40 px of the one hit are stunned too.
+            const cx = e.x + e.w / 2;
+            const cy = e.y + e.h / 2;
+            for (const o of Enemies.list()) {
+              if (o === e || o.dead || hb.hit.has(o)) continue;
+              if (Math.hypot(o.x + o.w / 2 - cx, o.y + o.h / 2 - cy) <= 40) {
+                hb.hit.add(o);
+                o.stunT = hb.stun;
+                Effects.spark(o.x + o.w / 2, o.y + o.h / 2, hb.dir);
+              }
+            }
+          }
+        } else Enemies.defeat(e, hb.x + hb.w / 2);
       });
     }
     for (let i = hitboxes.length - 1; i >= 0; i--) {
