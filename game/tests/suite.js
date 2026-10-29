@@ -285,7 +285,10 @@ for (const a of abilities) {
       assert.equal(await a.check(page), a.want);
       await page.keyboard.up(a.hold);
     } else {
+      // The game clock runs slower than wall time in headless Chromium, so wait for the charge to set its speed.
+      const t0 = a.name.includes('charge') ? await page.evaluate(() => __scene.time) : null;
       await page.keyboard.press(a.key); await wait(page, a.wait);
+      if (t0 !== null) await page.waitForFunction((t) => __scene.time >= t, t0 + 0.08);
       const got = await a.check(page);
       if (a.want === 'upward') assert.ok(got < -250 && got > -320, 'vy ' + got);
       else if (a.want === 'leap') assert.ok(got < -500 && got > -560, 'vy ' + got);
@@ -479,6 +482,21 @@ check('archer: an arrow hitting the player opens the death selection', async (br
     selected = await page.evaluate(() => __scene.mode === 'select');
   }
   assert.equal(selected, true);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('enemy: archer is drawn on every idle frame', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [] });
+  // The sheet has 2 idle frames and 9 walk frames. Every column the draw code can pick must exist.
+  const r = await page.evaluate(() => {
+    const cols = [0, 0.34, 0.67, 1.0, 5].map((t) => Math.floor(t * 3) % ANIM_ROWS.idle[1]);
+    return { idle: ANIM_ROWS.idle[1], walk: ANIM_ROWS.walk[1], cols, sheetOk: cols.every((c) => c < ANIM_ROWS.idle[1]) };
+  });
+  assert.equal(r.idle, 2);
+  assert.equal(r.walk, 9);
+  assert.equal(r.sheetOk, true, 'idle columns ' + r.cols.join(','));
   assert.deepEqual(page.errors, []);
   await page.close();
 });

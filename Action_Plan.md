@@ -69,7 +69,7 @@ Write one line in the commit message saying what you saw.
 
 ---
 
-## Task 0 [ ]: Baseline and sanity
+## Task 0 [x]: Baseline and sanity
 
 1. Run `git branch --show-current`. It must print `main`. If not, run `git checkout main`.
 2. Run `git status`. It must be clean. If not, stop and log it.
@@ -77,7 +77,7 @@ Write one line in the commit message saying what you saw.
 4. Run Step A, Step B, and Step D from the check routine. Write the real result in the Results log. Expect the known flake (`knight charge`) to fail sometimes. That is fine here.
 5. Do not commit anything else in this task unless you changed the Results log.
 
-## Task 1 [ ]: Fix the flaky charge test
+## Task 1 [x]: Fix the flaky charge test
 
 Why: the suite waits in real milliseconds, but the headless game clock runs slower. The check reads the player before the charge has set its speed.
 
@@ -97,7 +97,7 @@ Why: the suite waits in real milliseconds, but the headless game clock runs slow
 6. Run only that check many times, if the suite file supports a filter (search the top of `suite.js` for `process.argv`). If there is no filter, run the full suite twice. The charge check must pass both times.
 7. Commit as `T1: make charge check wait on game clock, not wall clock`. This task changes only the test, so the HTML rebuild will produce no diff; that is fine.
 
-## Task 2 [ ]: Fix invisible archer (idle and walk frame counts)
+## Task 2 [x]: Fix invisible archer (idle and walk frame counts)
 
 Why: the idle row has 2 frames and the walk row has 9, but the code uses 4 and 6, so the sprite is drawn from empty cells half the time.
 

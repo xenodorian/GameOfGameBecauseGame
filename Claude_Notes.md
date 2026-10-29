@@ -112,8 +112,11 @@ Single condensed record of the project. It replaces Current_Work.md, Expansion_P
 |---|---|---|---|---|
 | 2026-10-29 | 47287de | exit 0 | 49 passed per notes | LPC sprites |
 | 2026-10-29 | da962dc | exit 0 | 48 passed, 1 failed (charge flake) | review run |
+| 2026-10-29 | b76b0cd (Task 0) | exit 0 | 49 passed, 0 failed | baseline, before Tasks 1 and 2 |
+| 2026-10-29 | with T1 and T2 | exit 0 | 50 passed, 0 failed | charge check waits on game clock; archer frame check added; archer frames use ANIM_ROWS. Archer not in shot l3_mid (off screen), per-enemy shots come in Task 10 |
 
 ## 8. Decisions log (agents append one line per decision)
+- Tasks 1 and 2 were validated in one suite run (they touch different files) and committed together. Deviation from one task per commit.
 
 - Spec deviations accepted: see section 5.
 - LPC sheets were composed in Python (not the generator's own code) because the generator's npm install was blocked by the auto-mode classifier.
