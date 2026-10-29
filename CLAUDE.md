@@ -112,7 +112,7 @@ Where it is used:
 - Accepted spec deviations: weaver-only secret is in level 7, not levels 2 or 6. Exit zone is 4 tiles tall. The level 2 keyboard-bot check was dropped.
 
 Open work:
-- Art: weapons are partial. Sword (knight): idle and walk only. Bow (ranger): shoot and hurt only (no bow in idle or walk). Staff (mage): walk, thrust, spellcast, hurt. Each weapon hides on animations it lacks. Knight shield hides on slash and thrust. Zombie walks instead of jumping; skeleton idles instead of jumping. Layer z-order in `build_lpc.py` is hard-coded (knight shield background 3, definitions say 6; harmless).
+- Art: knight sword on all rows except spellcast and shoot. Bows (ranger, weaver, archer) on idle, walk, jump, shoot, hurt. Staff (mage): walk, thrust, spellcast, hurt; still hidden on slash and shoot (no LPC frames). Knight shield hides on slash and thrust. Zombie walks instead of jumping; skeleton idles instead of jumping. Layer z-order in `build_lpc.py` is hard-coded (knight shield background 3, definitions say 6; harmless).
 - Behavior: the warlord spawn overlaps the arena platform, so horizontal movement snaps it to the tile edge (not fixed; tests place it in open air). The level banner covers the top of sprites for the first 2.5 s (by design).
 - Not tested: real devices, other browsers, sound quality. Gamepad and touch are only simulated.
 - Test notes: `input: Left and Right together stand still` reads its reference position after both keys are held. `boss: a hit knocks the warlord back` steps the warlord update directly. `ability: knight charge (S) dashes` waits on the game clock.
@@ -168,4 +168,5 @@ Open work:
   - c_knight_ab3.png: OK. Blue white slash arc in front of the knight.
   - c_weaver_ab1.png: OK. Pale green glint on the arrow tip.
   - c_ranger_ab1.png: Arrow shaft visible; no distinct glow seen in this frame. The release flare is short, so it may have ended before the shot. Not fixed (V6 says no fixes).
+- Weapon visual check (X10): knight OK, sword reads on walk, idle, slash, thrust and jump. Ranger OK, bow on walk, shoot and hurt; slash and thrust hidden as planned. Archer OK, bow intact on walk and shoot, not cut at the cell edge, so the X9 archer rule was not triggered.
 - Last visual check (T10): every screenshot OK. Known cosmetic: the level banner covers a sprite top in l1_mid, l5_mid, l7_mid. l4_mid shows the selection screen because the capture dropped the player in a pit.

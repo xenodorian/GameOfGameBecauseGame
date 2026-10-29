@@ -126,7 +126,7 @@ Decision (rule 3): the user asked for all characters, so enemies get a walk-pose
 - `archer`: add the two bow layers the ranger uses.
 Rebuild sheets and run `check_sheets.py`. Enemies draw from the small sheet, so a bow can be cut at the cell edge. In X10 look at the archer; if its bow is cut badly, remove the archer bow layers, rebuild, and log it. The X2 compare script will now show diffs for these three; that is expected, do not rerun it. Commit. Message `X9: warlord sword, grunt dagger, archer bow`.
 
-## X10 [ ]: Visual check at sprite scale (W11)
+## X10 [x]: Visual check at sprite scale (W11)
 
 1. Make a contact sheet (scratch script, not committed): for each of the 5 big sheets and the 3 armed enemy small sheets, paste rows walk, slash, thrust, shoot, jump, scaled 2x with `Image.NEAREST`, into one PNG per character in `game/tests/shots/` (git-ignored). Limit each to 1600 px wide.
 2. Read only `knight` and `ranger` sheets plus the `archer` one. Write one line each under `CLAUDE.md` section 10 `Weapon visual check (X10):`. Say OK or what looks wrong. Do not fix anything here except the X9 archer rule.
