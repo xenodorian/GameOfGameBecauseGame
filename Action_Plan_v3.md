@@ -95,7 +95,7 @@ File: `game/tools/build_lpc.py`.
    - Flare: `Effects.flare(cx + 22 * p.facing, p.y + 8, ...)` keeping the ramp argument.
 3. Check routine A to C. Commit. Message `X5: arrows spawn at the bow, shoot plays its release`.
 
-## X6 [ ]: Smoother walk and jump (A4, A5)
+## X6 [x]: Smoother walk and jump (A4, A5)
 
 1. `game/src/anim.js` `pickFrame`:
    - Walk: `col: 1 + Math.floor(body.walkDist / 6) % (ANIM_ROWS.walk[1] - 1)`.

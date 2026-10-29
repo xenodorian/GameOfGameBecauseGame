@@ -166,7 +166,7 @@ class Enemy {
     let frame;
     if (this.hurtT > 0) frame = { row: ANIM_ROWS.hurt[0], col: 0 };
     else if (this.def.idle) frame = { row: ANIM_ROWS.idle[0], col: Math.floor(this.animT * 3) % ANIM_ROWS.idle[1] };
-    else frame = { row: ANIM_ROWS.walk[0], col: Math.floor(this.animT * 6) % ANIM_ROWS.walk[1] };
+    else frame = { row: ANIM_ROWS.walk[0], col: 1 + Math.floor(this.animT * 6) % (ANIM_ROWS.walk[1] - 1) };
     const sheet = IMG["lpc_" + this.kind];
     ctx.save();
     if (this.dir < 0) {

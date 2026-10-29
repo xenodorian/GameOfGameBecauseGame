@@ -53,9 +53,9 @@ function pickFrame(body, time) {
     const col = first + Math.min(n - 1, Math.floor(body.animT / (ACTION_LENGTH[body.action] / n)));
     return { row, col };
   }
-  if (!body.grounded) return { row: ANIM_ROWS.jump[0], col: body.vy < 0 ? 0 : 1 };
+  if (!body.grounded) return { row: ANIM_ROWS.jump[0], col: body.vy < -120 ? 1 : body.vy < 120 ? 2 : 3 };
   if (body.landT > 0) return { row: ANIM_ROWS.idle[0], col: 0 };
-  if (Math.abs(body.vx) > 1) return { row: ANIM_ROWS.walk[0], col: Math.floor(body.walkDist / 6) % ANIM_ROWS.walk[1] };
+  if (Math.abs(body.vx) > 1) return { row: ANIM_ROWS.walk[0], col: 1 + Math.floor(body.walkDist / 6) % (ANIM_ROWS.walk[1] - 1) };
   return { row: ANIM_ROWS.idle[0], col: Math.floor(time * 2) % ANIM_ROWS.idle[1] };
 }
 
