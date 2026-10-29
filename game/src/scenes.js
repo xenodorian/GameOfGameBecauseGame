@@ -100,7 +100,10 @@ class TitleScene {
   update() {
     this.sel = menuStep(this.sel, this.items.length);
     if (menuConfirm()) {
-      if (this.sel === 0) Engine.setScene(new PlayScene());
+      if (this.sel === 0) {
+        Hand.reset();
+        Engine.setScene(new PlayScene());
+      }
       if (this.sel === 1) Engine.setScene(new InputTestScene());
       if (this.sel === 2) Engine.setScene(new CreditsScene());
     }
@@ -112,6 +115,25 @@ class TitleScene {
 }
 
 // Credits: sources and licenses for the art and code.
+// Ending screen. Shown after the last level. Text is filled in by task F2.
+class EndingScene {
+  update() {
+    if (menuConfirm()) Engine.setScene(new CreditsScene());
+  }
+
+  draw(ctx) {
+    ctx.fillStyle = "#1b2430";
+    ctx.fillRect(0, 0, Engine.W, Engine.H);
+    ctx.fillStyle = "#e8e4d8";
+    ctx.textAlign = "center";
+    ctx.font = "18px system-ui, sans-serif";
+    ctx.fillText("The end", Engine.W / 2, 110);
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.fillText("Enter: credits", Engine.W / 2, 140);
+    ctx.textAlign = "left";
+  }
+}
+
 class CreditsScene {
   update() {
     if (menuBack() || menuConfirm()) Engine.setScene(new TitleScene());
@@ -162,7 +184,9 @@ function drawHills(ctx, scrollX, color, baseY, freq, amp) {
 //   complete     the exit flag was reached
 //   pause        the pause menu: resume or back to title
 class PlayScene {
-  constructor() {
+  constructor(levelIndex = 0, active = "knight") {
+    World.load(levelIndex);
+    Attacks.reset();
     this.images = {
       knight: IMG.knight_right,
       ranger_right: IMG.ranger_right,
@@ -176,7 +200,7 @@ class PlayScene {
       tree: IMG.tree,
     };
     this.cam = { x: 0, y: 0 };
-    this.active = "knight";
+    this.active = active;
     this.mode = "play";
     this.reason = "";
     this.sel = 0;
@@ -199,7 +223,10 @@ class PlayScene {
     if (this.mode === "select") this.updateSelect();
     else if (this.mode === "discardCard") this.updateDiscardCard();
     else if (this.mode === "complete") {
-      if (Input.pressed("start")) Engine.setScene(new PlayScene());
+      if (Input.pressed("start")) {
+        const more = World.index + 1 < World.count;
+        Engine.setScene(more ? new PlayScene(World.index + 1, this.active) : new EndingScene());
+      }
     } else if (this.mode === "pause") this.updatePause();
     else this.updatePlay(dt);
   }
@@ -479,7 +506,8 @@ class PlayScene {
       ctx.font = "16px system-ui, sans-serif";
       ctx.fillText("Level complete", Engine.W / 2, 110);
       ctx.font = "11px system-ui, sans-serif";
-      ctx.fillText("Press Enter or Start to play again.", Engine.W / 2, 132);
+      const more = World.index + 1 < World.count;
+      ctx.fillText(more ? "Enter: next level" : "Enter: continue", Engine.W / 2, 132);
       ctx.textAlign = "left";
     } else if (this.mode === "discardCard") {
       HUD.draw(ctx, this.sel);

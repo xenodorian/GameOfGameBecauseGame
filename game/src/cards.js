@@ -38,10 +38,17 @@ const Hand = (() => {
     return cardId;
   }
 
+  // Empties the hand and the deck. Called when a new game starts.
+  function reset() {
+    hand.fill(null);
+    deck.length = 0;
+  }
+
   return {
     SLOTS,
     collect,
     discard,
+    reset,
     get: (slot) => hand[slot],
     slots: () => hand.slice(),
     deckCount: () => deck.length,

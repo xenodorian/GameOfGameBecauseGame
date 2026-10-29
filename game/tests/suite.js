@@ -15,6 +15,7 @@ function check(name, fn) { checks.push({ name, fn }); }
 
 async function newPage(browser) {
   const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
+  await page.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
   page.errors = [];
   page.on('pageerror', (e) => page.errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') page.errors.push(m.text()); });
@@ -295,7 +296,29 @@ check('exit: reaching the flag shows level complete; Enter replays', async (brow
   await wait(page, 100);
   assert.equal(await page.evaluate(() => __scene.mode), 'complete');
   await page.keyboard.press('Enter'); await wait(page, 100);
-  assert.equal(await page.evaluate(() => Engine.current().mode), 'play');
+  const next = await page.evaluate(() => ({ count: World.count, index: World.index, scene: Engine.current().constructor.name }));
+  if (next.count > 1) assert.equal(next.index, 1);
+  else assert.equal(next.scene, 'EndingScene');
+  await page.close();
+});
+
+check('levels: every level loads, has a spawn and an exit, and completing it moves on', async (browser) => {
+  const page = await newPage(browser);
+  await page.keyboard.press('Enter'); await wait(page, 120);
+  const count = await page.evaluate(() => World.count);
+  for (let i = 0; i < count; i++) {
+    await page.evaluate((idx) => {
+      window.__scene = new PlayScene(idx); Engine.setScene(window.__scene);
+      const f = World.exit(); __scene.player.x = f.x; __scene.player.y = f.y;
+    }, i);
+    await wait(page, 100);
+    assert.equal(await page.evaluate(() => __scene.mode), 'complete', 'level ' + (i + 1));
+    await page.keyboard.press('Enter'); await wait(page, 100);
+    const after = await page.evaluate(() => ({ index: World.index, scene: Engine.current().constructor.name }));
+    if (i + 1 < count) assert.equal(after.index, i + 1);
+    else assert.equal(after.scene, 'EndingScene');
+  }
+  assert.deepEqual(page.errors, []);
   await page.close();
 });
 
