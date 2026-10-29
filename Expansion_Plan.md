@@ -211,7 +211,7 @@ Check: `python3 game/tools/validate_gates.py` exits 0. `--show 1` and `--map 1 b
 
 ## Phase C: Two new characters and the ability bar
 
-### [~] C1: Card defs and drops (build and gates pass; suite run pending)
+### [~] C1: Card defs and drops (added rat and weaver entries to CHARACTERS so their cards are playable; suite re-run pending)
 1. `CARD_DEFS` gets `rat: { name: "Rat", color: "#a0826d" }` and `weaver: { name: "Bone Weaver", color: "#d8d2c0" }`.
 2. `ENEMY_DEFS`: `rat_king.card = "rat"`, `archer.card = "weaver"`. Grunt and revenant stay.
 3. Every place that picks a random card must pick from all keys of `CARD_DEFS`. Search for `Math.random() * 3` and for `"random"` in `enemies.js` and `scenes.js` and fix each one to use `Object.keys(CARD_DEFS).length`.
@@ -394,3 +394,4 @@ Keep "Greenwood Road" geometry. Put four `i` tiles on air tiles of row 13 (the r
 (Executor agents add one line per decision here: task id, what was unclear, what was chosen.)
 
 - Opus: exit zone stays 4 tiles tall (jumping over the flag completes the level).
+- C1: a rat or weaver card could be selected before C2/C3 existed, which left the active character undefined and froze play. Added their CHARACTERS entries (C2/C3 step 1) with unimplemented ability ids that do nothing.
