@@ -36,7 +36,7 @@ new_string:
 ```
 Then run `node --check game/tests/suite.js`. It must print nothing.
 
-## V1 [ ]: Test that the beam hits two enemies
+## V1 [x]: Test that the beam hits two enemies
 
 File: `game/tests/suite.js`. Edit:
 

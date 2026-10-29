@@ -246,6 +246,17 @@ const abilities = [
     check: (p) => p.evaluate(() => __g.dead), want: true,
   },
   {
+    name: 'mage beam (A) hits two grunts in a row', who: 'mage', key: 'KeyA', wait: 400,
+    setup: (p) => p.evaluate(() => {
+      const a = new Enemy('grunt', 900, 256);
+      const b = new Enemy('grunt', 950, 256);
+      for (const g of [a, b]) { g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 }; Enemies.list().push(g); }
+      window.__g = a; window.__g2 = b;
+      __scene.player.x = 860; __scene.player.y = 256; __scene.player.facing = 1;
+    }),
+    check: (p) => p.evaluate(() => __g.dead && __g2.dead), want: true,
+  },
+  {
     name: 'mage float (S) hovers while Up is held', who: 'mage', key: 'KeyS', wait: 300, hold: 'ArrowUp',
     setup: (p) => placeAt(p, 200, 40),
     check: (p) => p.evaluate(() => __scene.player.vy), want: -120,
