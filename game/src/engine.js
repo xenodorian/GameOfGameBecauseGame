@@ -53,5 +53,5 @@ const Engine = (() => {
     requestAnimationFrame(frame);
   }
 
-  return { W, H, STEP, start, setScene, resize };
+  return { W, H, STEP, start, setScene, resize, current: () => scene };
 })();

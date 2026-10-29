@@ -7,6 +7,9 @@ const TILE = 32;
 //   _  one-way platform (solid only when landing from above)
 //   T  tree (decor, no collision)
 //   S  player spawn (drawn as empty)
+//   g  goblin grunt spawn (drawn as empty)
+//   m  mud revenant spawn (drawn as empty)
+//   F  level exit flag (drawn as a pole and flag)
 //   .  empty air
 const LEVEL_ROWS = [
   "........................................................................",
@@ -17,23 +20,30 @@ const LEVEL_ROWS = [
   "..S........................#...........................TTT..............",
   "..=====...........____.....#...........................###..............",
   "..........................................####..........................",
-  "..............TTT.........................................###...........",
-  "=========.....==========.............#####......................=====...",
+  "..............TTT...g.....................................###.....F.....",
+  "=========.....==========.............#####........m.............=====...",
   "============================................................============",
   "########################################################################",
 ];
 
 const World = (() => {
   const tiles = LEVEL_ROWS.map((row) => row.split(""));
+  // Temporary one-way platforms made in play (arrow anchor rope). Each has a life in seconds.
+  const platforms = [];
   const rows = tiles.length;
   const cols = tiles[0].length;
   const width = cols * TILE;
   const height = rows * TILE;
 
   let spawn = { x: 0, y: 0 };
+  const enemySpawns = [];
+  const MARKERS = { g: "grunt", m: "mud_revenant" };
+  let exit = null;
   tiles.forEach((row, ty) =>
     row.forEach((ch, tx) => {
       if (ch === "S") spawn = { x: tx * TILE, y: ty * TILE };
+      if (ch === "F") exit = { x: tx * TILE, y: ty * TILE, w: TILE, h: TILE };
+      if (MARKERS[ch]) enemySpawns.push({ kind: MARKERS[ch], x: tx * TILE, y: ty * TILE });
     })
   );
 
@@ -48,6 +58,12 @@ const World = (() => {
 
   function isOneWay(ch) {
     return ch === "_";
+  }
+
+  // True when the point sits on a tile that can hold up a body.
+  function isStandable(x, y) {
+    const ch = at(Math.floor(x / TILE), Math.floor(y / TILE));
+    return isSolid(ch) || isOneWay(ch);
   }
 
   // Tile cells the box overlaps. Callers pick which kinds they care about.
@@ -97,6 +113,76 @@ const World = (() => {
         e.grounded = true;
       }
     }
+    for (const pl of platforms) {
+      const overlapX = e.x + e.w > pl.x && e.x < pl.x + pl.w;
+      if (overlapX && e.vy >= 0 && prevBottom <= pl.y + 0.5 && e.y + e.h >= pl.y) {
+        e.y = pl.y - e.h;
+        e.vy = 0;
+        e.grounded = true;
+      }
+    }
+  }
+
+  function addPlatform(pl) {
+    platforms.push(pl);
+  }
+
+  function updatePlatforms(dt) {
+    for (let i = platforms.length - 1; i >= 0; i--) {
+      platforms[i].life -= dt;
+      if (platforms[i].life <= 0) platforms.splice(i, 1);
+    }
+  }
+
+  function drawPlatforms(ctx, camX, camY) {
+    for (const pl of platforms) {
+      // Rope: a brown line with posts at both ends.
+      ctx.fillStyle = "#7a5230";
+      ctx.fillRect(Math.round(pl.x - camX), Math.round(pl.y - camY), pl.w, 3);
+      ctx.fillRect(Math.round(pl.x - camX), Math.round(pl.y - camY), 3, pl.h + 6);
+      ctx.fillRect(Math.round(pl.x + pl.w - camX - 3), Math.round(pl.y - camY), 3, pl.h + 6);
+    }
+  }
+
+  // Closest safe spot to (x, y) for a body of size w by h. A safe spot is a
+  // standable tile with a clear 2 by 3 tile area above it, and no enemy
+  // within 3 tiles. Searches up to 20 tiles out. Falls back to the spawn.
+  function closestSafeSpace(x, y, w, h, enemies) {
+    const cx = Math.min(cols - 1, Math.max(0, Math.floor((x + w / 2) / TILE)));
+    const cy = Math.min(rows - 1, Math.max(0, Math.floor((y + h) / TILE)));
+    const free = (ch) => !isSolid(ch) && !isOneWay(ch);
+    let best = null;
+    let bestDist = Infinity;
+
+    for (let ty = cy - 20; ty <= cy + 20; ty++) {
+      for (let tx = cx - 20; tx <= cx + 20; tx++) {
+        const ground = at(tx, ty);
+        if (!(isSolid(ground) || isOneWay(ground))) continue;
+        let clear = true;
+        for (let dy = 1; dy <= 3 && clear; dy++) {
+          for (let dx = 0; dx <= 1 && clear; dx++) {
+            clear = free(at(tx + dx, ty - dy));
+          }
+        }
+        if (!clear) continue;
+
+        const sx = tx * TILE + (TILE - w) / 2;
+        const sy = ty * TILE - h;
+        const near = enemies.some(
+          (e) =>
+            !e.dead &&
+            Math.hypot(sx + w / 2 - (e.x + e.w / 2), sy + h / 2 - (e.y + e.h / 2)) < 3 * TILE
+        );
+        if (near) continue;
+
+        const dist = Math.hypot(sx - x, sy - y);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = { x: sx, y: sy };
+        }
+      }
+    }
+    return best || { x: spawn.x, y: spawn.y };
   }
 
   function draw(ctx, images, camX, camY, viewW, viewH) {
@@ -123,5 +209,24 @@ const World = (() => {
     }
   }
 
-  return { TILE, width, height, cols, rows, spawn, at, moveBody, draw, overlapping };
+  return {
+    TILE,
+    width,
+    height,
+    cols,
+    rows,
+    spawn,
+    exit: () => exit,
+    enemySpawns,
+    at,
+    isStandable,
+    moveBody,
+    closestSafeSpace,
+    addPlatform,
+    updatePlatforms,
+    drawPlatforms,
+    platforms,
+    draw,
+    overlapping,
+  };
 })();

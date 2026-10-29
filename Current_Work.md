@@ -72,11 +72,18 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
 
 ## Build status (updated this session)
 
-- Playable slice: `game/changeling.html` (one file, rebuild with `python3 game/tools/build_single_html.py`). Source is in `game/src/`.
-- Phases 0 to 2 are done or partly done (see the checklist). Phases 3 to 9 are not started.
-- Test: headless Chromium (Playwright) loads the file with no console errors, shows the input test, opens the play slice with Enter, walks right, jumps, and lands on the ground tile. Portrait overlay turns on at phone portrait size.
-- Not yet tested: gamepad, touch buttons, full screen, Firefox, Safari, Android, and the one-way platform.
-- Known gap: `Phase 2` parallax is missing. Gameplay cards, abilities, and the level content are next.
+- Playable build: `game/changeling.html` (one file). Rebuild with `python3 game/tools/build_single_html.py`. Source is in `game/src/`.
+- Browser tests (Playwright, headless Chromium) are in `game/tests/`. Run each with `node game/tests/<name>.js` from a folder where Playwright is installed (`NODE_PATH` set to the global npm root).
+- Done or partly done: Phases 0 to 5. Phase 4 has all 12 abilities coded but not every effect is tested. Phase 6 has the exit and level-complete screen only. Phases 7 to 9 are mostly open.
+- Open items for the next session: secret areas and their gates, the gate validation tool, the title and pause screens, the credits screen, a real-device pass (gamepad, phone, iOS full screen), and LPC attack sheets and mage art.
+- Judgment calls made without the user (record for review):
+  - A stomp defeats enemies until the abilities arrived. It is still active alongside them.
+  - Death and discard both open the card selection. The chosen card leaves the hand. The dead or discarded character is lost. An empty hand returns the Knight.
+  - Enemies and pickups persist across deaths. Only the player respawns.
+  - Discard-card mode pauses the game. X or B cancels.
+  - Hold Down 0.5 s, or press Q, discards the current character. A quick Down tap or C opens discard-card mode.
+  - Deck refills a freed hand slot from the top of the deck.
+  - The mage uses the Knight sprite as placeholder art.
 
 ## Build workflow (task list)
 
@@ -101,45 +108,45 @@ Status key: [ ] not started, [~] in progress, [x] done.
 - [~] Tile render using DCSS tiles (walls, grass, dirt, trees). Background parallax from method_5 is not done yet.
 
 ### Phase 3: Enemies and cards
-- [ ] Basic enemy AI (patrol, chase in range, attack).
-- [ ] Enemy defeat drops a card. Card is a pickup that flies to the nearest free hand slot or the deck.
-- [ ] Hand (3 slots) and deck (random order, count only) with the fill rules.
-- [ ] Hand HUD and deck count HUD.
+- [x] Basic enemy AI: patrol with turns at walls and ledges, chase within sight, contact hurts the player, stun from shield bash.
+- [x] Enemy defeat drops a card. Stomp, melee, and arrow hits defeat enemies. The card pickup falls with gravity and flies into the hand or deck when touched. Provisional: stomp works from Phase 3 until the abilities arrive.
+- [x] Hand (3 slots) and deck (random order, count only). Verified: 3 fill, then the deck takes the rest at random positions; a freed slot refills from the top of the deck.
+- [x] Hand HUD and deck count HUD.
 
 ### Phase 4: Characters and abilities
-- [ ] Character data format: sprite sheet paths, stats, the four abilities, and their input bindings.
-- [ ] Knight, Ranger, and Mage implemented with all four abilities each.
-- [ ] Ability effects use the LPC attack sheets for animation timing (slash, thrust, shoot, spellcast).
-- [ ] Verify each LPC layer for each character renders correctly. Mage robe layers must be checked first.
-- [ ] Character switch: the active character changes to a card from the hand when the player chooses to swap, or after death.
+- [x] Character data format: `CHARACTERS` in `game/src/abilities.js` (sprite key, four ability ids).
+- [~] Knight, Ranger, and Mage implemented with all four abilities each. All 12 abilities are coded. Verified in headless Chromium: slash, shield bash, charge, shoot, arrow anchor (stand on the rope), hop, blink, float. Thrust and spell bolt share the code paths of slash and shoot but are not separately tested. Mage uses the Knight sprite as placeholder art.
+- [ ] Ability effects use the LPC attack sheets for animation timing. Not done: abilities currently draw simple hitboxes and bolts.
+- [ ] Verify each LPC layer for each character renders correctly. Not done: no mage art yet. The Ranger uses the Sprite Foundry 48px sprite, not LPC layers.
+- [~] Character switch. Implemented as the selection after a death or discard. A voluntary swap during play is not implemented, because the design doc does not say what happens to the character being swapped out.
 
 ### Phase 5: Death, respawn, and discard
-- [ ] Death screen with 3 hand cards, left and right selection, confirm with Z or A.
-- [ ] Respawn uses the closest safe space rule (see Decisions).
-- [ ] Discard current character (Q or Down held).
-- [ ] Discard hand card (C toggle, Left and Right highlight, C confirm; Down on a gamepad).
+- [x] Death screen with 3 hand cards, left and right selection, confirm with Z or A. Verified in headless Chromium.
+- [x] Respawn uses the closest safe space rule. Verified: 300 random death points, zero failures (standable, 2x3 clear, no enemy within 3 tiles).
+- [x] Discard current character (Q, or hold Down 0.5 s). Verified in headless Chromium for Down. Q is wired but not separately tested. The discarded character goes to the selection screen.
+- [x] Discard hand card (C or quick Down tap to open, Left and Right to highlight, C or Down to confirm, X or B to cancel). Verified in headless Chromium.
 
 ### Phase 6: Level content
-- [ ] Main level: completable with any character, with no ability required.
-- [ ] Secret areas gated by ability. Each gate must be reachable by at least one character.
-- [ ] Power-ups and card pickups placed in secret areas and in the main level.
-- [ ] Gate validation tool: a script that checks every secret area is reachable with each gating ability.
+- [~] Main level: completable with any character. The exit flag and level-complete screen work and are verified. The route from spawn to exit is walkable by reading the layout, but no test has walked the full route yet.
+- [ ] Secret areas gated by ability. Not started.
+- [ ] Power-ups and card pickups placed in secret areas and in the main level. Not started.
+- [ ] Gate validation tool. Not started.
 
 ### Phase 7: Screens and polish
-- [ ] Title screen, pause menu, game over, level complete.
-- [ ] Credits screen listing the LPC, DCSS, and Sprite Foundry licenses and authors.
+- [ ] Title screen, pause menu, game over, level complete. Level complete is done. The input test screen is the only title for now. No pause or game over yet.
+- [ ] Credits screen listing the LPC, DCSS, and Sprite Foundry licenses and authors. Not started. Licenses are in the asset folders.
 - [ ] Sound is out of scope unless added later.
 
 ### Phase 8: Testing
-- [ ] Keyboard-only playthrough of the main level with each character.
-- [ ] Gamepad-only playthrough with the d-pad and A, B, X, Y.
-- [ ] Mobile test in landscape: touch controls, full screen toggle, portrait overlay.
-- [ ] Respawn test: 100 random deaths, each lands in a safe space.
-- [ ] Gate validation passes.
+- [ ] Keyboard-only playthrough of the main level with each character. Not done: needs a full route test.
+- [~] Gamepad-only playthrough. Simulated (stubbed Gamepad API): d-pad moves, A triggers ability 3. Not tested on a real pad.
+- [~] Mobile test in landscape. Simulated touch in phone-sized landscape: touch right moves, touch jump jumps. Portrait overlay shows. Not tested on a real phone.
+- [~] Respawn test: 300 random points checked (see above). The 100-death run is covered by that check.
+- [ ] Gate validation passes. Depends on the gate validation tool.
 
 ### Phase 9: Release
-- [ ] Final single HTML file under a size target (aim for under 20 MB).
-- [ ] Upload to the repo under `game/`, and a link in `README.md`.
+- [x] Final single HTML file under a size target. `game/changeling.html` is about 77 KB, well under 20 MB.
+- [~] Upload to the repo under `game/`. Done. Link in `README.md` added.
 
 ---
 

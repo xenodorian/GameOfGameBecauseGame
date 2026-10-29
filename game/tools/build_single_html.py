@@ -17,16 +17,19 @@ ASSETS = GAME / "assets"
 OUT = GAME / "changeling.html"
 
 # Load order matters. Each file may use the globals from the files above it.
-SCRIPTS = ["engine.js", "input.js", "world.js", "scenes.js", "main.js"]
+SCRIPTS = ["engine.js", "input.js", "world.js", "cards.js", "enemies.js", "abilities.js", "scenes.js", "main.js"]
 
 # Asset key -> file under game/assets. Keys are what the JS asks for.
 IMAGES = {
     "knight_right": "sprites/knight_right.png",
     "knight_front": "sprites/knight_front.png",
+    "ranger_right": "sprites/ranger_right.png",
     "wall": "tiles/brick_brown0.png",
     "grass": "tiles/grass0.png",
     "dirt": "tiles/grey_dirt0.png",
     "tree": "tiles/tree1.png",
+    "grunt": "enemies/grunt_right.png",
+    "mud_revenant": "enemies/mud_revenant_right.png",
 }
 
 MIME = {".png": "image/png", ".jpg": "image/jpeg", ".gif": "image/gif"}
