@@ -157,4 +157,9 @@ Open work:
 - Sandbox network: PyPI, npm, GitHub reachable. `huggingface.co`, `kenney.nl`, `opengameart.org`, itch.io, Wikimedia, Archive.org, jsDelivr, unpkg blocked.
 - Python 3 with Pillow, Node 22, Playwright with Chromium (`NODE_PATH=$(npm root -g)`).
 - Licenses: LPC sheets OGA-BY 3.0, CC-BY-SA 3.0, or GPL 3.0 per asset (`game/assets/lpc/CREDITS.txt`). DCSS tiles mostly CC0, per-tile licenses not checked; confirm before commercial release. Pixelify Sans OFL 1.1.
+- Effects visual check (V6):
+  - c_mage_ab1.png: OK. Violet beam from the staff tip.
+  - c_knight_ab3.png: OK. Blue white slash arc in front of the knight.
+  - c_weaver_ab1.png: OK. Pale green glint on the arrow tip.
+  - c_ranger_ab1.png: Arrow shaft visible; no distinct glow seen in this frame. The release flare is short, so it may have ended before the shot. Not fixed (V6 says no fixes).
 - Last visual check (T10): every screenshot OK. Known cosmetic: the level banner covers a sprite top in l1_mid, l5_mid, l7_mid. l4_mid shows the selection screen because the capture dropped the player in a pit.

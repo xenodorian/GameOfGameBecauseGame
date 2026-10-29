@@ -133,7 +133,7 @@ new_string:
 ```
 Then check routine steps A to C.
 
-## V6 [ ]: Visual check
+## V6 [x]: Visual check
 
 No code change.
 
