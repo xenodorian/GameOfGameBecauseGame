@@ -506,6 +506,25 @@ check('spikes: touching spikes opens the selection', async (browser) => {
   await page.close();
 });
 
+check('cracked wall: knight shield bash breaks it', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [] });
+  await page.evaluate(() => {
+    const tx = Math.floor((__scene.player.x + __scene.player.w) / World.TILE) + 1;
+    const ty = Math.floor((__scene.player.y + __scene.player.h) / World.TILE) - 1;
+    World.setTile(tx, ty, 'x');
+    window.__crack = { tx, ty };
+    __scene.player.x = (tx - 1) * World.TILE + 6; __scene.player.y = ty * World.TILE - 30 + 2; __scene.player.vy = 0;
+    __scene.player.facing = 1;
+  });
+  await page.keyboard.press('KeyA');
+  await wait(page, 120);
+  const ch = await page.evaluate(() => World.at(__crack.tx, __crack.ty));
+  assert.equal(ch, '.');
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 check('gates: validate_gates.py exits 0', async () => {
   execFileSync('python3', [path.join(GAME, 'tools', 'validate_gates.py')], { stdio: 'pipe' });
 });

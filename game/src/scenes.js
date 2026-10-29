@@ -275,6 +275,8 @@ class PlayScene {
       p.vy = Math.min(p.vy + 900 * dt, 600);
     }
     const prevBottom = p.y + p.h;
+    // A charge breaks cracked walls it runs into.
+    if (this.dashT > 0) World.breakCracked(p.facing > 0 ? p.x + p.w : p.x - 6, p.y, 6, p.h);
     World.moveBody(p, dt);
     // Spikes are deadly: the bottom of the body touching one opens the selection.
     if (World.overlapping(p.x + 2, p.y + p.h - 8, p.w - 4, 8).some((c) => c.ch === "^")) {

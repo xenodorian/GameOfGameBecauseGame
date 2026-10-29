@@ -425,6 +425,7 @@ const TILE = 32;
 //   k  card pickup on the main route (not a secret)
 //   p  power-up on the ground (draws a random card into hand or deck)
 //   ^  spikes (not solid; touching them is deadly)
+//   x  cracked wall (solid; broken by the knight's shield bash or charge)
 //   .  empty air
 const World = (() => {
   let index = 0;
@@ -483,7 +484,19 @@ const World = (() => {
   }
 
   function isSolid(ch) {
-    return ch === "#" || ch === "=";
+    return ch === "#" || ch === "=" || ch === "x";
+  }
+
+  // Breaks every cracked wall the box touches. Returns true if any broke.
+  function breakCracked(x, y, w, h) {
+    let broke = false;
+    for (const c of overlapping(x, y, w, h)) {
+      if (c.ch === "x") {
+        setTile(c.tx, c.ty, ".");
+        broke = true;
+      }
+    }
+    return broke;
   }
 
   function isOneWay(ch) {
@@ -619,6 +632,20 @@ const World = (() => {
     return best || { x: spawn.x, y: spawn.y };
   }
 
+  // A wall tile with dark zigzag cracks across it.
+  function drawCracked(ctx, wallImg, px, py) {
+    ctx.drawImage(wallImg, px, py, TILE, TILE);
+    ctx.strokeStyle = "#2a1d14";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px + 2, py + 4);
+    ctx.lineTo(px + 12, py + 12);
+    ctx.lineTo(px + 8, py + 20);
+    ctx.lineTo(px + 22, py + 28);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+  }
+
   // Three grey spikes standing on the bottom edge of the tile.
   function drawSpikes(ctx, px, py) {
     ctx.fillStyle = "#9aa0a8";
@@ -648,6 +675,7 @@ const World = (() => {
         const px = Math.round(tx * TILE - camX);
         const py = Math.round(ty * TILE - camY);
         if (ch === "#") ctx.drawImage(images.wall, px, py, TILE, TILE);
+        else if (ch === "x") drawCracked(ctx, images.wall, px, py);
         else if (ch === "=") {
           ctx.drawImage(images.dirt, px, py, TILE, TILE);
           ctx.drawImage(images.grass, px, py, TILE, TILE);
@@ -678,7 +706,9 @@ const World = (() => {
     exit: () => exit,
     at,
     setTile,
+    isSolid,
     isStandable,
+    breakCracked,
     moveBody,
     closestSafeSpace,
     addPlatform,
@@ -1089,7 +1119,7 @@ const Attacks = (() => {
       const nx = p.x + p.facing * dist;
       const clear = World.overlapping(nx, p.y, p.w, p.h).every((c) => {
         const ch = c.ch;
-        return !(ch === "#" || ch === "=");
+        return !World.isSolid(ch);
       });
       if (clear) {
         p.x = Math.max(0, Math.min(nx, World.width - p.w));
@@ -1101,6 +1131,7 @@ const Attacks = (() => {
   function update(dt) {
     for (const hb of hitboxes) {
       hb.t -= dt;
+      if (hb.kind === "bash") World.breakCracked(hb.x, hb.y, hb.w, hb.h);
       Enemies.list().forEach((e) => {
         if (e.dead || !overlaps(hb, e)) return;
         if (hb.stun) e.stunT = hb.stun;
@@ -1114,7 +1145,7 @@ const Attacks = (() => {
     for (const q of projectiles) {
       q.life -= dt;
       q.x += q.vx * dt;
-      if (World.overlapping(q.x, q.y, q.w, q.h).some((c) => c.ch === "#" || c.ch === "=")) q.life = 0;
+      if (World.overlapping(q.x, q.y, q.w, q.h).some((c) => World.isSolid(c.ch))) q.life = 0;
       for (const e of Enemies.list()) {
         if (!e.dead && overlaps(q, e)) {
           Enemies.defeat(e);
@@ -1129,7 +1160,7 @@ const Attacks = (() => {
     for (const h of hostile) {
       h.life -= dt;
       h.x += h.vx * dt;
-      if (World.overlapping(h.x, h.y, h.w, h.h).some((c) => c.ch === "#" || c.ch === "=")) h.life = 0;
+      if (World.overlapping(h.x, h.y, h.w, h.h).some((c) => World.isSolid(c.ch))) h.life = 0;
     }
     for (let i = hostile.length - 1; i >= 0; i--) {
       if (hostile[i].life <= 0) hostile.splice(i, 1);
@@ -1453,6 +1484,8 @@ class PlayScene {
       p.vy = Math.min(p.vy + 900 * dt, 600);
     }
     const prevBottom = p.y + p.h;
+    // A charge breaks cracked walls it runs into.
+    if (this.dashT > 0) World.breakCracked(p.facing > 0 ? p.x + p.w : p.x - 6, p.y, 6, p.h);
     World.moveBody(p, dt);
     // Spikes are deadly: the bottom of the body touching one opens the selection.
     if (World.overlapping(p.x + 2, p.y + p.h - 8, p.w - 4, 8).some((c) => c.ch === "^")) {

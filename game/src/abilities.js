@@ -117,7 +117,7 @@ const Attacks = (() => {
       const nx = p.x + p.facing * dist;
       const clear = World.overlapping(nx, p.y, p.w, p.h).every((c) => {
         const ch = c.ch;
-        return !(ch === "#" || ch === "=");
+        return !World.isSolid(ch);
       });
       if (clear) {
         p.x = Math.max(0, Math.min(nx, World.width - p.w));
@@ -129,6 +129,7 @@ const Attacks = (() => {
   function update(dt) {
     for (const hb of hitboxes) {
       hb.t -= dt;
+      if (hb.kind === "bash") World.breakCracked(hb.x, hb.y, hb.w, hb.h);
       Enemies.list().forEach((e) => {
         if (e.dead || !overlaps(hb, e)) return;
         if (hb.stun) e.stunT = hb.stun;
@@ -142,7 +143,7 @@ const Attacks = (() => {
     for (const q of projectiles) {
       q.life -= dt;
       q.x += q.vx * dt;
-      if (World.overlapping(q.x, q.y, q.w, q.h).some((c) => c.ch === "#" || c.ch === "=")) q.life = 0;
+      if (World.overlapping(q.x, q.y, q.w, q.h).some((c) => World.isSolid(c.ch))) q.life = 0;
       for (const e of Enemies.list()) {
         if (!e.dead && overlaps(q, e)) {
           Enemies.defeat(e);
@@ -157,7 +158,7 @@ const Attacks = (() => {
     for (const h of hostile) {
       h.life -= dt;
       h.x += h.vx * dt;
-      if (World.overlapping(h.x, h.y, h.w, h.h).some((c) => c.ch === "#" || c.ch === "=")) h.life = 0;
+      if (World.overlapping(h.x, h.y, h.w, h.h).some((c) => World.isSolid(c.ch))) h.life = 0;
     }
     for (let i = hostile.length - 1; i >= 0; i--) {
       if (hostile[i].life <= 0) hostile.splice(i, 1);

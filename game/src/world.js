@@ -16,6 +16,7 @@ const TILE = 32;
 //   k  card pickup on the main route (not a secret)
 //   p  power-up on the ground (draws a random card into hand or deck)
 //   ^  spikes (not solid; touching them is deadly)
+//   x  cracked wall (solid; broken by the knight's shield bash or charge)
 //   .  empty air
 const World = (() => {
   let index = 0;
@@ -74,7 +75,19 @@ const World = (() => {
   }
 
   function isSolid(ch) {
-    return ch === "#" || ch === "=";
+    return ch === "#" || ch === "=" || ch === "x";
+  }
+
+  // Breaks every cracked wall the box touches. Returns true if any broke.
+  function breakCracked(x, y, w, h) {
+    let broke = false;
+    for (const c of overlapping(x, y, w, h)) {
+      if (c.ch === "x") {
+        setTile(c.tx, c.ty, ".");
+        broke = true;
+      }
+    }
+    return broke;
   }
 
   function isOneWay(ch) {
@@ -210,6 +223,20 @@ const World = (() => {
     return best || { x: spawn.x, y: spawn.y };
   }
 
+  // A wall tile with dark zigzag cracks across it.
+  function drawCracked(ctx, wallImg, px, py) {
+    ctx.drawImage(wallImg, px, py, TILE, TILE);
+    ctx.strokeStyle = "#2a1d14";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px + 2, py + 4);
+    ctx.lineTo(px + 12, py + 12);
+    ctx.lineTo(px + 8, py + 20);
+    ctx.lineTo(px + 22, py + 28);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+  }
+
   // Three grey spikes standing on the bottom edge of the tile.
   function drawSpikes(ctx, px, py) {
     ctx.fillStyle = "#9aa0a8";
@@ -239,6 +266,7 @@ const World = (() => {
         const px = Math.round(tx * TILE - camX);
         const py = Math.round(ty * TILE - camY);
         if (ch === "#") ctx.drawImage(images.wall, px, py, TILE, TILE);
+        else if (ch === "x") drawCracked(ctx, images.wall, px, py);
         else if (ch === "=") {
           ctx.drawImage(images.dirt, px, py, TILE, TILE);
           ctx.drawImage(images.grass, px, py, TILE, TILE);
@@ -269,7 +297,9 @@ const World = (() => {
     exit: () => exit,
     at,
     setTile,
+    isSolid,
     isStandable,
+    breakCracked,
     moveBody,
     closestSafeSpace,
     addPlatform,

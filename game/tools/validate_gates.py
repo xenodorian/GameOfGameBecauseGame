@@ -35,7 +35,7 @@ GAME = pathlib.Path(__file__).resolve().parent.parent
 
 ABILITY_SETS = {
     "basic": set(),
-    "knight": {"charge"},
+    "knight": {"charge", "bash"},
     "ranger": {"hop", "rope"},
     "mage": {"float", "blink"},
 }
@@ -66,10 +66,12 @@ class Grid:
     on them but walks through them, as in the game.
     """
 
-    def __init__(self, rows, ropes):
+    def __init__(self, rows, ropes, breakable=False):
         self.h = len(rows)
         self.w = len(rows[0])
-        self.solid = [[rows[y][x] in "#=" for x in range(self.w)] for y in range(self.h)]
+        # Cracked walls (x) are air for a character who can break them.
+        solid_chars = "#=" if breakable else "#=x"
+        self.solid = [[rows[y][x] in solid_chars for x in range(self.w)] for y in range(self.h)]
         self.ropes = ropes
         # land[y][x]: row where a body falling from (x, y) comes to rest, or None.
         self.land = [[None] * self.w for _ in range(self.h)]
@@ -103,7 +105,7 @@ def explore(rows, abilities, start, ropes):
     Returns (reached, rope_sources), where rope_sources are the standing
     tiles a rope could be anchored from.
     """
-    grid = Grid(rows, ropes)
+    grid = Grid(rows, ropes, breakable="bash" in abilities)
     hop = "hop" in abilities
     blink = "blink" in abilities
     charge = "charge" in abilities
@@ -181,7 +183,7 @@ def reachable(rows, abilities, start):
     ropes = set()
     while True:
         reached, sources = explore(rows, abilities, start, frozenset(ropes))
-        grid = Grid(rows, frozenset(ropes))
+        grid = Grid(rows, frozenset(ropes), breakable="bash" in abilities)
         new = set()
         for x, y in sources:
             for i in (1, 2, 3):
