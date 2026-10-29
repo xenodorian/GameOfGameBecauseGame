@@ -213,17 +213,26 @@ const World = (() => {
           ctx.fillStyle = "#3a3020";
           ctx.fillRect(x + sx, y + 3, w, 1);
         }
+        ctx.fillStyle = pl.color || "#7a5230";
+        ctx.fillRect(x, y, 3, pl.h + 6);
+        ctx.fillRect(x + pl.w - 3, y, 3, pl.h + 6);
       } else {
-        // Rope: three segments, the middle one sagging 2 px.
-        const third = Math.floor(pl.w / 3);
-        ctx.fillStyle = "#7a5230";
-        ctx.fillRect(x, y, third, 3);
-        ctx.fillRect(x + third, y + 2, pl.w - 2 * third, 3);
-        ctx.fillRect(x + pl.w - third, y, third, 3);
+        // Rope platform (arrow anchor): a plank you can stand on, with a light top edge,
+        // joints every tile, and two ropes running up from the ends. It fades over its last 1.5 s.
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, pl.life / 1.5);
+        ctx.fillStyle = "#8a5a32";
+        ctx.fillRect(x, y, pl.w, 5);
+        ctx.fillStyle = "#c9955a";
+        ctx.fillRect(x, y, pl.w, 1);
+        ctx.fillStyle = "#4a2e18";
+        ctx.fillRect(x, y + 4, pl.w, 1);
+        for (let sx = TILE; sx < pl.w; sx += TILE) ctx.fillRect(x + sx - 1, y, 2, 5);
+        ctx.fillStyle = "#e8d9b0";
+        ctx.fillRect(x + 2, y - 10, 1, 10);
+        ctx.fillRect(x + pl.w - 3, y - 10, 1, 10);
+        ctx.restore();
       }
-      ctx.fillStyle = pl.color || "#7a5230";
-      ctx.fillRect(x, y, 3, pl.h + 6);
-      ctx.fillRect(x + pl.w - 3, y, 3, pl.h + 6);
     }
   }
 

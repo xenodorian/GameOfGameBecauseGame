@@ -116,9 +116,10 @@ const Attacks = (() => {
         pendingShot = { t: 0, owner: scene.active, kind: id, scene };
         break;
       case "arrow_anchor": {
-        // Rope platform three tiles long, one tile in front, two tiles above the feet.
+        // Rope platform three tiles long, one tile in front, at foot level.
         const x = p.facing > 0 ? p.x + p.w + 4 : p.x - 4 - 3 * World.TILE;
-        const y = p.y + p.h - 2 * World.TILE;
+        // The plank's top sits at the feet, so it bridges the gap at foot level.
+        const y = p.y + p.h;
         World.platforms.length = 0;
         World.addPlatform({ x, y, w: 3 * World.TILE, h: 6, life: 6 });
         break;
@@ -126,7 +127,8 @@ const Attacks = (() => {
       case "bone_bridge": {
         // Bone bridge: the anchor, but 5 tiles long and it lasts longer.
         const x = p.facing > 0 ? p.x + p.w + 4 : p.x - 4 - 5 * World.TILE;
-        const y = p.y + p.h - 2 * World.TILE;
+        // The plank's top sits at the feet, so it bridges the gap at foot level.
+        const y = p.y + p.h;
         World.platforms.length = 0;
         World.addPlatform({ x, y, w: 5 * World.TILE, h: 6, life: 8, color: "#e8e2d0" });
         break;

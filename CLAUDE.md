@@ -172,7 +172,7 @@ Open work:
 - Feedback pass: sprites stand on the grass. The player is drawn 3 px lower, and enemies use the same offset in their own scale.
 - Feedback pass: trees draw at 3x their tile (96 px) and stand on the first solid tile below them.
 - Feedback pass: the knight's stab lunges forward 0.16 s at 210 px/s, and the stab no longer leaves an afterimage (it read as repeated stabs). Only slashes do.
-- Open question: the rope platform under a grass platform (ranger S) reads as a bracket hanging from grass. Not changed yet.
+- Bridges: the arrow anchor and bone bridge sit at foot level, so the plank top is at the feet and they cross the gap in front of the caster. The rope plank is drawn as a plank with joints and ropes at the ends, and it fades over its last 1.5 s.
 
 ## 10. Environment and licenses
 
