@@ -169,6 +169,7 @@ class PlayScene {
       grunt: IMG.grunt,
       mud_revenant: IMG.mud_revenant,
       rat_king: IMG.rat_king,
+      bone_weaver: IMG.bone_weaver,
       wall: IMG.wall,
       grass: IMG.grass,
       dirt: IMG.dirt,
@@ -257,6 +258,10 @@ class PlayScene {
     World.updatePlatforms(dt);
     this.checkEnemyContact(p, prevBottom);
     if (this.mode !== "play") return;
+    if (Attacks.hitByHostile(p)) {
+      this.beginSelection("slain");
+      return;
+    }
 
     for (const pickup of Enemies.pickups()) {
       pickup.update(dt);

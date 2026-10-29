@@ -40,6 +40,8 @@ const ABILITY_NAMES = {
 const Attacks = (() => {
   const hitboxes = [];
   const projectiles = [];
+  // Enemy arrows. They fly until they hit a wall or the player.
+  const hostile = [];
   const MAX_PROJECTILES = 2;
 
   function faceRect(p, reach, h, dy) {
@@ -151,6 +153,15 @@ const Attacks = (() => {
     for (let i = projectiles.length - 1; i >= 0; i--) {
       if (projectiles[i].life <= 0) projectiles.splice(i, 1);
     }
+
+    for (const h of hostile) {
+      h.life -= dt;
+      h.x += h.vx * dt;
+      if (World.overlapping(h.x, h.y, h.w, h.h).some((c) => c.ch === "#" || c.ch === "=")) h.life = 0;
+    }
+    for (let i = hostile.length - 1; i >= 0; i--) {
+      if (hostile[i].life <= 0) hostile.splice(i, 1);
+    }
   }
 
   function draw(ctx, cx, cy) {
@@ -162,12 +173,32 @@ const Attacks = (() => {
       ctx.fillStyle = q.kind === "spell_bolt" ? "#b9a2f0" : "#e8e4d8";
       ctx.fillRect(Math.round(q.x - cx), Math.round(q.y - cy), q.w, q.h);
     }
+    for (const h of hostile) {
+      ctx.fillStyle = "#c2452d";
+      ctx.fillRect(Math.round(h.x - cx), Math.round(h.y - cy), h.w, h.h);
+    }
+  }
+
+  function fireHostile(x, y, dir) {
+    hostile.push({ x, y, w: 8, h: 4, vx: dir * 240, life: 2.5 });
+  }
+
+  // True if a hostile arrow hits the body. The arrow is used up on contact.
+  function hitByHostile(body) {
+    for (const h of hostile) {
+      if (h.life > 0 && overlaps(h, body)) {
+        h.life = 0;
+        return true;
+      }
+    }
+    return false;
   }
 
   function reset() {
     hitboxes.length = 0;
     projectiles.length = 0;
+    hostile.length = 0;
   }
 
-  return { use, update, draw, reset };
+  return { use, update, draw, fireHostile, hitByHostile, reset };
 })();

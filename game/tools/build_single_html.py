@@ -31,6 +31,7 @@ IMAGES = {
     "grunt": "enemies/grunt_right.png",
     "mud_revenant": "enemies/mud_revenant_right.png",
     "rat_king": "enemies/rat_king_right.png",
+    "bone_weaver": "enemies/bone_weaver_right.png",
 }
 
 MIME = {".png": "image/png", ".jpg": "image/jpeg", ".gif": "image/gif"}

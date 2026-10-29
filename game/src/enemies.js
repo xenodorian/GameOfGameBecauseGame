@@ -33,6 +33,17 @@ const ENEMY_DEFS = {
     jumpVy: -330,
     jumpEvery: 1.4,
   },
+  // Stands its ground and fires a hostile arrow at the player when lined up.
+  archer: {
+    sprite: "bone_weaver",
+    w: 22,
+    h: 30,
+    speed: 0,
+    chaseSpeed: 0,
+    sight: 200,
+    card: "knight",
+    fireEvery: 1.6,
+  },
 };
 
 class Enemy {
@@ -51,6 +62,7 @@ class Enemy {
     this.dead = false;
     this.stunT = 0;
     this.jumpT = def.jumpEvery || 0;
+    this.fireT = def.fireEvery || 0;
   }
 
   update(dt, player) {
@@ -73,6 +85,15 @@ class Enemy {
       if (this.grounded && chasing && this.jumpT <= 0) {
         this.vy = d.jumpVy;
         this.jumpT = d.jumpEvery;
+      }
+    }
+
+    if (d.fireEvery) {
+      this.fireT -= dt;
+      if (chasing && this.fireT <= 0) {
+        this.dir = dx >= 0 ? 1 : -1;
+        Attacks.fireHostile(this.x + this.w / 2, this.y + 12, this.dir);
+        this.fireT = d.fireEvery;
       }
     }
 
