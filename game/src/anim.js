@@ -41,11 +41,16 @@ function startAction(body, abilityId) {
   body.animT = 0;
 }
 
+// First frame an action plays. Shoot starts at frame 7, so the action runs through the release (frame 9) as the arrow flies.
+const ACTION_FIRST = { shoot: 7 };
+
 // Picks the frame for a body this step. Pure: reads state, changes nothing.
 function pickFrame(body, time) {
   if (body.action) {
     const [row, count] = ANIM_ROWS[body.action];
-    const col = Math.min(count - 1, Math.floor(body.animT / (ACTION_LENGTH[body.action] / count)));
+    const first = ACTION_FIRST[body.action] || 0;
+    const n = count - first;
+    const col = first + Math.min(n - 1, Math.floor(body.animT / (ACTION_LENGTH[body.action] / n)));
     return { row, col };
   }
   if (!body.grounded) return { row: ANIM_ROWS.jump[0], col: body.vy < 0 ? 0 : 1 };

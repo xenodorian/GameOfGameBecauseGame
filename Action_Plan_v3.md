@@ -87,7 +87,7 @@ File: `game/tools/build_lpc.py`.
    Do not change cards, title, or enemies; they keep the 64 px sheet.
 4. Check routine A to C. Screenshot tool once. Read `game/tests/shots/c_knight_ab3.png` only. The knight must show a sword arc or blade, and must not be shifted from its old spot. Commit. Message `X4: player uses 192 px sheets so weapons can reach out`.
 
-## X5 [ ]: Arrow leaves the bow (A1)
+## X5 [x]: Arrow leaves the bow (A1)
 
 1. `game/src/anim.js`: add `const ACTION_FIRST = { shoot: 7 };` In `pickFrame` action branch: `const first = ACTION_FIRST[body.action] || 0; const n = count - first;` and `col = first + Math.min(n - 1, Math.floor(body.animT / (ACTION_LENGTH[body.action] / n)));`. The shot now shows the full draw then the release (frame 9) right as the arrow flies.
 2. `game/src/abilities.js`, case `shoot` (grep `Effects.flare`): let `cx = p.x + p.w / 2`.

@@ -105,12 +105,14 @@ const Attacks = (() => {
         if (!beam) beam = { body: p, dir: p.facing, t: 0, len: 0, hitWall: false, hit: new Set(), seed: 1, motes: [] };
         break;
       case "shoot": {
-        Effects.flare(p.facing > 0 ? p.x + p.w + 2 : p.x - 2, p.y + 13, scene.active === "weaver" ? "bone" : "steel");
+        // The bow is held out in front of the body, so the arrow and its flare start there.
+        const cx = p.x + p.w / 2;
+        Effects.flare(cx + 22 * p.facing, p.y + 8, scene.active === "weaver" ? "bone" : "steel");
         const live = projectiles.filter((q) => q.owner === scene.active).length;
         if (live >= MAX_PROJECTILES) break;
         projectiles.push({
-          x: p.facing > 0 ? p.x + p.w : p.x - 8,
-          y: p.y + 12,
+          x: p.facing > 0 ? cx + 14 : cx - 22,
+          y: p.y + 6,
           w: 8,
           h: 4,
           vx: p.facing * 380,
