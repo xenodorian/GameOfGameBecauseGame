@@ -167,6 +167,13 @@ Open work:
 - Suite: ranger shoot and mage beam checks now start on the ground and wait on the game clock, because the shot and beam release later in game time.
 - Known gap: a ranger's bow on idle uses the walk-art pose (LPC has no bow-idle frames), so it sits horizontal after a shot.
 
+- Feedback pass: each character has 10 HP. Enemy contact and archer arrows take 2 HP, spikes take 2 HP, and a hit gives 1 s of safety with a short knockback. A fall, or 0 HP, ends the character. Suite checks for contact, arrows, and spikes now expect HP loss, not the selection screen. The rat king hop check starts 110 px away, since the first hop must come before contact.
+- Feedback pass: the ranger's bow shows on idle again, using the walk frame (the earlier idle hide is reverted at the user's request). The mage holds the wand (the staff layer is removed); the wand's slash frames are its only frames.
+- Feedback pass: sprites stand on the grass. The player is drawn 3 px lower, and enemies use the same offset in their own scale.
+- Feedback pass: trees draw at 3x their tile (96 px) and stand on the first solid tile below them.
+- Feedback pass: the knight's stab lunges forward 0.16 s at 210 px/s, and the stab no longer leaves an afterimage (it read as repeated stabs). Only slashes do.
+- Open question: the rope platform under a grass platform (ranger S) reads as a bracket hanging from grass. Not changed yet.
+
 ## 10. Environment and licenses
 
 - Sandbox network: PyPI, npm, GitHub reachable. `huggingface.co`, `kenney.nl`, `opengameart.org`, itch.io, Wikimedia, Archive.org, jsDelivr, unpkg blocked.

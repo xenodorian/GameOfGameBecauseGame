@@ -85,10 +85,10 @@ hat/magic/wizard
   authors: Michael Whitlock (bigbeargames), Tuomo Untinen (reemax), JaidynReiman
   licenses: CC-BY-SA 3.0, GPL 2.0, GPL 3.0
   https://opengameart.org/content/lpc-items-and-game-effects https://opengameart.org/content/lpc-pointed-hats https://opengameart.org/content/lpc-expanded-hats-facial-helmets
-weapon/magic/simple
-  authors: bluecarrot16, Dr. Jamgo
-  licenses: CC0
-  https://opengameart.org/content/lpc-simple-staff
+weapon/magic/wand
+  authors: Matthew Krohn (makrohn)
+  licenses: CC-BY-SA 3.0, GPL 3.0, OGA-BY 3.0
+  https://opengameart.org/content/lpc-wands
 [rat]
 body/bodies/male
   authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)

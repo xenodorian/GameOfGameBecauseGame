@@ -49,10 +49,6 @@ PATH_OVERRIDE = {
     "weapon/ranged/bow/normal/universal/foreground/{anim}/light.png": {
         "walk": "weapon/ranged/bow/normal/walk/foreground/light.png",
     },
-    # The mage's staff swings with the wand's slash frames (the library has no staff swing).
-    "weapon/magic/simple/foreground/{anim}/simple.png": {
-        "slash": "weapon/magic/wand/male/slash/wand.png",
-    },
 }
 
 # Each character is a list of (item folder, zPos). zPos values come from the generator's
@@ -76,7 +72,7 @@ CHARACTERS = {
     "mage": [
         ("body/bodies/female/{anim}.png", 10), ("head/heads/human/female/{anim}.png", 100),
         ("torso/clothes/robe/female/{anim}/blue.png", 35), ("hat/magic/wizard/base/adult/{anim}/base_black.png", 130),
-        ("weapon/magic/simple/background/{anim}/simple.png", 9), ("weapon/magic/simple/foreground/{anim}/simple.png", 140),
+        ("weapon/magic/wand/male/{anim}/wand.png", 140),
     ],
     "rat": [
         ("body/bodies/male/{anim}.png", 10), ("head/heads/rat/adult/{anim}.png", 100),
@@ -190,12 +186,7 @@ def compose(lpc, key, layers, zmap, report, weapons_only=False):
                 # Use a similar animation so the layer does not vanish from the frames. A weapon
                 # only reuses its walk pose on idle and jump, so it stays in hand there.
                 is_weapon = "/weapon/" in f"/{folder}"
-                # The player's bow has no standing pose. Its walk frame reads wrong with the body
-                # standing still, so the bow is hidden on idle and jump. The archer always idles, so it keeps its bow.
-                if is_weapon and "/bow/" in f"/{folder}" and key in ("ranger", "weaver") and anim in ("idle", "jump"):
-                    subs = []
-                else:
-                    subs = (["walk"] if anim in ("idle", "jump") else []) if is_weapon else FALLBACK.get(anim, [])
+                subs = (["walk"] if anim in ("idle", "jump") else []) if is_weapon else FALLBACK.get(anim, [])
                 for sub in subs:
                     layer_frames = frames_of(layer_path(lpc, folder, sub), RIGHT_ROW if sub != "hurt" else 0)
                     if layer_frames is not None:

@@ -340,6 +340,9 @@ function drawHills(ctx, scrollX, color, baseY, freq, amp) {
 }
 
 // Play slice: walk, jump, stomp, collect cards, die, pick a card, respawn.
+// Each character has 10 HP. Hits and spikes take HP. A fall or 0 HP ends the character.
+const MAX_HP = 10;
+const HIT_DAMAGE = 2;
 //
 // Modes:
 //   play         normal play
@@ -373,6 +376,9 @@ class PlayScene {
     this.downTime = 0;
     this.downFired = false;
     this.dashT = 0;
+    this.lungeT = 0;
+    this.hp = MAX_HP;
+    this.hpInvT = 0;
     this.floatT = 0;
     this.scurryT = 0;
     this.ghostT = 0;
@@ -434,6 +440,11 @@ class PlayScene {
     if (this.dashT > 0) {
       this.dashT -= dt;
       p.vx = p.facing * 320;
+    }
+    // A stab lunges forward a short way, one motion with the thrust frames.
+    if (this.lungeT > 0) {
+      this.lungeT -= dt;
+      p.vx = p.facing * 210;
     }
 
     if (p.grounded) {
@@ -497,10 +508,11 @@ class PlayScene {
       Effects.dust(p.x + p.w / 2, p.y + p.h, "#8a7a66", 5, 2, 0.3);
     }
     p.prevGrounded = p.grounded;
-    // Spikes are deadly: the bottom of the body touching one opens the selection.
+    // Spikes hurt: the bottom of the body touching one takes damage and bounces the player up.
     if (World.overlapping(p.x + 2, p.y + p.h - 8, p.w - 4, 8).some((c) => c.ch === "^")) {
-      this.beginSelection("slain");
-      return;
+      this.takeDamage(HIT_DAMAGE);
+      if (this.mode !== "play") return;
+      p.vy = -260;
     }
 
     for (const enemy of Enemies.list()) {
@@ -513,13 +525,14 @@ class PlayScene {
     if (this.ghostT > 0) this.ghostT -= dt;
     if (this.bannerT > 0) this.bannerT -= dt;
     if (this.flashT > 0) this.flashT -= dt;
+    if (this.hpInvT > 0) this.hpInvT -= dt;
     Effects.update(dt);
     this.updateAnimation(dt);
     this.checkEnemyContact(p, prevBottom);
     if (this.mode !== "play") return;
     if (this.ghostT <= 0 && Attacks.hitByHostile(p)) {
-      this.beginSelection("slain");
-      return;
+      this.takeDamage(HIT_DAMAGE);
+      if (this.mode !== "play") return;
     }
 
     for (const pickup of Enemies.pickups()) {
@@ -630,10 +643,22 @@ class PlayScene {
         Enemies.defeat(enemy, p.x + p.w / 2);
         p.vy = -260;
       } else if (this.ghostT <= 0) {
-        this.beginSelection("slain");
+        this.takeDamage(HIT_DAMAGE);
         return;
       }
     }
+  }
+
+  // A hit takes HP and gives a second of safety with a short knockback. At 0 HP the character is lost.
+  takeDamage(amount) {
+    if (this.hpInvT > 0 || this.flashT > 0 || this.mode !== "play") return;
+    this.hp = Math.max(0, this.hp - amount);
+    this.hpInvT = 1.0;
+    this.player.vy = -200;
+    this.player.vx = -this.player.facing * 120;
+    Sfx.play("hurt");
+    Effects.shake(0.1, 1);
+    if (this.hp <= 0) this.beginSelection("slain");
   }
 
   // Death or discard: the current character is lost. The player picks a
@@ -696,6 +721,8 @@ class PlayScene {
     this.active = cardId;
     this.mode = "play";
     this.dashT = 0;
+    this.hp = MAX_HP;
+    this.hpInvT = 0;
     this.floatT = 0;
     this.scurryT = 0;
     this.ghostT = 0;
@@ -816,6 +843,7 @@ class PlayScene {
       HUD.draw(ctx, -1);
       this.drawSignBox(ctx);
       this.drawAbilityBar(ctx);
+      this.drawHp(ctx);
       this.drawBossBar(ctx);
     }
   }
@@ -835,6 +863,8 @@ class PlayScene {
   drawBody(ctx, cx, cy) {
     // Flash after a respawn: skip every other 0.1 s.
     if (this.flashT > 0 && Math.floor(this.flashT / 0.1) % 2 === 0) return;
+    // Hit flicker: skip every other 0.1 s while the hit safety lasts.
+    if (this.hpInvT > 0 && this.mode === "play" && Math.floor(this.hpInvT / 0.1) % 2 === 0) return;
     const p = this.player;
     const sheet = IMG[LPC_KEY[this.active]];
     // The big 192 px sheet lets weapons reach out past the 64 px body. Its body sits in the centre.
@@ -843,7 +873,9 @@ class PlayScene {
     const pad = (size - 64) / 2;
     // The cell is centred on the body and its bottom sits on the feet.
     const sx = Math.round(p.x + p.w / 2 - 32 - pad - cx);
-    const sy = Math.round(p.y + p.h - 64 - pad - cy);
+    // The lowest drawn pixel (row 127 of a big cell, row 62 of a 64 px cell) sits 3 px into the hitbox bottom,
+    // because the grass texture starts about 3 px below the tile edge.
+    const sy = Math.round(p.y + p.h - (big ? 124 : 59) - cy);
     ctx.save();
     const frame = this.mode === "dying" ? { row: ANIM_ROWS.hurt[0], col: 0 } : this.frame;
     if (this.ghostT > 0) {
@@ -865,11 +897,22 @@ class PlayScene {
     }
     // Melee swings leave the weapon's afterimage behind the body (see drawWeaponTrail).
     const weapon = IMG[LPC_KEY[this.active] + "_weapon_big"];
-    if (weapon && big && this.mode !== "dying" && (p.action === "slash" || p.action === "thrust")) {
+    // Only slashes leave an afterimage. A stab would show as repeated stabs.
+    if (weapon && big && this.mode !== "dying" && p.action === "slash") {
       drawWeaponTrail(ctx, weapon, frame.row, frame.col, 0, sx, sy, p.facing);
     }
     drawFrame(ctx, big || sheet, frame, sx, sy, p.facing, size);
     ctx.restore();
+  }
+
+  // HP as ten small pips under the character name.
+  drawHp(ctx) {
+    const x0 = 52;
+    const y = 26;
+    for (let i = 0; i < MAX_HP; i++) {
+      ctx.fillStyle = i < this.hp ? "#e0493c" : "rgba(40, 30, 30, 0.6)";
+      ctx.fillRect(x0 + i * 6, y, 4, 6);
+    }
   }
 
   // Level name for the first 2.5 seconds, fading out over the last 0.5.

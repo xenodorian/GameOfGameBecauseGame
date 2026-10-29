@@ -161,7 +161,8 @@ class Enemy {
     const dw = this.def.drawW || 64;
     const dh = this.def.drawH || 64;
     const sx = Math.round(this.x + this.w / 2 - dw / 2 - camX);
-    const sy = Math.round(this.y + this.h - dh - camY);
+    // Feet are on row 62 of a 64 px cell. Drawn 3 px into the hitbox bottom to meet the grass texture.
+    const sy = Math.round(this.y + this.h - dh * (59 / 64) - camY);
     // Hurt: the hurt row, a white silhouette. Archers stand and idle. Others walk.
     let frame;
     if (this.hurtT > 0) frame = { row: ANIM_ROWS.hurt[0], col: 0 };

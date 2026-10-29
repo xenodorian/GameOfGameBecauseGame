@@ -298,6 +298,18 @@ const World = (() => {
     }
   }
 
+  // A tree is drawn 3x its tile size (96 px) and stands on the first solid tile below it, so its
+  // trunk meets the ground. Trees are decor: they use no collision.
+  const TREE_SCALE = 3;
+  function drawTree(ctx, img, tx, ty, px, py) {
+    let by = ty + 1;
+    while (by < rows && !isSolid(at(tx, by))) by++;
+    const size = TILE * TREE_SCALE;
+    // py is the tile's screen row, so the base is measured from it, not from world coordinates.
+    const baseY = py + (by - ty) * TILE;
+    ctx.drawImage(img, px + TILE / 2 - size / 2, baseY - size, size, size);
+  }
+
   // Three grey spikes standing on the bottom edge of the tile.
   function drawSpikes(ctx, px, py) {
     ctx.fillStyle = "#9aa0a8";
@@ -344,7 +356,7 @@ const World = (() => {
         } else if (ch === "_") {
           ctx.drawImage(images.grass, px, py, TILE, TILE);
         } else if (ch === "T" && LEVELS[index].theme !== "dungeon") {
-          ctx.drawImage(images.tree, px, py, TILE, TILE);
+          drawTree(ctx, images.tree, tx, ty, px, py);
         } else if (ch === "^") {
           drawSpikes(ctx, px, py);
         } else if (ch === "F") {

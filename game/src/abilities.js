@@ -98,6 +98,8 @@ const Attacks = (() => {
         hitboxes.push({ ...faceRect(p, 36, 24, 4), ...fx(p), t: 0.15, total: 0.15, kind: "slash", weapon: weaponHasRow(LPC_KEY[scene.active], ANIM_ROWS.slash[0]) });
         break;
       case "thrust":
+        // The stab lunges the knight a short way forward (see the lunge in PlayScene.update).
+        scene.lungeT = 0.16;
         hitboxes.push({ ...faceRect(p, 56, 12, 10), ...fx(p), t: 0.15, total: 0.15, kind: "thrust", weapon: weaponHasRow(LPC_KEY[scene.active], ANIM_ROWS.thrust[0]) });
         break;
       case "shield_bash":

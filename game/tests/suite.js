@@ -465,7 +465,8 @@ check('enemy: rat king hops toward a nearby player', async (browser) => {
   await startPlay(page, { hand: [], freeze: false });
   await page.evaluate(() => {
     window.__j = Enemies.list().find((e) => e.kind === 'rat_king');
-    __j.x = __scene.player.x + 60; __j.y = __scene.player.y;
+    // Start far enough away that the first hop comes before contact (contact now knocks the player back).
+    __j.x = __scene.player.x + 110; __j.y = __scene.player.y;
   });
   let sawJump = false;
   for (let i = 0; i < 30 && !sawJump; i++) {
@@ -503,15 +504,15 @@ check('archer: fires an arrow when the player is lined up within 200 px', async 
   await page.close();
 });
 
-check('archer: an arrow hitting the player opens the death selection', async (browser) => {
+check('archer: an arrow hitting the player costs 2 HP', async (browser) => {
   const page = await newPage(browser);
   await archerScene(page, { hand: ['ranger'] });
-  let selected = false;
-  for (let i = 0; i < 60 && !selected; i++) {
+  let hurt = false;
+  for (let i = 0; i < 60 && !hurt; i++) {
     await wait(page, 100);
-    selected = await page.evaluate(() => __scene.mode === 'select');
+    hurt = await page.evaluate(() => __scene.hp === 8 && __scene.mode === 'play');
   }
-  assert.equal(selected, true);
+  assert.equal(hurt, true);
   assert.deepEqual(page.errors, []);
   await page.close();
 });
@@ -759,7 +760,7 @@ check('feel: slash spam is limited by its cooldown', async (browser) => {
   await page.close();
 });
 
-check('spikes: touching spikes opens the selection', async (browser) => {
+check('spikes: touching spikes costs 2 HP', async (browser) => {
   const page = await newPage(browser);
   await startPlay(page, { hand: ['ranger'] });
   // Put spikes on the floor one tile to the right of the knight, then walk into them.
@@ -770,13 +771,13 @@ check('spikes: touching spikes opens the selection', async (browser) => {
     __scene.player.x = (tx - 1) * World.TILE + 6; __scene.player.y = ty * World.TILE - 30 + 2; __scene.player.vy = 0;
   });
   await page.keyboard.down('ArrowRight');
-  let selected = false;
-  for (let i = 0; i < 40 && !selected; i++) {
+  let hurt = false;
+  for (let i = 0; i < 40 && !hurt; i++) {
     await wait(page, 60);
-    selected = await page.evaluate(() => __scene.mode === 'select');
+    hurt = await page.evaluate(() => __scene.hp === 8 && __scene.mode === 'play');
   }
   await page.keyboard.up('ArrowRight');
-  assert.equal(selected, true);
+  assert.equal(hurt, true);
   assert.deepEqual(page.errors, []);
   await page.close();
 });
