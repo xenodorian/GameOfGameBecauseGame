@@ -899,12 +899,13 @@ class PlayScene {
   drawSignBox(ctx) {
     if (!this.signText) return;
     ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-    ctx.fillRect(40, 8, 400, 40);
+    // Under the level banner, so neither the HUD nor the banner is covered.
+    ctx.fillRect(40, 118, 400, 40);
     ctx.fillStyle = "#ffffff";
     ctx.font = "10px GameFont, system-ui, sans-serif";
     ctx.textAlign = "center";
     const lines = wrapText(ctx, this.signText, 380);
-    lines.forEach((line, i) => drawText(ctx, line, Engine.W / 2, 24 + i * 14));
+    lines.forEach((line, i) => drawText(ctx, line, Engine.W / 2, 134 + i * 14));
     ctx.textAlign = "left";
   }
 

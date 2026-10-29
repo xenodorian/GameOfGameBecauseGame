@@ -39,15 +39,19 @@ CHARACTERS = {
         ("torso/armour/plate/male/{anim}.png", 60), ("arms/armour/plate/male/{anim}.png", 60),
         ("hat/helmet/greathelm/male/{anim}.png", 130),
         ("shield/heater/revised/trim/bg/{anim}.png", 3), ("shield/heater/revised/trim/fg/{anim}.png", 115),
+        ("weapon/sword/arming/universal/bg/{anim}/steel.png", 9), ("weapon/sword/arming/universal/fg/{anim}/steel.png", 140),
     ],
     "ranger": [
         ("body/bodies/male/{anim}.png", 10), ("head/heads/human/male/{anim}.png", 100),
         ("legs/pants/male/{anim}.png", 20), ("feet/shoes/basic/thin/{anim}.png", 15),
         ("torso/armour/leather/male/{anim}.png", 60), ("hat/cloth/hood/adult/{anim}.png", 130),
+        ("weapon/ranged/bow/normal/universal/background/{anim}/light.png", -1),
+        ("weapon/ranged/bow/normal/universal/foreground/{anim}/light.png", 140),
     ],
     "mage": [
         ("body/bodies/female/{anim}.png", 10), ("head/heads/human/female/{anim}.png", 100),
         ("torso/clothes/robe/female/{anim}/blue.png", 35), ("hat/magic/wizard/base/adult/{anim}/base_black.png", 130),
+        ("weapon/magic/simple/background/{anim}/simple.png", 9), ("weapon/magic/simple/foreground/{anim}/simple.png", 140),
     ],
     "rat": [
         ("body/bodies/male/{anim}.png", 10), ("head/heads/rat/adult/{anim}.png", 100),
@@ -62,7 +66,7 @@ CHARACTERS = {
     "mud_revenant": [("body/bodies/zombie/{anim}/zombie.png", 10), ("head/heads/zombie/adult/{anim}.png", 100)],
     "rat_king": [
         ("body/bodies/male/{anim}.png", 10), ("head/heads/rat/adult/{anim}.png", 100),
-        ("torso/armour/plate/male/{anim}.png", 60),
+        ("torso/armour/plate/male/{anim}.png", 60), ("hat/formal/crown/adult/{anim}/crown_gold.png", 130),
     ],
     "warlord": [
         ("body/bodies/male/{anim}.png", 10), ("head/heads/orc/male/{anim}.png", 100),
@@ -122,7 +126,7 @@ def compose(lpc, key, layers, zmap, report):
         frames = None
         for folder, z in ordered:
             layer_frames = frames_of(layer_path(lpc, folder, anim), row)
-            if layer_frames is None:
+            if layer_frames is None and "/weapon/" not in f"/{folder}":
                 # Use a similar animation so the layer does not vanish from the frames.
                 for sub in FALLBACK.get(anim, []):
                     layer_frames = frames_of(layer_path(lpc, folder, sub), RIGHT_ROW if sub != "hurt" else 0)

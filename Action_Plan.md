@@ -223,7 +223,7 @@ If an effect needs a tool you do not have, skip it, log it, and go on. Do not sp
 5. Rebuild the HTML (Step A). If the credits screen in the game reads this file or an inline copy, check where (`Grep pattern="CREDITS" path="game"`) and update that too.
 6. Run the check routine. Commit as `T9: credits list only used assets`.
 
-## Task 10 [ ]: Visual pass (screenshots)
+## Task 10 [x]: Visual pass (screenshots)
 
 1. Run the screenshot tool (see above). List the PNGs in `game/tests/shots`.
 2. Add a shot per enemy type if none exists. Write a short script block in `screenshots.js` that, for each of `grunt`, `mud_revenant`, `rat_king`, `archer`, `warlord`, loads a level that contains it (any level; use `World.load(i)`), teleports the player 80 px left of that enemy, waits 300 ms, and shoots. Copy the shape of the existing shots.
@@ -231,7 +231,7 @@ If an effect needs a tool you do not have, skip it, log it, and go on. Do not sp
 4. For each problem you can fix in under 3 tries, fix it, rebuild, shoot again, and update the line. For problems you cannot fix, leave the line saying what is wrong.
 5. Commit as `T10: visual pass and screenshots`.
 
-## Task 11 [ ] (hard, do last): LPC weapons and crown
+## Task 11 [x] (hard, do last): LPC weapons and crown
 
 This task is the riskiest. Do it only after Tasks 1 to 10 are committed. If it fails 3 times, undo with `git checkout -- game` and `git clean -fd game/tools` for new files only, log it, and finish with Task 12.
 

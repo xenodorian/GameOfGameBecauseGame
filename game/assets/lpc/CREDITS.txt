@@ -31,6 +31,10 @@ shield/heater/revised/trim
   authors: bluecarrot16, Sander Frenken (castelonia), ElizaWy, JaidynReiman
   licenses: OGA-BY 3.0
   https://opengameart.org/content/lpc-shields
+weapon/sword/arming
+  authors: ElizaWy; walk and down by JaidynReiman
+  licenses: OGA-BY 3.0
+  https://github.com/ElizaWy/LPC/tree/main/Characters/Props/Sword%2001%20-%20Arming%20Sword https://opengameart.org/content/lpc-expanded-sit-run-jump-more
 [ranger]
 body/bodies/male
   authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
@@ -60,6 +64,10 @@ hat/cloth/hood
   authors: Johannes Sjölund (wulax), JaidynReiman
   licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
   https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+weapon/ranged/bow/normal
+  authors: Johannes Sjölund (wulax), Pierre Vigier (pvigier)
+  licenses: OGA-BY 3.0+, GPL 3.0, CC-BY 4.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-walk-animations-for-bows
 [mage]
 body/bodies/female
   authors: Benjamin K. Smith (BenCreating), bluecarrot16, TheraHedwig, Evert, MuffinElZangano, Durrani, Pierre Vigier (pvigier), ElizaWy, Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
@@ -77,6 +85,10 @@ hat/magic/wizard
   authors: Michael Whitlock (bigbeargames), Tuomo Untinen (reemax), JaidynReiman
   licenses: CC-BY-SA 3.0, GPL 2.0, GPL 3.0
   https://opengameart.org/content/lpc-items-and-game-effects https://opengameart.org/content/lpc-pointed-hats https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+weapon/magic/simple
+  authors: bluecarrot16, Dr. Jamgo
+  licenses: CC0
+  https://opengameart.org/content/lpc-simple-staff
 [rat]
 body/bodies/male
   authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
@@ -143,6 +155,10 @@ torso/armour/plate/male
   authors: Napsio (Vitruvian Studio), JaidynReiman, bluecarrot16, Michael Whitlock (bigbeargames), Johannes Sjölund (wulax)
   licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
   https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women
+hat/formal/crown
+  authors: DarkwallLKE, Charles Sanchez (CharlesGabriel)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-crown https://opengameart.org/content/lpc-expanded-hats-facial-helmets
 [warlord]
 body/bodies/male
   authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)

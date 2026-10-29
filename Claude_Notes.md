@@ -73,8 +73,9 @@ Single condensed record of the project. It replaces Current_Work.md, Expansion_P
 3. `build_lpc.py compose()` sorts layers by a hard-coded zPos, not the scanned values. Only mismatch: knight shield background is 3, definitions say 6. Harmless. Low priority.
 
 ### 6.3 Art gaps
-- Knight has no sword, ranger no bow, mage no staff, rat king no crown. LPC weapon layers not composed.
+- Weapons (T11): sword, bow, and staff are composed, but each has only some animations (see the T11 row in section 7). Hidden where missing.
 - Knight shield has no slash or thrust frames, so it is hidden during those animations.
+- Rat king crown: added (T11).
 - Animation fallbacks exist (zombie walks instead of jumping, skeleton idles instead of jumping). The build prints each one.
 - Enemy sprites were checked only from a preview grid and a few screenshots.
 - Credits list every credit entry of each definition file, including unused variants. Keep only entries whose `file` matches a used folder (function `credits_for()` in `build_lpc.py`).
@@ -117,8 +118,11 @@ Single condensed record of the project. It replaces Current_Work.md, Expansion_P
 | 2026-10-29 | with T3 to T6 | exit 0 | 52 passed, 0 failed | enemies face walk direction (flip when dir < 0); hurt pose during dying mode (0.15 s); warlord knockback; ability bar lifts above touch buttons. Two checks were hardened: stand-still reads position after both keys are held (press order gave one 2.17 px step); knockback steps the enemy update in open air (spawn overlaps a platform) |
 | 2026-10-29 | with T7 and T8 | exit 0 | 52 passed, 0 failed | selection cards show idle frame and four ability names (card 116 by 140, not 108 tall, so the names fit); level complete panel; hand moved to x 150 so 'Bone Weaver' fits. T8: spark, dust, ring, float sparkles, leap and landing dust, rope sag, bone bridge pattern, ghost outline. Shots z_select, z_complete, c_knight_ab3, c_mage_ab1 checked |
 | 2026-10-29 | T9 | exit 0 | not rerun (no game code changed; last run 52 passed, 0 failed at T8) | CREDITS.txt filtered to used items: 16.5 KB (was larger). Sheets checked pixel-identical before and after |
+| 2026-10-29 | with T10 and T11 | exit 0 | 52 passed, 0 failed | Enemy shots added (5); sign box moved under the level banner; weapons added: knight sword (idle and walk only), ranger bow (shoot and hurt only), mage staff (walk, thrust, spellcast, hurt), rat king crown (all anims). Weapons hidden on animations they lack. Shots checked: knight, ranger, mage |
 
 ## 8. Decisions log (agents append one line per decision)
+- T10 and T11 were validated together and committed together (the LPC sheets changed in T11 and the HTML needed a rebuild). Deviation.
+- Weapon layers never use the attack fallback. A weapon with no frame for an animation is hidden on that animation (plan T11 step 5).
 - Tasks 7 and 8 were validated and committed together (both touch scenes.js). Deviation from one task per commit. Task 8 effects were built in one pass, not one commit each.
 - Selection card is 140 px tall, not 108, to fit the idle frame and four ability names.
 - Tasks 3 to 6 were validated in one suite run and committed together (they share scenes.js). Deviation from one task per commit.
@@ -139,3 +143,25 @@ Single condensed record of the project. It replaces Current_Work.md, Expansion_P
 - Sandbox network: PyPI, npm, and GitHub reachable. `huggingface.co`, `kenney.nl`, `opengameart.org`, itch.io, Wikimedia, Archive.org, jsDelivr, unpkg are blocked.
 - Python 3 with Pillow, and Node 22 are installed. Playwright with Chromium is installed (`NODE_PATH=$(npm root -g)`).
 - Licenses: LPC sheets are OGA-BY 3.0, CC-BY-SA 3.0, or GPL 3.0 per asset (see `game/assets/lpc/CREDITS.txt`). DCSS tiles are mostly CC0 but per-tile licenses were not checked one by one; confirm before commercial release. Pixelify Sans is OFL 1.1.
+
+## 10. Visual check (T10, screenshots from game/tests/screenshots.js)
+
+Every PNG in game/tests/shots was opened and read after the final build. Shots are git-ignored; rerun the tool to regenerate.
+- 00_title: OK. Walkers sit above the footer line.
+- c_knight_ab1, c_knight_ab3: OK. Slash arc drawn.
+- c_mage_ab1, c_mage_ab3: OK. Spell orb drawn.
+- c_ranger_ab1, c_ranger_ab3: OK. Arrow drawn. The ranger has no bow yet (known gap, section 6.3).
+- c_rat_ab1, c_rat_ab3: OK. Leap pose shows.
+- c_weaver_ab1, c_weaver_ab3: OK. Arrow drawn.
+- e_archer: OK. Archer visible on its idle frames (T2).
+- e_grunt: OK after the sign box move (T10). Goblin faces the player.
+- e_mud_revenant: OK.
+- e_rat_king: OK. No crown yet (known gap).
+- e_warlord: OK. Drawn at double size, faces the direction it moves.
+- l1_start, l2_start, l3_start, l4_start, l5_start, l6_start, l7_start, l8_start: OK.
+- l1_mid, l2_mid, l3_mid, l5_mid, l6_mid, l7_mid, l8_mid: OK. Known, cosmetic: in l1_mid, l5_mid, and l7_mid the level banner covers the top of a sprite. The banner is up for 2.5 s, so these shots caught it. Not changed.
+- l4_mid: shows the selection screen. The capture placed the player over a pit and it died. This is the shot, not a rendering fault.
+- z_select: OK. Card names and four ability names fit.
+- z_complete: OK. Panel text is inside the panel.
+- z_ending: OK.
+- Fixed during T10: the sign text box covered the HUD (moved to y 118, under the level banner, after two tries).

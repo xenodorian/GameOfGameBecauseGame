@@ -42,6 +42,18 @@ const OUT = path.join(__dirname, 'shots');
   await page.evaluate(() => { Engine.current().beginSelection('slain'); });
   await page.waitForTimeout(500);
   await shot('z_select');
+  // One shot per enemy type: the first level that has it, the player 80 px to its left.
+  for (const kind of ['grunt', 'mud_revenant', 'rat_king', 'archer', 'warlord']) {
+    const found = await page.evaluate((k) => {
+      for (let i = 0; i < World.count; i++) {
+        const s = new PlayScene(i);
+        const e = Enemies.list().find((en) => en.kind === k);
+        if (e) { window.__s = s; Engine.setScene(s); s.player.x = e.x - 80; s.player.y = e.y; return true; }
+      }
+      return false;
+    }, kind);
+    if (found) { await page.waitForTimeout(300); await shot(`e_${kind}`); }
+  }
   // Level complete panel on level 1.
   await page.evaluate(() => { window.__s = new PlayScene(0); Engine.setScene(__s); __s.mode = 'complete'; });
   await page.waitForTimeout(300);
