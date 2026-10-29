@@ -199,13 +199,31 @@ const World = (() => {
     }
   }
 
+  // Only the drawing changes; collision stays a flat platform.
   function drawPlatforms(ctx, camX, camY) {
     for (const pl of platforms) {
-      // Rope: a brown line with posts at both ends.
+      const x = Math.round(pl.x - camX);
+      const y = Math.round(pl.y - camY);
+      if (pl.color) {
+        // Bone bridge: alternating 6 px segments with a dark outline.
+        for (let sx = 0; sx < pl.w; sx += 6) {
+          const w = Math.min(6, pl.w - sx);
+          ctx.fillStyle = (sx / 6) % 2 === 0 ? pl.color : "#c8c0a8";
+          ctx.fillRect(x + sx, y, w, 3);
+          ctx.fillStyle = "#3a3020";
+          ctx.fillRect(x + sx, y + 3, w, 1);
+        }
+      } else {
+        // Rope: three segments, the middle one sagging 2 px.
+        const third = Math.floor(pl.w / 3);
+        ctx.fillStyle = "#7a5230";
+        ctx.fillRect(x, y, third, 3);
+        ctx.fillRect(x + third, y + 2, pl.w - 2 * third, 3);
+        ctx.fillRect(x + pl.w - third, y, third, 3);
+      }
       ctx.fillStyle = pl.color || "#7a5230";
-      ctx.fillRect(Math.round(pl.x - camX), Math.round(pl.y - camY), pl.w, 3);
-      ctx.fillRect(Math.round(pl.x - camX), Math.round(pl.y - camY), 3, pl.h + 6);
-      ctx.fillRect(Math.round(pl.x + pl.w - camX - 3), Math.round(pl.y - camY), 3, pl.h + 6);
+      ctx.fillRect(x, y, 3, pl.h + 6);
+      ctx.fillRect(x + pl.w - 3, y, 3, pl.h + 6);
     }
   }
 

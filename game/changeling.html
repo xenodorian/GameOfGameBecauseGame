@@ -929,13 +929,31 @@ const World = (() => {
     }
   }
 
+  // Only the drawing changes; collision stays a flat platform.
   function drawPlatforms(ctx, camX, camY) {
     for (const pl of platforms) {
-      // Rope: a brown line with posts at both ends.
+      const x = Math.round(pl.x - camX);
+      const y = Math.round(pl.y - camY);
+      if (pl.color) {
+        // Bone bridge: alternating 6 px segments with a dark outline.
+        for (let sx = 0; sx < pl.w; sx += 6) {
+          const w = Math.min(6, pl.w - sx);
+          ctx.fillStyle = (sx / 6) % 2 === 0 ? pl.color : "#c8c0a8";
+          ctx.fillRect(x + sx, y, w, 3);
+          ctx.fillStyle = "#3a3020";
+          ctx.fillRect(x + sx, y + 3, w, 1);
+        }
+      } else {
+        // Rope: three segments, the middle one sagging 2 px.
+        const third = Math.floor(pl.w / 3);
+        ctx.fillStyle = "#7a5230";
+        ctx.fillRect(x, y, third, 3);
+        ctx.fillRect(x + third, y + 2, pl.w - 2 * third, 3);
+        ctx.fillRect(x + pl.w - third, y, third, 3);
+      }
       ctx.fillStyle = pl.color || "#7a5230";
-      ctx.fillRect(Math.round(pl.x - camX), Math.round(pl.y - camY), pl.w, 3);
-      ctx.fillRect(Math.round(pl.x - camX), Math.round(pl.y - camY), 3, pl.h + 6);
-      ctx.fillRect(Math.round(pl.x + pl.w - camX - 3), Math.round(pl.y - camY), 3, pl.h + 6);
+      ctx.fillRect(x, y, 3, pl.h + 6);
+      ctx.fillRect(x + pl.w - 3, y, 3, pl.h + 6);
     }
   }
 
@@ -1412,11 +1430,33 @@ const Effects = {
   shakeX: 0,
   shakeY: 0,
   bursts: [],
+  // Short effects: sparks (hit points), dust squares, and rings. All move in update, never in draw.
+  sparks: [],
+  dusts: [],
+  rings: [],
   reset() {
     this.shakeT = 0;
     this.shakeX = 0;
     this.shakeY = 0;
     this.bursts.length = 0;
+    this.sparks.length = 0;
+    this.dusts.length = 0;
+    this.rings.length = 0;
+  },
+  // Six white lines at fixed angles, 4 to 7 px long, for 0.12 s.
+  spark(x, y) {
+    this.sparks.push({ x, y, t: 0 });
+  },
+  // n small squares. vy is the starting upward speed (negative rises). Lives for life seconds.
+  dust(x, y, color, n, size = 2, life = 0.25, vy = 0) {
+    for (let i = 0; i < n; i++) {
+      const vx = (i - (n - 1) / 2) * 20;
+      this.dusts.push({ x, y, vx, vy: vy - 20 * (i % 2), size, color, life, t: 0 });
+    }
+  },
+  // A circle outline growing from radius 6 to 16 over 0.2 s.
+  ring(x, y, color) {
+    this.rings.push({ x, y, color, t: 0 });
   },
   burst(x, y, color) {
     const parts = [];
@@ -1444,12 +1484,52 @@ const Effects = {
       }
     }
     this.bursts = this.bursts.filter((b) => b.t < 0.4);
+    for (const s of this.sparks) s.t += dt;
+    this.sparks = this.sparks.filter((s) => s.t < 0.12);
+    for (const q of this.dusts) {
+      q.t += dt;
+      q.vy += 300 * dt;
+      q.x += q.vx * dt;
+      q.y += q.vy * dt;
+    }
+    this.dusts = this.dusts.filter((q) => q.t < q.life);
+    for (const r of this.rings) r.t += dt;
+    this.rings = this.rings.filter((r) => r.t < 0.2);
   },
   draw(ctx, camX, camY) {
     for (const b of this.bursts) {
       ctx.globalAlpha = 1 - b.t / 0.4;
       ctx.fillStyle = b.color;
       for (const q of b.parts) ctx.fillRect(Math.round(q.x - camX), Math.round(q.y - camY), 4, 4);
+    }
+    ctx.globalAlpha = 1;
+    for (const s of this.sparks) {
+      const cx = s.x - camX;
+      const cy = s.y - camY;
+      const len = 4 + (s.t / 0.12) * 3;
+      ctx.globalAlpha = 1 - s.t / 0.12;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let k = 0; k < 6; k++) {
+        const a = (k * Math.PI) / 3;
+        ctx.moveTo(Math.round(cx + Math.cos(a) * 2), Math.round(cy + Math.sin(a) * 2));
+        ctx.lineTo(Math.round(cx + Math.cos(a) * (2 + len)), Math.round(cy + Math.sin(a) * (2 + len)));
+      }
+      ctx.stroke();
+    }
+    for (const q of this.dusts) {
+      ctx.globalAlpha = 1 - q.t / q.life;
+      ctx.fillStyle = q.color;
+      ctx.fillRect(Math.round(q.x - camX), Math.round(q.y - camY), q.size, q.size);
+    }
+    for (const r of this.rings) {
+      ctx.globalAlpha = 1 - r.t / 0.2;
+      ctx.strokeStyle = r.color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(Math.round(r.x - camX), Math.round(r.y - camY), 6 + (r.t / 0.2) * 10, 0, Math.PI * 2);
+      ctx.stroke();
     }
     ctx.globalAlpha = 1;
   },
@@ -1656,6 +1736,7 @@ const Attacks = (() => {
         if (p.grounded) {
           p.vy = -540;
           p.jumping = false;
+          Effects.dust(p.x + p.w / 2, p.y + p.h, "#8a7a66", 5, 2, 0.3);
         }
         break;
       case "scurry":
@@ -1674,6 +1755,7 @@ const Attacks = (() => {
 
   // Teleport forward up to 96 px. Shorter steps are tried if the target is solid.
   function blink(p) {
+    Effects.ring(p.x + p.w / 2, p.y + p.h / 2, "#b9a2f0");
     for (const dist of [96, 64, 32]) {
       const nx = p.x + p.facing * dist;
       const clear = World.overlapping(nx, p.y, p.w, p.h).every((c) => {
@@ -1682,6 +1764,7 @@ const Attacks = (() => {
       });
       if (clear) {
         p.x = Math.max(0, Math.min(nx, World.width - p.w));
+        Effects.ring(p.x + p.w / 2, p.y + p.h / 2, "#b9a2f0");
         return;
       }
     }
@@ -1694,6 +1777,7 @@ const Attacks = (() => {
       Enemies.list().forEach((e) => {
         if (e.dead || !overlaps(hb, e)) return;
         hitThisStep = true;
+        Effects.spark(e.x + e.w / 2, e.y + e.h / 2);
         if (hb.stun) e.stunT = hb.stun;
         else Enemies.defeat(e, hb.x + hb.w / 2);
       });
@@ -1705,10 +1789,15 @@ const Attacks = (() => {
     for (const q of projectiles) {
       q.life -= dt;
       q.x += q.vx * dt;
-      if (World.overlapping(q.x, q.y, q.w, q.h).some((c) => World.isSolid(c.ch))) q.life = 0;
+      if (World.overlapping(q.x, q.y, q.w, q.h).some((c) => World.isSolid(c.ch))) {
+        // Hitting a wall: a few dust squares in the arrow's colour.
+        Effects.dust(q.x, q.y, q.kind === "spell_bolt" ? "#b9a2f0" : "#e8e4d8", 3, 2, 0.25);
+        q.life = 0;
+      }
       for (const e of Enemies.list()) {
         if (!e.dead && overlaps(q, e)) {
           hitThisStep = true;
+          Effects.spark(q.x, q.y);
           Enemies.defeat(e, q.x);
           q.life = 0;
         }
@@ -1913,6 +2002,14 @@ function pickFrame(body, time) {
   if (Math.abs(body.vx) > 1) return { row: ANIM_ROWS.walk[0], col: Math.floor(body.walkDist / 6) % ANIM_ROWS.walk[1] };
   return { row: ANIM_ROWS.idle[0], col: Math.floor(time * 2) % ANIM_ROWS.idle[1] };
 }
+
+// Offscreen canvas for the ghost outline's cyan copy. Made once at load.
+const GhostCanvas = (() => {
+  const c = document.createElement("canvas");
+  c.width = 64;
+  c.height = 64;
+  return c;
+})();
 
 // Draws one 64 by 64 cell from a sheet with its bottom centre at (x, y). Flipped when facing left.
 function drawFrame(ctx, sheet, frame, x, y, facing) {
@@ -2309,6 +2406,7 @@ class PlayScene {
     this.scurryT = 0;
     this.ghostT = 0;
     this.hurtShowT = 0;
+    this.sparkleT = 0;
     this.pauseSel = 0;
     this.flashT = 0;
     this.secretsFound = 0;
@@ -2408,6 +2506,12 @@ class PlayScene {
     if (this.floatT > 0) {
       this.floatT -= dt;
       p.vy = Input.down("up") ? -120 : Math.min(p.vy + 200 * dt, 40);
+      // Float sparkles: two purple motes under the feet every 0.05 s.
+      this.sparkleT += dt;
+      if (this.sparkleT >= 0.05) {
+        this.sparkleT = 0;
+        Effects.dust(p.x + p.w / 2 - 3, p.y + p.h, "#b9a2f0", 2, 1, 0.3, -30);
+      }
     } else {
       p.vy = Math.min(p.vy + 900 * dt, 600);
     }
@@ -2417,7 +2521,10 @@ class PlayScene {
     const fallSpeed = p.vy;
     World.moveBody(p, dt);
     // A hard landing shows the land frame for a moment.
-    if (p.grounded && !p.prevGrounded && fallSpeed > 250) p.landT = 0.08;
+    if (p.grounded && !p.prevGrounded && fallSpeed > 250) {
+      p.landT = 0.08;
+      Effects.dust(p.x + p.w / 2, p.y + p.h, "#8a7a66", 5, 2, 0.3);
+    }
     p.prevGrounded = p.grounded;
     // Spikes are deadly: the bottom of the body touching one opens the selection.
     if (World.overlapping(p.x + 2, p.y + p.h - 8, p.w - 4, 8).some((c) => c.ch === "^")) {
@@ -2622,6 +2729,7 @@ class PlayScene {
     this.scurryT = 0;
     this.ghostT = 0;
     this.hurtShowT = 0;
+    this.sparkleT = 0;
     this.hitstopT = 0;
     this.cooldowns = [0, 0, 0, 0];
     this.abBuf = [0, 0, 0, 0];
@@ -2705,15 +2813,25 @@ class PlayScene {
       HUD.draw(ctx, -1);
       ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
       ctx.fillRect(0, 0, Engine.W, Engine.H);
-      ctx.fillStyle = "#e8e4d8";
+      // A centred panel with the result of the level.
+      const pw = 240;
+      const ph = 110;
+      const px = Engine.W / 2 - pw / 2;
+      const py = 92;
+      ctx.fillStyle = "rgba(10, 12, 18, 0.85)";
+      ctx.fillRect(px, py, pw, ph);
+      ctx.strokeStyle = "#cfd6df";
+      ctx.strokeRect(px + 0.5, py + 0.5, pw - 1, ph - 1);
+      ctx.fillStyle = "#f4efe2";
       ctx.textAlign = "center";
-      ctx.font = "16px GameFont, system-ui, sans-serif";
-      drawText(ctx, "Level complete", Engine.W / 2, 110);
+      ctx.font = "bold 16px GameFont, system-ui, sans-serif";
+      drawText(ctx, "Level complete", Engine.W / 2, py + 26);
+      ctx.font = "12px GameFont, system-ui, sans-serif";
+      drawText(ctx, World.level.name, Engine.W / 2, py + 46);
       ctx.font = "11px GameFont, system-ui, sans-serif";
-      drawText(ctx, "Secrets found: " + this.secretsFound + " of " + this.secretsTotal, Engine.W / 2, 128);
-      ctx.font = "11px GameFont, system-ui, sans-serif";
+      drawText(ctx, "Secrets found: " + this.secretsFound + " of " + this.secretsTotal, Engine.W / 2, py + 68);
       const more = World.index + 1 < World.count;
-      drawText(ctx, more ? "Enter: next level" : "Enter: continue", Engine.W / 2, 146);
+      drawText(ctx, more ? "Enter: next level" : "Enter: continue", Engine.W / 2, py + 92);
       ctx.textAlign = "left";
     } else if (this.mode === "discardCard") {
       HUD.draw(ctx, this.sel);
@@ -2751,9 +2869,24 @@ class PlayScene {
     const sx = Math.round(p.x + p.w / 2 - 32 - cx);
     const sy = Math.round(p.y + p.h - 64 - cy);
     ctx.save();
-    // Ghost: the body is drawn faded while the ghost ability lasts.
-    if (this.ghostT > 0) ctx.globalAlpha = 0.5;
     const frame = this.mode === "dying" ? { row: ANIM_ROWS.hurt[0], col: 0 } : this.frame;
+    if (this.ghostT > 0) {
+      // Ghost outline: a cyan copy of the frame, one pixel out in four directions. It blinks every 0.05 s.
+      if (Math.floor(this.time * 20) % 2 === 0) {
+        const g = GhostCanvas.getContext("2d");
+        g.clearRect(0, 0, 64, 64);
+        g.drawImage(sheet, frame.col * 64, frame.row * 64, 64, 64, 0, 0, 64, 64);
+        g.globalCompositeOperation = "source-atop";
+        g.fillStyle = "#6fe3ff";
+        g.fillRect(0, 0, 64, 64);
+        g.globalCompositeOperation = "source-over";
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          drawFrame(ctx, GhostCanvas, { row: 0, col: 0 }, sx + dx, sy + dy, p.facing);
+        }
+      }
+      // The body itself is drawn faded while the ghost ability lasts.
+      ctx.globalAlpha = 0.5;
+    }
     drawFrame(ctx, sheet, frame, sx, sy, p.facing);
     ctx.restore();
   }
@@ -2826,21 +2959,45 @@ class PlayScene {
     drawText(ctx, "Choose a card to become. Left/Right to choose, Z or A to confirm.", Engine.W / 2, 90);
     ctx.textAlign = "left";
 
+    // Three cards, 116 px wide with 12 px gaps. The highlighted card lifts 4 px and gets a gold border.
     Hand.slots().forEach((cardId, i) => {
-      const x = Engine.W / 2 - 1.5 * 124 + i * 124;
-      const y = 110;
-      ctx.fillStyle = cardId ? CARD_DEFS[cardId].color : "#2a3644";
-      ctx.fillRect(x, y, 116, 90);
-      ctx.strokeStyle = i === this.sel ? "#d9a441" : "#111418";
-      ctx.lineWidth = i === this.sel ? 3 : 1;
-      ctx.strokeRect(x + 0.5, y + 0.5, 115, 89);
-      ctx.lineWidth = 1;
+      const x = Engine.W / 2 - 186 + i * 128;
+      const lift = i === this.sel ? 4 : 0;
+      const y = 104 - lift;
+      const w = 116;
+      const h = 140;
       if (cardId) {
-        ctx.fillStyle = "#f4efe2";
-        ctx.font = "13px GameFont, system-ui, sans-serif";
+        ctx.fillStyle = CARD_DEFS[cardId].color;
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+        ctx.fillRect(x, y, w, h);
+        // The idle frame of the character, cropped to the figure and drawn at 1.25x.
+        ctx.drawImage(IMG[LPC_KEY[cardId]], 16, 8, 32, 56, x + (w - 40) / 2, y + 6, 40, 70);
         ctx.textAlign = "center";
-        drawText(ctx, CARD_DEFS[cardId].name, x + 58, y + 50);
+        ctx.fillStyle = "#f4efe2";
+        ctx.font = "bold 12px GameFont, system-ui, sans-serif";
+        drawText(ctx, CARD_DEFS[cardId].name, x + w / 2, y + 90);
+        ctx.font = "10px GameFont, system-ui, sans-serif";
+        CHARACTERS[cardId].abilities.forEach((id, k) => {
+          drawText(ctx, ABILITY_NAMES[id], x + w / 2, y + 104 + k * 11);
+        });
         ctx.textAlign = "left";
+      } else {
+        ctx.fillStyle = "#2a3644";
+        ctx.fillRect(x, y, w, h);
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = "#9fb0c0";
+        ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+        ctx.setLineDash([]);
+      }
+      if (i === this.sel) {
+        ctx.strokeStyle = "#d9a441";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - 1, y - 1, w + 2, h + 2);
+        ctx.lineWidth = 1;
+      } else if (cardId) {
+        ctx.strokeStyle = "#111418";
+        ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
       }
     });
   }
@@ -2864,7 +3021,7 @@ const HUD = (() => {
   const SLOT_W = 30;
   const SLOT_H = 40;
   const SLOT_GAP = 4;
-  const X0 = 120;
+  const X0 = 150;
   const Y = 6;
 
   function slotRect(i) {

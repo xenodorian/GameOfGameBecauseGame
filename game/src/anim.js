@@ -54,6 +54,14 @@ function pickFrame(body, time) {
   return { row: ANIM_ROWS.idle[0], col: Math.floor(time * 2) % ANIM_ROWS.idle[1] };
 }
 
+// Offscreen canvas for the ghost outline's cyan copy. Made once at load.
+const GhostCanvas = (() => {
+  const c = document.createElement("canvas");
+  c.width = 64;
+  c.height = 64;
+  return c;
+})();
+
 // Draws one 64 by 64 cell from a sheet with its bottom centre at (x, y). Flipped when facing left.
 function drawFrame(ctx, sheet, frame, x, y, facing) {
   const sx = frame.col * 64;

@@ -40,8 +40,12 @@ const OUT = path.join(__dirname, 'shots');
     await shot(`c_${who}_ab1`);
   }
   await page.evaluate(() => { Engine.current().beginSelection('slain'); });
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(500);
   await shot('z_select');
+  // Level complete panel on level 1.
+  await page.evaluate(() => { window.__s = new PlayScene(0); Engine.setScene(__s); __s.mode = 'complete'; });
+  await page.waitForTimeout(300);
+  await shot('z_complete');
   await page.evaluate(() => Engine.setScene(new EndingScene()));
   await page.waitForTimeout(500);
   await shot('z_ending');

@@ -185,7 +185,7 @@ Why: when the player dies the selection screen opens at once. A short hurt pose 
 4. Add a suite check `hud: ability bar clears the touch buttons`. Find the existing touch test in `suite.js` (search `touch`) which already makes a phone-sized landscape page with touch on. In that page, call the draw once, then assert `lift > 0`. If `lift` is local, store it on the scene as `this.abilityLift` so the test can read it. Keep it simple.
 5. Run the check routine. Commit as `T6: ability bar moves above touch buttons`.
 
-## Task 7 [ ]: Redesign the selection screen and level complete screen
+## Task 7 [x]: Redesign the selection screen and level complete screen
 
 1. Open `game/src/scenes.js`. Find `drawSelect` (the death and discard selection) and the level complete draw (search `Level complete`). Read both fully. Find how `drawText` is used (`game/src/ui.js`) and copy its usage exactly, including how font and fill color are set before the call.
 2. Selection screen changes (keep all existing logic and key handling, change only drawing):
@@ -198,19 +198,19 @@ Why: when the player dies the selection screen opens at once. A short hurt pose 
 5. Run the check routine, then screenshots. Open `z_select.png` and the level complete shot (if none exists, add one to `screenshots.js`: go to the exit of level 1 and shoot after the scene says complete). Check: no text overlaps other text, nothing is cut off at the card edges, names like "Shield bash" fit.
 6. Commit as `T7: redesign selection and level complete screens`.
 
-## Task 8 [ ]: Small effects, one per commit
+## Task 8 [x]: Small effects, one per commit
 
 Do these in order. Each one is a separate commit. The idea is the same every time: spawn a few short-lived particles through the existing `Effects` object in `game/src/enemies.js`. First read `Effects` fully (search `const Effects`). Find what functions it already has (burst, shake, reset, update, draw). Reuse its particle list and update and draw code. If it can only make a burst of squares, add one small function per effect. Particles must be updated in update code, never in draw. Particles must be cleared by `Effects.reset()`.
 
 After each one: run the check routine, run screenshots, and commit with the id shown.
 
-- T8a [ ] Hit spark. In `Attacks.update` (`abilities.js`), at the two places where an enemy is hit (melee and projectile), call a new `Effects.spark(x, y)` that creates 6 short white lines radiating from the point, each 4 to 7 px, living 0.12 s. Draw them as 1 px white lines. Use a fixed set of 6 angles (0, 60, 120, 180, 240, 300 degrees) so there is no randomness in draw.
-- T8b [ ] Projectile wall particles. In `Attacks.update`, where a projectile is removed because it hit a solid tile (look for `World.isSolid` or `ch === "#"`), call `Effects.dust(x, y, color, 3)`: 3 small squares, falling and fading over 0.25 s. Use the projectile's own color.
-- T8c [ ] Blink rings. In `blink(p)` in `abilities.js`, call `Effects.ring(x, y, color)` at the start position and the end position. A ring is a circle outline growing from radius 6 to 16 over 0.2 s, color `#b9a2f0`, fading.
-- T8d [ ] Float sparkles. In `PlayScene.update` (while `this.floatT > 0`), every 0.05 s spawn 2 purple 1 px particles under the feet that rise and fade over 0.3 s. Use an accumulator field `this.sparkleT` and reset it to 0 on respawn.
-- T8e [ ] Leap and landing dust. Call `Effects.dust(footX, footY, "#8a7a66", 5)` when the rat's `leap` fires and where `landT` is set after a hard landing.
-- T8f [ ] Rope sag and bone bridge pattern. In `World.drawPlatforms` (`world.js`): for a rope (no custom color), draw 3 segments with the middle one 2 px lower, plus a small post at each end. For a bone bridge (color `#e8e2d0`), alternate `#e8e2d0` and `#c8c0a8` rectangles every 6 px with a 1 px dark outline. Collision stays the same flat platform; only the drawing changes.
-- T8g [ ] Ghost outline. In `PlayScene.drawBody`, while `ghostT > 0`: first draw a cyan version of the current frame offset by 1 px in each of the four directions, visible only on every other 0.05 s (use `this.time`, which update advances), then draw the normal sprite at alpha 0.5. To tint: draw the frame to a small offscreen canvas, then `globalCompositeOperation = "source-atop"` and fill `#6fe3ff`. Create that offscreen canvas once at load, not each frame.
+- T8a [x] Hit spark. In `Attacks.update` (`abilities.js`), at the two places where an enemy is hit (melee and projectile), call a new `Effects.spark(x, y)` that creates 6 short white lines radiating from the point, each 4 to 7 px, living 0.12 s. Draw them as 1 px white lines. Use a fixed set of 6 angles (0, 60, 120, 180, 240, 300 degrees) so there is no randomness in draw.
+- T8b [x] Projectile wall particles. In `Attacks.update`, where a projectile is removed because it hit a solid tile (look for `World.isSolid` or `ch === "#"`), call `Effects.dust(x, y, color, 3)`: 3 small squares, falling and fading over 0.25 s. Use the projectile's own color.
+- T8c [x] Blink rings. In `blink(p)` in `abilities.js`, call `Effects.ring(x, y, color)` at the start position and the end position. A ring is a circle outline growing from radius 6 to 16 over 0.2 s, color `#b9a2f0`, fading.
+- T8d [x] Float sparkles. In `PlayScene.update` (while `this.floatT > 0`), every 0.05 s spawn 2 purple 1 px particles under the feet that rise and fade over 0.3 s. Use an accumulator field `this.sparkleT` and reset it to 0 on respawn.
+- T8e [x] Leap and landing dust. Call `Effects.dust(footX, footY, "#8a7a66", 5)` when the rat's `leap` fires and where `landT` is set after a hard landing.
+- T8f [x] Rope sag and bone bridge pattern. In `World.drawPlatforms` (`world.js`): for a rope (no custom color), draw 3 segments with the middle one 2 px lower, plus a small post at each end. For a bone bridge (color `#e8e2d0`), alternate `#e8e2d0` and `#c8c0a8` rectangles every 6 px with a 1 px dark outline. Collision stays the same flat platform; only the drawing changes.
+- T8g [x] Ghost outline. In `PlayScene.drawBody`, while `ghostT > 0`: first draw a cyan version of the current frame offset by 1 px in each of the four directions, visible only on every other 0.05 s (use `this.time`, which update advances), then draw the normal sprite at alpha 0.5. To tint: draw the frame to a small offscreen canvas, then `globalCompositeOperation = "source-atop"` and fill `#6fe3ff`. Create that offscreen canvas once at load, not each frame.
 
 If an effect needs a tool you do not have, skip it, log it, and go on. Do not spend more than 3 tries on any single effect.
 

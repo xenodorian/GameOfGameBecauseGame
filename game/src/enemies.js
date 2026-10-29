@@ -232,11 +232,33 @@ const Effects = {
   shakeX: 0,
   shakeY: 0,
   bursts: [],
+  // Short effects: sparks (hit points), dust squares, and rings. All move in update, never in draw.
+  sparks: [],
+  dusts: [],
+  rings: [],
   reset() {
     this.shakeT = 0;
     this.shakeX = 0;
     this.shakeY = 0;
     this.bursts.length = 0;
+    this.sparks.length = 0;
+    this.dusts.length = 0;
+    this.rings.length = 0;
+  },
+  // Six white lines at fixed angles, 4 to 7 px long, for 0.12 s.
+  spark(x, y) {
+    this.sparks.push({ x, y, t: 0 });
+  },
+  // n small squares. vy is the starting upward speed (negative rises). Lives for life seconds.
+  dust(x, y, color, n, size = 2, life = 0.25, vy = 0) {
+    for (let i = 0; i < n; i++) {
+      const vx = (i - (n - 1) / 2) * 20;
+      this.dusts.push({ x, y, vx, vy: vy - 20 * (i % 2), size, color, life, t: 0 });
+    }
+  },
+  // A circle outline growing from radius 6 to 16 over 0.2 s.
+  ring(x, y, color) {
+    this.rings.push({ x, y, color, t: 0 });
   },
   burst(x, y, color) {
     const parts = [];
@@ -264,12 +286,52 @@ const Effects = {
       }
     }
     this.bursts = this.bursts.filter((b) => b.t < 0.4);
+    for (const s of this.sparks) s.t += dt;
+    this.sparks = this.sparks.filter((s) => s.t < 0.12);
+    for (const q of this.dusts) {
+      q.t += dt;
+      q.vy += 300 * dt;
+      q.x += q.vx * dt;
+      q.y += q.vy * dt;
+    }
+    this.dusts = this.dusts.filter((q) => q.t < q.life);
+    for (const r of this.rings) r.t += dt;
+    this.rings = this.rings.filter((r) => r.t < 0.2);
   },
   draw(ctx, camX, camY) {
     for (const b of this.bursts) {
       ctx.globalAlpha = 1 - b.t / 0.4;
       ctx.fillStyle = b.color;
       for (const q of b.parts) ctx.fillRect(Math.round(q.x - camX), Math.round(q.y - camY), 4, 4);
+    }
+    ctx.globalAlpha = 1;
+    for (const s of this.sparks) {
+      const cx = s.x - camX;
+      const cy = s.y - camY;
+      const len = 4 + (s.t / 0.12) * 3;
+      ctx.globalAlpha = 1 - s.t / 0.12;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let k = 0; k < 6; k++) {
+        const a = (k * Math.PI) / 3;
+        ctx.moveTo(Math.round(cx + Math.cos(a) * 2), Math.round(cy + Math.sin(a) * 2));
+        ctx.lineTo(Math.round(cx + Math.cos(a) * (2 + len)), Math.round(cy + Math.sin(a) * (2 + len)));
+      }
+      ctx.stroke();
+    }
+    for (const q of this.dusts) {
+      ctx.globalAlpha = 1 - q.t / q.life;
+      ctx.fillStyle = q.color;
+      ctx.fillRect(Math.round(q.x - camX), Math.round(q.y - camY), q.size, q.size);
+    }
+    for (const r of this.rings) {
+      ctx.globalAlpha = 1 - r.t / 0.2;
+      ctx.strokeStyle = r.color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(Math.round(r.x - camX), Math.round(r.y - camY), 6 + (r.t / 0.2) * 10, 0, Math.PI * 2);
+      ctx.stroke();
     }
     ctx.globalAlpha = 1;
   },

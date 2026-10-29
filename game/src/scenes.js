@@ -377,6 +377,7 @@ class PlayScene {
     this.scurryT = 0;
     this.ghostT = 0;
     this.hurtShowT = 0;
+    this.sparkleT = 0;
     this.pauseSel = 0;
     this.flashT = 0;
     this.secretsFound = 0;
@@ -476,6 +477,12 @@ class PlayScene {
     if (this.floatT > 0) {
       this.floatT -= dt;
       p.vy = Input.down("up") ? -120 : Math.min(p.vy + 200 * dt, 40);
+      // Float sparkles: two purple motes under the feet every 0.05 s.
+      this.sparkleT += dt;
+      if (this.sparkleT >= 0.05) {
+        this.sparkleT = 0;
+        Effects.dust(p.x + p.w / 2 - 3, p.y + p.h, "#b9a2f0", 2, 1, 0.3, -30);
+      }
     } else {
       p.vy = Math.min(p.vy + 900 * dt, 600);
     }
@@ -485,7 +492,10 @@ class PlayScene {
     const fallSpeed = p.vy;
     World.moveBody(p, dt);
     // A hard landing shows the land frame for a moment.
-    if (p.grounded && !p.prevGrounded && fallSpeed > 250) p.landT = 0.08;
+    if (p.grounded && !p.prevGrounded && fallSpeed > 250) {
+      p.landT = 0.08;
+      Effects.dust(p.x + p.w / 2, p.y + p.h, "#8a7a66", 5, 2, 0.3);
+    }
     p.prevGrounded = p.grounded;
     // Spikes are deadly: the bottom of the body touching one opens the selection.
     if (World.overlapping(p.x + 2, p.y + p.h - 8, p.w - 4, 8).some((c) => c.ch === "^")) {
@@ -690,6 +700,7 @@ class PlayScene {
     this.scurryT = 0;
     this.ghostT = 0;
     this.hurtShowT = 0;
+    this.sparkleT = 0;
     this.hitstopT = 0;
     this.cooldowns = [0, 0, 0, 0];
     this.abBuf = [0, 0, 0, 0];
@@ -773,15 +784,25 @@ class PlayScene {
       HUD.draw(ctx, -1);
       ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
       ctx.fillRect(0, 0, Engine.W, Engine.H);
-      ctx.fillStyle = "#e8e4d8";
+      // A centred panel with the result of the level.
+      const pw = 240;
+      const ph = 110;
+      const px = Engine.W / 2 - pw / 2;
+      const py = 92;
+      ctx.fillStyle = "rgba(10, 12, 18, 0.85)";
+      ctx.fillRect(px, py, pw, ph);
+      ctx.strokeStyle = "#cfd6df";
+      ctx.strokeRect(px + 0.5, py + 0.5, pw - 1, ph - 1);
+      ctx.fillStyle = "#f4efe2";
       ctx.textAlign = "center";
-      ctx.font = "16px GameFont, system-ui, sans-serif";
-      drawText(ctx, "Level complete", Engine.W / 2, 110);
+      ctx.font = "bold 16px GameFont, system-ui, sans-serif";
+      drawText(ctx, "Level complete", Engine.W / 2, py + 26);
+      ctx.font = "12px GameFont, system-ui, sans-serif";
+      drawText(ctx, World.level.name, Engine.W / 2, py + 46);
       ctx.font = "11px GameFont, system-ui, sans-serif";
-      drawText(ctx, "Secrets found: " + this.secretsFound + " of " + this.secretsTotal, Engine.W / 2, 128);
-      ctx.font = "11px GameFont, system-ui, sans-serif";
+      drawText(ctx, "Secrets found: " + this.secretsFound + " of " + this.secretsTotal, Engine.W / 2, py + 68);
       const more = World.index + 1 < World.count;
-      drawText(ctx, more ? "Enter: next level" : "Enter: continue", Engine.W / 2, 146);
+      drawText(ctx, more ? "Enter: next level" : "Enter: continue", Engine.W / 2, py + 92);
       ctx.textAlign = "left";
     } else if (this.mode === "discardCard") {
       HUD.draw(ctx, this.sel);
@@ -819,9 +840,24 @@ class PlayScene {
     const sx = Math.round(p.x + p.w / 2 - 32 - cx);
     const sy = Math.round(p.y + p.h - 64 - cy);
     ctx.save();
-    // Ghost: the body is drawn faded while the ghost ability lasts.
-    if (this.ghostT > 0) ctx.globalAlpha = 0.5;
     const frame = this.mode === "dying" ? { row: ANIM_ROWS.hurt[0], col: 0 } : this.frame;
+    if (this.ghostT > 0) {
+      // Ghost outline: a cyan copy of the frame, one pixel out in four directions. It blinks every 0.05 s.
+      if (Math.floor(this.time * 20) % 2 === 0) {
+        const g = GhostCanvas.getContext("2d");
+        g.clearRect(0, 0, 64, 64);
+        g.drawImage(sheet, frame.col * 64, frame.row * 64, 64, 64, 0, 0, 64, 64);
+        g.globalCompositeOperation = "source-atop";
+        g.fillStyle = "#6fe3ff";
+        g.fillRect(0, 0, 64, 64);
+        g.globalCompositeOperation = "source-over";
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          drawFrame(ctx, GhostCanvas, { row: 0, col: 0 }, sx + dx, sy + dy, p.facing);
+        }
+      }
+      // The body itself is drawn faded while the ghost ability lasts.
+      ctx.globalAlpha = 0.5;
+    }
     drawFrame(ctx, sheet, frame, sx, sy, p.facing);
     ctx.restore();
   }
@@ -894,21 +930,45 @@ class PlayScene {
     drawText(ctx, "Choose a card to become. Left/Right to choose, Z or A to confirm.", Engine.W / 2, 90);
     ctx.textAlign = "left";
 
+    // Three cards, 116 px wide with 12 px gaps. The highlighted card lifts 4 px and gets a gold border.
     Hand.slots().forEach((cardId, i) => {
-      const x = Engine.W / 2 - 1.5 * 124 + i * 124;
-      const y = 110;
-      ctx.fillStyle = cardId ? CARD_DEFS[cardId].color : "#2a3644";
-      ctx.fillRect(x, y, 116, 90);
-      ctx.strokeStyle = i === this.sel ? "#d9a441" : "#111418";
-      ctx.lineWidth = i === this.sel ? 3 : 1;
-      ctx.strokeRect(x + 0.5, y + 0.5, 115, 89);
-      ctx.lineWidth = 1;
+      const x = Engine.W / 2 - 186 + i * 128;
+      const lift = i === this.sel ? 4 : 0;
+      const y = 104 - lift;
+      const w = 116;
+      const h = 140;
       if (cardId) {
-        ctx.fillStyle = "#f4efe2";
-        ctx.font = "13px GameFont, system-ui, sans-serif";
+        ctx.fillStyle = CARD_DEFS[cardId].color;
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+        ctx.fillRect(x, y, w, h);
+        // The idle frame of the character, cropped to the figure and drawn at 1.25x.
+        ctx.drawImage(IMG[LPC_KEY[cardId]], 16, 8, 32, 56, x + (w - 40) / 2, y + 6, 40, 70);
         ctx.textAlign = "center";
-        drawText(ctx, CARD_DEFS[cardId].name, x + 58, y + 50);
+        ctx.fillStyle = "#f4efe2";
+        ctx.font = "bold 12px GameFont, system-ui, sans-serif";
+        drawText(ctx, CARD_DEFS[cardId].name, x + w / 2, y + 90);
+        ctx.font = "10px GameFont, system-ui, sans-serif";
+        CHARACTERS[cardId].abilities.forEach((id, k) => {
+          drawText(ctx, ABILITY_NAMES[id], x + w / 2, y + 104 + k * 11);
+        });
         ctx.textAlign = "left";
+      } else {
+        ctx.fillStyle = "#2a3644";
+        ctx.fillRect(x, y, w, h);
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = "#9fb0c0";
+        ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+        ctx.setLineDash([]);
+      }
+      if (i === this.sel) {
+        ctx.strokeStyle = "#d9a441";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - 1, y - 1, w + 2, h + 2);
+        ctx.lineWidth = 1;
+      } else if (cardId) {
+        ctx.strokeStyle = "#111418";
+        ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
       }
     });
   }
@@ -932,7 +992,7 @@ const HUD = (() => {
   const SLOT_W = 30;
   const SLOT_H = 40;
   const SLOT_GAP = 4;
-  const X0 = 120;
+  const X0 = 150;
   const Y = 6;
 
   function slotRect(i) {

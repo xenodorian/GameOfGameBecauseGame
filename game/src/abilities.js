@@ -146,6 +146,7 @@ const Attacks = (() => {
         if (p.grounded) {
           p.vy = -540;
           p.jumping = false;
+          Effects.dust(p.x + p.w / 2, p.y + p.h, "#8a7a66", 5, 2, 0.3);
         }
         break;
       case "scurry":
@@ -164,6 +165,7 @@ const Attacks = (() => {
 
   // Teleport forward up to 96 px. Shorter steps are tried if the target is solid.
   function blink(p) {
+    Effects.ring(p.x + p.w / 2, p.y + p.h / 2, "#b9a2f0");
     for (const dist of [96, 64, 32]) {
       const nx = p.x + p.facing * dist;
       const clear = World.overlapping(nx, p.y, p.w, p.h).every((c) => {
@@ -172,6 +174,7 @@ const Attacks = (() => {
       });
       if (clear) {
         p.x = Math.max(0, Math.min(nx, World.width - p.w));
+        Effects.ring(p.x + p.w / 2, p.y + p.h / 2, "#b9a2f0");
         return;
       }
     }
@@ -184,6 +187,7 @@ const Attacks = (() => {
       Enemies.list().forEach((e) => {
         if (e.dead || !overlaps(hb, e)) return;
         hitThisStep = true;
+        Effects.spark(e.x + e.w / 2, e.y + e.h / 2);
         if (hb.stun) e.stunT = hb.stun;
         else Enemies.defeat(e, hb.x + hb.w / 2);
       });
@@ -195,10 +199,15 @@ const Attacks = (() => {
     for (const q of projectiles) {
       q.life -= dt;
       q.x += q.vx * dt;
-      if (World.overlapping(q.x, q.y, q.w, q.h).some((c) => World.isSolid(c.ch))) q.life = 0;
+      if (World.overlapping(q.x, q.y, q.w, q.h).some((c) => World.isSolid(c.ch))) {
+        // Hitting a wall: a few dust squares in the arrow's colour.
+        Effects.dust(q.x, q.y, q.kind === "spell_bolt" ? "#b9a2f0" : "#e8e4d8", 3, 2, 0.25);
+        q.life = 0;
+      }
       for (const e of Enemies.list()) {
         if (!e.dead && overlaps(q, e)) {
           hitThisStep = true;
+          Effects.spark(q.x, q.y);
           Enemies.defeat(e, q.x);
           q.life = 0;
         }
