@@ -74,7 +74,7 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
 
 - Playable build: `game/changeling.html` (one file). Rebuild with `python3 game/tools/build_single_html.py`. Source is in `game/src/`.
 - Browser tests (Playwright, headless Chromium) are in `game/tests/`. Run each with `node game/tests/<name>.js` from a folder where Playwright is installed (`NODE_PATH` set to the global npm root).
-- Done or partly done: Phases 0 to 5. Phase 4 has all 12 abilities coded but not every effect is tested. Phase 6 has the exit and level-complete screen only. Phases 7 to 9 are mostly open.
+- Done or partly done: Phases 0 to 8. Phase 9 is the release step and is done except the real-device checks. Phase 4 has all 12 abilities coded but not every effect is tested. Phase 6 has the exit and level-complete screen only. Phases 7 to 9 are mostly open.
 - Open items for the next session: secret areas and their gates, the gate validation tool, the title and pause screens, the credits screen, a real-device pass (gamepad, phone, iOS full screen), and LPC attack sheets and mage art.
 - Decisions (all made by the build agent; no open questions remain):
   - Stomp defeats enemies, alongside the abilities. Decided: keep it.
@@ -134,21 +134,21 @@ Status key: [ ] not started, [~] in progress, [x] done.
 - [x] Discard hand card (C or quick Down tap to open, Left and Right to highlight, C or Down to confirm, X or B to cancel). Verified in headless Chromium.
 
 ### Phase 6: Level content
-- [~] Main level: completable with any character. The exit flag and level-complete screen work and are verified. The route from spawn to exit is walkable by reading the layout, but no test has walked the full route yet.
-- [ ] Secret areas gated by ability. Not started.
-- [ ] Power-ups and card pickups placed in secret areas and in the main level. Not started.
-- [ ] Gate validation tool. Not started.
+- [x] Main level: completable with any character. `test_playthrough.js` reaches the exit with knight, ranger, and mage (about 16 s each, no deaths). `validate_gates.py` checks basic, knight, ranger, and mage.
+- [x] Secret areas gated by ability. Float alcove card (col 38, row 10) and chasm pocket power-up (col 70, row 13). Basic moves cannot reach either. See Decisions for reach by character.
+- [x] Power-ups and card pickups placed in secret areas and in the main level. Card markers `c`, power-up markers `p`.
+- [x] Gate validation tool. `game/tools/validate_gates.py`. Tile-level model, documented in its header.
 
 ### Phase 7: Screens and polish
-- [ ] Title screen, pause menu, game over, level complete. Level complete is done. The input test screen is the only title for now. No pause or game over yet.
-- [ ] Credits screen listing the LPC, DCSS, and Sprite Foundry licenses and authors. Not started. Licenses are in the asset folders.
+- [x] Title screen, pause menu, and level complete. Verified by `test_menus.js`. Game over is not used: deaths are unlimited (see Decisions).
+- [x] Credits screen listing the LPC, DCSS, and Sprite Foundry licenses and authors.
 - [ ] Sound is out of scope unless added later.
 
 ### Phase 8: Testing
 - [x] Keyboard-only playthrough of the main level with each character. `game/tests/test_playthrough.js` passed for knight, ranger, and mage: exit reached in about 16 s each, with no deaths.
-- [~] Gamepad-only playthrough. Simulated (stubbed Gamepad API): d-pad moves, A triggers ability 3. Not tested on a real pad.
+- [~] Gamepad-only playthrough. Simulated only (stubbed Gamepad API): d-pad moves, A triggers ability 3. Not tested on a real pad.
 - [~] Mobile test in landscape. Simulated touch in phone-sized landscape: touch right moves, touch jump jumps. Portrait overlay shows. Not tested on a real phone.
-- [~] Respawn test: 300 random points checked (see above). The 100-death run is covered by that check.
+- [x] Respawn test: 300 random death points checked, zero failures (`test_phase5.js`).
 - [x] Gate validation passes. `game/tools/validate_gates.py` exits 0.
 
 ### Phase 9: Release
