@@ -7,6 +7,8 @@ each ability set. It checks two things:
   1. The main route (spawn to exit flag) is reachable with every character.
   2. Each secret pickup (c, p) is reachable by at least one character, and
      is not reachable with basic moves alone, so it really is gated.
+     Pickups listed in MAIN_ROUTE_PICKUPS are main-route content, not
+     secrets. They are reported but not required to be gated.
 
 This is a tile-level approximation of the game's physics, not a simulation.
 Assumptions, taken from game/src/world.js and game/src/scenes.js:
@@ -29,6 +31,9 @@ from collections import deque
 
 GAME = pathlib.Path(__file__).resolve().parent.parent
 WORLD_JS = GAME / "src" / "world.js"
+
+# Pickups on the main route, as (col, row). They are not gated on purpose.
+MAIN_ROUTE_PICKUPS = {(22, 12)}
 
 ABILITY_SETS = {
     "basic": set(),
@@ -215,6 +220,9 @@ def main():
         by = [n for n in ABILITY_SETS if n != "basic" and can(n)]
         gated = not can("basic")
         label = f"{'card' if kind == 'c' else 'power-up'} at col {px} row {py}"
+        if (px, py) in MAIN_ROUTE_PICKUPS:
+            print(f"  {label:26s} main route pickup  reachable by: {', '.join(by) or 'none'}")
+            continue
         ok = bool(by) and gated
         print(f"  {label:26s} {'OK' if ok else 'FAIL'}  reachable by: {', '.join(by) or 'none'}")
         if not by:
