@@ -145,11 +145,11 @@ Status key: [ ] not started, [~] in progress, [x] done.
 - [ ] Sound is out of scope unless added later.
 
 ### Phase 8: Testing
-- [ ] Keyboard-only playthrough of the main level with each character. Not done: needs a full route test.
+- [x] Keyboard-only playthrough of the main level with each character. `game/tests/test_playthrough.js` passed for knight, ranger, and mage: exit reached in about 16 s each, with no deaths.
 - [~] Gamepad-only playthrough. Simulated (stubbed Gamepad API): d-pad moves, A triggers ability 3. Not tested on a real pad.
 - [~] Mobile test in landscape. Simulated touch in phone-sized landscape: touch right moves, touch jump jumps. Portrait overlay shows. Not tested on a real phone.
 - [~] Respawn test: 300 random points checked (see above). The 100-death run is covered by that check.
-- [ ] Gate validation passes. Depends on the gate validation tool.
+- [x] Gate validation passes. `game/tools/validate_gates.py` exits 0.
 
 ### Phase 9: Release
 - [x] Final single HTML file under a size target. `game/changeling.html` is about 77 KB, well under 20 MB.
