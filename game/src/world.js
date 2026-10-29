@@ -9,6 +9,7 @@ const TILE = 32;
 //   S  player spawn (drawn as empty)
 //   g  goblin grunt spawn (drawn as empty)
 //   m  mud revenant spawn (drawn as empty)
+//   j  rat king spawn (drawn as empty)
 //   F  level exit flag (drawn as a pole and flag)
 //   c  card pickup on the ground (random character card)
 //   p  power-up on the ground (draws a random card into hand or deck)
@@ -27,7 +28,7 @@ const LEVEL_ROWS = [
   "......................................c.................................",
   "....................................====................................",
   "........................................................................",
-  "..S......T..........g.......====............T.......m.....F...........p.",
+  "..S......T..........g.......====........j...T.......m.....F...........p.",
   "============..==================================================....====",
   "############..##################################################....####",
 ];
@@ -43,7 +44,7 @@ const World = (() => {
 
   let spawn = { x: 0, y: 0 };
   const enemySpawns = [];
-  const MARKERS = { g: "grunt", m: "mud_revenant" };
+  const MARKERS = { g: "grunt", m: "mud_revenant", j: "rat_king" };
   const pickupSpawns = [];
   let exit = null;
   tiles.forEach((row, ty) =>

@@ -30,6 +30,7 @@ IMAGES = {
     "tree": "tiles/tree1.png",
     "grunt": "enemies/grunt_right.png",
     "mud_revenant": "enemies/mud_revenant_right.png",
+    "rat_king": "enemies/rat_king_right.png",
 }
 
 MIME = {".png": "image/png", ".jpg": "image/jpeg", ".gif": "image/gif"}

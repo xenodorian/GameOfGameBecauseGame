@@ -370,6 +370,23 @@ for (const character of ['knight', 'ranger', 'mage']) {
   });
 }
 
+check('enemy: rat king hops toward a nearby player', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [], freeze: false });
+  await page.evaluate(() => {
+    window.__j = Enemies.list().find((e) => e.kind === 'rat_king');
+    __j.x = __scene.player.x + 60; __j.y = __scene.player.y;
+  });
+  let sawJump = false;
+  for (let i = 0; i < 30 && !sawJump; i++) {
+    await wait(page, 60);
+    sawJump = await page.evaluate(() => __j.vy < -100);
+  }
+  assert.equal(sawJump, true);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 check('gates: validate_gates.py exits 0', async () => {
   execFileSync('python3', [path.join(GAME, 'tools', 'validate_gates.py')], { stdio: 'pipe' });
 });

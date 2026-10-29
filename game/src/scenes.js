@@ -168,6 +168,7 @@ class PlayScene {
       ranger_right: IMG.ranger_right,
       grunt: IMG.grunt,
       mud_revenant: IMG.mud_revenant,
+      rat_king: IMG.rat_king,
       wall: IMG.wall,
       grass: IMG.grass,
       dirt: IMG.dirt,

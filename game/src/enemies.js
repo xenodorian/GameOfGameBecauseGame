@@ -21,6 +21,18 @@ const ENEMY_DEFS = {
     sight: 110,
     card: "mage",
   },
+  // Hops toward the player when it is near and on the ground.
+  rat_king: {
+    sprite: "rat_king",
+    w: 22,
+    h: 26,
+    speed: 35,
+    chaseSpeed: 60,
+    sight: 160,
+    card: "ranger",
+    jumpVy: -330,
+    jumpEvery: 1.4,
+  },
 };
 
 class Enemy {
@@ -38,6 +50,7 @@ class Enemy {
     this.dir = -1;
     this.dead = false;
     this.stunT = 0;
+    this.jumpT = def.jumpEvery || 0;
   }
 
   update(dt, player) {
@@ -53,6 +66,14 @@ class Enemy {
       this.vy = Math.min(this.vy + 900 * dt, 600);
       World.moveBody(this, dt);
       return;
+    }
+
+    if (d.jumpVy) {
+      this.jumpT -= dt;
+      if (this.grounded && chasing && this.jumpT <= 0) {
+        this.vy = d.jumpVy;
+        this.jumpT = d.jumpEvery;
+      }
     }
 
     if (chasing) {
