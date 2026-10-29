@@ -376,6 +376,7 @@ class PlayScene {
     this.downTime = 0;
     this.downFired = false;
     this.dashT = 0;
+    this.dashGraceT = 0;
     this.lungeT = 0;
     this.hp = MAX_HP;
     this.hpInvT = 0;
@@ -439,6 +440,7 @@ class PlayScene {
     p.vx = move * (this.scurryT > 0 ? 220 : 130);
     if (this.dashT > 0) {
       this.dashT -= dt;
+      if (this.dashT <= 0) this.dashGraceT = 0.15;
       p.vx = p.facing * 320;
     }
     // A stab lunges forward a short way, one motion with the thrust frames.
@@ -513,6 +515,18 @@ class PlayScene {
       this.takeDamage(HIT_DAMAGE);
       if (this.mode !== "play") return;
       p.vy = -260;
+    }
+
+    // A charge bowls through: a box in front of the knight defeats each enemy it touches.
+    if (this.dashGraceT > 0) this.dashGraceT -= dt;
+    if (this.dashT > 0) {
+      const box = { x: p.facing > 0 ? p.x + p.w - 4 : p.x - 14, y: p.y, w: 18, h: p.h };
+      for (const enemy of Enemies.list()) {
+        if (enemy.dead || !this.overlaps(box, enemy)) continue;
+        Effects.spark(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, p.facing);
+        Enemies.defeat(enemy, p.x + p.w / 2);
+        this.hitstopT = 0.05;
+      }
     }
 
     for (const enemy of Enemies.list()) {
@@ -636,6 +650,8 @@ class PlayScene {
   checkEnemyContact(p, prevBottom) {
     // Right after a respawn the player is safe for one second.
     if (this.flashT > 0) return;
+    // A charge makes the knight immune to contact while it lasts, plus 0.15 s.
+    if (this.dashT > 0 || this.dashGraceT > 0) return;
     for (const enemy of Enemies.list()) {
       if (enemy.dead || !this.overlaps(p, enemy)) continue;
       const stomp = p.vy > 0 && prevBottom <= enemy.y + 6;
@@ -721,6 +737,7 @@ class PlayScene {
     this.active = cardId;
     this.mode = "play";
     this.dashT = 0;
+    this.dashGraceT = 0;
     this.hp = MAX_HP;
     this.hpInvT = 0;
     this.floatT = 0;

@@ -214,6 +214,15 @@ const abilities = [
     check: (p) => p.evaluate(() => __scene.dashT > 0 && Math.abs(__scene.player.vx) > 300), want: true,
   },
   {
+    name: 'knight charge (S) bowls through a grunt and hp stays 10', who: 'knight', key: 'KeyS', wait: 600,
+    setup: (p) => p.evaluate(() => {
+      const g = new Enemy('grunt', 268, 418);
+      Enemies.list().push(g); window.__g = g;
+      __scene.player.x = 200; __scene.player.y = 418; __scene.player.facing = 1;
+    }),
+    check: (p) => p.evaluate(() => __g.dead && __scene.hp === 10), want: true,
+  },
+  {
     name: 'ranger shoot (A) defeats a grunt in line', who: 'ranger', key: 'KeyA', wait: 600,
     setup: (p) => p.evaluate(() => {
       const g = new Enemy('grunt', 900, 386);
