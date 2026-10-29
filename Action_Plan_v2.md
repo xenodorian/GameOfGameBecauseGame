@@ -143,7 +143,7 @@ No code change.
 4. Add one line per PNG to `CLAUDE.md` section 10, under a new line `Effects visual check (V6):`. Say OK, or say what looks wrong. Do NOT fix anything here.
 5. Commit `CLAUDE.md` and this file. Message: `V6: effects visual check`.
 
-## V7 [ ]: Close out (the only suite run)
+## V7 [x]: Close out (the only suite run)
 
 1. Run `git status`. It must show a clean tree.
 2. Run check routine step B, then step D (the full suite) ONE time, in the background as `CLAUDE.md` section 2 says.
@@ -159,3 +159,5 @@ No code change.
 - A setting to turn off flash and shake. That needs the user to decide how it should look.
 - Anything in the `method_*` folders or `reference/`.
 - Real devices, other browsers, sound quality checks.
+
+ACTION PLAN V2 COMPLETE

@@ -137,6 +137,7 @@ Open work:
 | 2026-10-29 | T9 | exit 0 | not rerun (no game code) | CREDITS.txt 16.5 KB; sheets pixel-identical |
 | 2026-10-29 | T10 and T11 | exit 0 | 52 passed, 0 failed | enemy shots; weapons partial |
 | 2026-10-29 | 9dc906d (T12) | exit 0 | 52 passed, 0 failed | clean tree |
+| 2026-10-29 | 427aced (V7, Action Plan v2) | exit 0 | 53 passed, 0 failed | stomp check fixed (V0); beam test added (V1). Run once. |
 | 2026-10-29 | effects pass | exit 0 | 51 passed, 1 failed | mage beam, banded slash, thrust, bash, hits, flares, shake, flash. Screenshots checked: beam charge, sustain, fade; knight slash, thrust, bash; ranger shot. No page errors. Failed: `stomp defeats a grunt...; side contact respawns safely` (mode was play, not select, after the side contact). Not investigated or rerun: the user stopped test runs. UNVERIFIED cause: wall-clock waits in that check vs heavier effect drawing |
 
 ## 9. Decisions log (append one line per decision)
