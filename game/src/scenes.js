@@ -137,6 +137,22 @@ class CreditsScene {
   }
 }
 
+// Far background ridge. Drawn at a fraction of the camera's x so it scrolls
+// slower than the level (parallax). Procedural, so it needs no asset.
+function drawHills(ctx, scrollX, color, baseY, freq, amp) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, Engine.H);
+  for (let x = 0; x <= Engine.W; x += 4) {
+    const wx = x + scrollX;
+    const y = baseY - Math.sin(wx * freq) * amp - Math.sin(wx * freq * 0.37 + 1.3) * amp * 0.6;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(Engine.W, Engine.H);
+  ctx.closePath();
+  ctx.fill();
+}
+
 // Play slice: walk, jump, stomp, collect cards, die, pick a card, respawn.
 //
 // Modes:
@@ -419,6 +435,8 @@ class PlayScene {
 
     const cx = Math.round(this.cam.x);
     const cy = Math.round(this.cam.y);
+    drawHills(ctx, cx * 0.25, "#a8cde8", 150, 0.012, 14);
+    drawHills(ctx, cx * 0.5, "#6f9fbf", 190, 0.02, 20);
     World.draw(ctx, this.images, cx, cy, Engine.W, Engine.H);
     World.drawPlatforms(ctx, cx, cy);
     Attacks.draw(ctx, cx, cy);

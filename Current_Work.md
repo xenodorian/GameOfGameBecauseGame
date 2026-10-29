@@ -73,7 +73,7 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
 ## Build status (updated this session)
 
 - Playable build: `game/changeling.html` (one file). Rebuild with `python3 game/tools/build_single_html.py`. Source is in `game/src/`.
-- Browser tests (Playwright, headless Chromium) are in `game/tests/`. Run each with `node game/tests/<name>.js` from a folder where Playwright is installed (`NODE_PATH` set to the global npm root).
+- Full test suite: `NODE_PATH=$(npm root -g) node game/tests/suite.js` (Playwright with Chromium). It runs 24 checks, including all keyboard playthroughs and the gate validator, and exits non-zero on failure. Last run: 24 of 24 pass.
 - Done or partly done: Phases 0 to 8. Phase 9 is the release step and is done except the real-device checks. Phase 4 has all 12 abilities coded but not every effect is tested. Phase 6 has the exit and level-complete screen only. Phases 7 to 9 are mostly open.
 - Open items for the next session: secret areas and their gates, the gate validation tool, the title and pause screens, the credits screen, a real-device pass (gamepad, phone, iOS full screen), and LPC attack sheets and mage art.
 - Decisions (all made by the build agent; no open questions remain):
@@ -112,7 +112,7 @@ Status key: [ ] not started, [~] in progress, [x] done.
 - [x] Tile map loader and collision (grounded, wall, one-way platform). Axis-separated AABB against the tile grid. One-way platform logic is implemented; not yet exercised by a test.
 - [x] Player physics: walk, jump (Up), variable jump height (releasing Up cuts the arc). Verified in headless Chromium.
 - [x] Camera follow with level bounds (eased follow, clamped to the level).
-- [~] Tile render using DCSS tiles (walls, grass, dirt, trees). Background parallax from method_5 is not done yet.
+- [x] Tile render using DCSS tiles (walls, grass, dirt, trees). Two procedural parallax ridges at 0.25x and 0.5x camera speed. Drawn in code, not from method_5's Pillow render, so there is no asset dependency.
 
 ### Phase 3: Enemies and cards
 - [x] Basic enemy AI: patrol with turns at walls and ledges, chase within sight, contact hurts the player, stun from shield bash.
