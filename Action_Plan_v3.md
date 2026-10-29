@@ -11,7 +11,7 @@ Facts already checked (2026-10-29, do not re-research):
 - The warlord spawns with its top at the top of the `W` tile (`world.js`, `enemySpawns.push`). It is 58 px tall, so its feet start 26 px inside the ground. That is the "snap" in review item G1.
 - Enemy hitbox heights: grunt 30, mud revenant 30, rat king 26, archer 30, warlord 58. Player is 18 by 30.
 
-## X1 [ ]: Get the LPC source (no commit)
+## X1 [x]: Get the LPC source (no commit)
 
 ```bash
 cd /home/user && git clone -q --depth 1 --filter=blob:none --sparse https://github.com/liberatedpixelcup/Universal-LPC-Spritesheet-Character-Generator lpc_gen
@@ -19,7 +19,7 @@ cd /home/user/lpc_gen && git sparse-checkout set spritesheets/body spritesheets/
 ```
 If `/home/user/lpc_gen` already exists, run only the second line. Then run `python3 game/tools/build_lpc.py /home/user/lpc_gen` once and run `git status`. If any `game/assets/lpc/*.png` changed, write that in the Decisions log and run `git checkout -- game/assets`.
 
-## X2 [ ]: One 192 px composer (W8, fallbacks)
+## X2 [x]: One 192 px composer (W8, fallbacks)
 
 File: `game/tools/build_lpc.py` only. Goal: compose every row in 192 px cells, then write two sheets.
 

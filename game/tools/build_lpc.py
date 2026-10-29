@@ -29,6 +29,12 @@ FALLBACK = {
     "idle": ["walk"], "jump": ["idle", "walk"], "thrust": ["slash"], "slash": ["thrust"],
     "shoot": ["spellcast", "thrust"], "spellcast": ["shoot", "thrust"], "hurt": ["idle"],
 }
+# Frames are composed in BIG px cells so that weapons can reach past the 64 px body.
+BIG = 192
+COUNT = {"idle": 2, "walk": 9, "slash": 6, "thrust": 8, "spellcast": 7, "shoot": 13, "hurt": 6, "jump": 5}
+BIG_KEYS = ["knight", "ranger", "mage", "rat", "weaver"]
+# A layer pattern -> {anim: fixed path}, for animations that live in another folder (filled below).
+PATH_OVERRIDE = {}
 
 # Each character is a list of (item folder, zPos). zPos values come from the generator's
 # sheet_definitions, looked up by folder in scan_zpos(); the value here is only a fallback.
@@ -111,23 +117,45 @@ def scan_zpos(defs):
 
 
 def layer_path(lpc, pattern, anim):
+    if pattern in PATH_OVERRIDE and anim in PATH_OVERRIDE[pattern]:
+        return lpc / "spritesheets" / PATH_OVERRIDE[pattern][anim]
     return lpc / "spritesheets" / pattern.replace("{anim}", anim)
 
 
 def frames_of(sheet_path, row):
-    """Return the list of 64 px frames in one row of an animation sheet, or None if absent."""
+    """Return the list of BIG px frames in one row of an animation sheet, or None if absent.
+
+    A 64 px cell is centred in a BIG cell. A 128 or 192 px cell (oversize weapons) is centred too.
+    """
     if not sheet_path.exists():
         return None
     im = Image.open(sheet_path).convert("RGBA")
-    n = im.size[0] // CELL
-    return [im.crop((c * CELL, row * CELL, c * CELL + CELL, row * CELL + CELL)) for c in range(n)]
+    cell = CELL if im.size[1] == CELL else im.size[1] // 4
+    if cell not in (64, 128, 192):
+        return None
+    off = (BIG - cell) // 2
+    out = []
+    for c in range(im.size[0] // cell):
+        big = Image.new("RGBA", (BIG, BIG), (0, 0, 0, 0))
+        big.paste(im.crop((c * cell, row * cell, c * cell + cell, row * cell + cell)), (off, off))
+        out.append(big)
+    return out
+
+
+def fit(frames, n):
+    """Cut a frame list to n frames, or repeat its last frame until it has n."""
+    frames = frames[:n]
+    while len(frames) < n:
+        frames.append(frames[-1])
+    return frames
 
 
 def compose(lpc, key, layers, zmap, report):
-    sheet = Image.new("RGBA", (COLS * CELL, len(ANIMS) * CELL), (0, 0, 0, 0))
+    big_sheet = Image.new("RGBA", (COLS * BIG, len(ANIMS) * BIG), (0, 0, 0, 0))
     ordered = sorted(layers, key=lambda L: L[1])
     for r, anim in enumerate(ANIMS):
         row = 0 if anim == "hurt" else RIGHT_ROW
+        n = COUNT[anim]
         frames = None
         for folder, z in ordered:
             layer_frames = frames_of(layer_path(lpc, folder, anim), row)
@@ -140,21 +168,32 @@ def compose(lpc, key, layers, zmap, report):
                     layer_frames = frames_of(layer_path(lpc, folder, sub), RIGHT_ROW if sub != "hurt" else 0)
                     if layer_frames is not None:
                         report.append(f"{key}: {folder} has no {anim}, used {sub}")
+                        if is_weapon:
+                            layer_frames = [layer_frames[0]] * n
                         break
             if layer_frames is None:
                 report.append(f"{key}: {folder} has no {anim}")
                 continue
             if frames is None:
-                frames = [Image.new("RGBA", (CELL, CELL), (0, 0, 0, 0)) for _ in layer_frames]
+                frames = [Image.new("RGBA", (BIG, BIG), (0, 0, 0, 0)) for _ in layer_frames]
             if len(layer_frames) > len(frames):
-                frames += [Image.new("RGBA", (CELL, CELL), (0, 0, 0, 0)) for _ in range(len(layer_frames) - len(frames))]
+                frames += [Image.new("RGBA", (BIG, BIG), (0, 0, 0, 0)) for _ in range(len(layer_frames) - len(frames))]
             for i, fr in enumerate(layer_frames):
                 frames[i] = Image.alpha_composite(frames[i], fr)
-        for c, fr in enumerate((frames or [])[:COLS]):
-            sheet.paste(fr, (c * CELL, r * CELL), fr)
+        frames = fit(frames or [Image.new("RGBA", (BIG, BIG), (0, 0, 0, 0))], n)
+        for c, fr in enumerate(frames[:COLS]):
+            big_sheet.paste(fr, (c * BIG, r * BIG), fr)
+    # The small sheet is the centre 64 px of each BIG cell, the same size the game drew before.
+    small = Image.new("RGBA", (COLS * CELL, len(ANIMS) * CELL), (0, 0, 0, 0))
+    for r in range(len(ANIMS)):
+        for c in range(COLS):
+            x, y = c * BIG + (BIG - CELL) // 2, r * BIG + (BIG - CELL) // 2
+            small.paste(big_sheet.crop((x, y, x + CELL, y + CELL)), (c * CELL, r * CELL))
     OUT.mkdir(parents=True, exist_ok=True)
-    sheet.save(OUT / f"{key}.png")
-    return sheet
+    small.save(OUT / f"{key}.png")
+    if key in BIG_KEYS:
+        big_sheet.save(OUT / f"{key}_big.png")
+    return small
 
 
 def credits_for(defs, zmap_files, folders):
