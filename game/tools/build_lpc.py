@@ -190,7 +190,12 @@ def compose(lpc, key, layers, zmap, report, weapons_only=False):
                 # Use a similar animation so the layer does not vanish from the frames. A weapon
                 # only reuses its walk pose on idle and jump, so it stays in hand there.
                 is_weapon = "/weapon/" in f"/{folder}"
-                subs = (["walk"] if anim in ("idle", "jump") else []) if is_weapon else FALLBACK.get(anim, [])
+                # The player's bow has no standing pose. Its walk frame reads wrong with the body
+                # standing still, so the bow is hidden on idle and jump. The archer always idles, so it keeps its bow.
+                if is_weapon and "/bow/" in f"/{folder}" and key in ("ranger", "weaver") and anim in ("idle", "jump"):
+                    subs = []
+                else:
+                    subs = (["walk"] if anim in ("idle", "jump") else []) if is_weapon else FALLBACK.get(anim, [])
                 for sub in subs:
                     layer_frames = frames_of(layer_path(lpc, folder, sub), RIGHT_ROW if sub != "hurt" else 0)
                     if layer_frames is not None:
