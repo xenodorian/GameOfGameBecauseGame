@@ -154,7 +154,7 @@ Edit `game/tools/validate_gates.py`:
 
 Check: `python3 game/tools/validate_gates.py` exits 0. `--show 1` and `--map 1 basic` print sensible maps.
 
-### [~] A4: Level progression and ending (build and gates pass; suite run pending)
+### [x] A4: Level progression and ending
 1. `PlayScene` constructor takes `(levelIndex = 0, active = "knight")`. First lines: `World.load(levelIndex); Attacks.reset();` Keep the existing `Enemies.spawnFromLevel()` call. Set `this.active = active`.
 2. On `complete`, pressing Enter or Start:
    - if `World.index + 1 < World.count`: `Engine.setScene(new PlayScene(World.index + 1, this.active))`
