@@ -84,10 +84,15 @@ CHARACTERS = {
         ("weapon/ranged/bow/normal/universal/background/{anim}/light.png", -1),
         ("weapon/ranged/bow/normal/universal/foreground/{anim}/light.png", 140),
     ],
-    "archer": [("body/bodies/skeleton/{anim}.png", 10), ("head/heads/skeleton/adult/{anim}.png", 100)],
+    "archer": [
+        ("body/bodies/skeleton/{anim}.png", 10), ("head/heads/skeleton/adult/{anim}.png", 100),
+        ("weapon/ranged/bow/normal/universal/background/{anim}/light.png", -1),
+        ("weapon/ranged/bow/normal/universal/foreground/{anim}/light.png", 140),
+    ],
     "grunt": [
         ("body/bodies/male/{anim}.png", 10), ("head/heads/goblin/adult/{anim}.png", 100),
         ("torso/armour/leather/male/{anim}.png", 60),
+        ("weapon/sword/dagger/behind/{anim}/dagger.png", 9), ("weapon/sword/dagger/{anim}/dagger.png", 140),
     ],
     "mud_revenant": [("body/bodies/zombie/{anim}/zombie.png", 10), ("head/heads/zombie/adult/{anim}.png", 100)],
     "rat_king": [
@@ -99,6 +104,7 @@ CHARACTERS = {
         ("legs/armour/plate/male/{anim}.png", 20), ("feet/armour/plate/male/{anim}.png", 15),
         ("torso/armour/plate/male/{anim}.png", 60), ("arms/armour/plate/male/{anim}.png", 60),
         ("hat/helmet/greathelm/male/{anim}.png", 130),
+        ("weapon/sword/longsword/universal_behind/{anim}/longsword.png", 9), ("weapon/sword/longsword/{anim}/longsword.png", 140),
     ],
 }
 

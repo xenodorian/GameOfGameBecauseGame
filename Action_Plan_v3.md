@@ -118,7 +118,7 @@ Only the warlord is taller than a tile, so nothing else moves. Check routine A t
 
 `game/src/scenes.js`: remove the line `this.drawBanner2(ctx);` from the play-mode HUD branch (about line 816) and add it right after `World.drawPlatforms(ctx, cx, cy);` (about line 756). Sprites and attacks now draw over the banner. Check routine A to C. Commit. Message `X8: level banner draws under sprites`.
 
-## X9 [ ]: Enemy weapons (W6)
+## X9 [x]: Enemy weapons (W6)
 
 Decision (rule 3): the user asked for all characters, so enemies get a walk-pose weapon. File: `build_lpc.py` `CHARACTERS`.
 - `warlord`: add the two longsword layers from X3.

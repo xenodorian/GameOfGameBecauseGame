@@ -128,6 +128,10 @@ head/heads/skeleton
   authors: bluecarrot16, Napsio, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
   licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
   https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-skeleton https://opengameart.org/content/lpc-character-bases
+weapon/ranged/bow/normal
+  authors: Johannes Sjölund (wulax), Pierre Vigier (pvigier)
+  licenses: OGA-BY 3.0+, GPL 3.0, CC-BY 4.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-walk-animations-for-bows
 [grunt]
 body/bodies/male
   authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
@@ -141,6 +145,10 @@ torso/armour/leather
   authors: Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
   licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
   https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-armor
+weapon/sword/dagger
+  authors: bluecarrot16, Johannes Sjölund (wulax), Matthew Krohn (makrohn)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-extended-weapon-animations
 [mud_revenant]
 body/bodies/zombie
   authors: Stephen Challener (Redshrike), Johannes Sjölund (wulax), Sander Frenken (castelonia), Benjamin K. Smith (BenCreating), bluecarrot16
@@ -196,3 +204,7 @@ hat/helmet/greathelm
   authors: bluecarrot16
   licenses: OGA-BY 3.0, CC-BY 3.0, CC-BY 4.0, GPL 2.0, GPL 3.0
   https://opengameart.org/content/lpc-helmets https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+weapon/sword/longsword
+  authors: Johannes Sjölund (wulax), bluecarrot16
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-extended-weapon-animations
