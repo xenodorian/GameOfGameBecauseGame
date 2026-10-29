@@ -437,9 +437,9 @@ check('archer: an arrow hitting the player opens the death selection', async (br
 check('platform: knight jumps up through a one-way platform and lands on it', async (browser) => {
   const page = await newPage(browser);
   await startPlay(page, { hand: [] });
-  // One-way platform 2 tiles above the floor; the knight starts below it.
+  // One-way platform top at y 390, within a jump's reach of the floor (feet at 448, jump peak feet at 384).
   await page.evaluate(() => {
-    World.addPlatform({ x: 440, y: 352, w: 96, h: 6, life: 100 });
+    World.addPlatform({ x: 440, y: 390, w: 96, h: 6, life: 100 });
     __scene.player.x = 470; __scene.player.y = 418; __scene.player.vy = 0; __scene.player.vx = 0;
   });
   await wait(page, 60);
@@ -452,9 +452,9 @@ check('platform: knight jumps up through a one-way platform and lands on it', as
     top = Math.min(top, r.y);
     grounded = r.g;
   }
-  assert.ok(top < 352 - 30, 'knight passed above the platform: top y ' + top);
+  assert.ok(top < 390 - 30, 'knight passed above the platform: top y ' + top);
   const feet = await page.evaluate(() => __scene.player.y + __scene.player.h);
-  assert.equal(grounded && Math.abs(feet - 352) < 1, true, 'standing on the platform, feet ' + feet);
+  assert.equal(grounded && Math.abs(feet - 390) < 1, true, 'standing on the platform, feet ' + feet);
   assert.deepEqual(page.errors, []);
   await page.close();
 });
