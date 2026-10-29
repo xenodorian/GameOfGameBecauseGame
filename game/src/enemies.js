@@ -49,6 +49,8 @@ const ENEMY_DEFS = {
     jumpVy: -420,
     jumpEvery: 3.0,
     fireEvery: 2.2,
+    // Arrow top at 41 px so its centre is at standing player centre height (feet - 15).
+    fireY: 41,
   },
   archer: {
     idle: true,
@@ -103,7 +105,7 @@ class Enemy {
     this.fireT -= dt;
     if (chasing && this.fireT <= 0) {
       this.dir = dx >= 0 ? 1 : -1;
-      Attacks.fireHostile(this.x + this.w / 2, this.y + 12, this.dir);
+      Attacks.fireHostile(this.x + this.w / 2, this.y + (d.fireY || 12), this.dir);
       this.fireT = d.fireEvery;
     }
   }

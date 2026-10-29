@@ -527,6 +527,28 @@ check('archer: fires an arrow when the player is lined up within 200 px', async 
   await page.close();
 });
 
+check('warlord: an arrow flies at the standing player centre height', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [], freeze: false });
+  const r = await page.evaluate(() => {
+    const w = new Enemy('warlord', 600, 418 - 28);
+    Enemies.list().length = 0; Enemies.list().push(w);
+    __scene.player.x = 500; __scene.player.y = 418; __scene.player.vy = 0; __scene.player.vx = 0;
+    const list = [];
+    const orig = Attacks.fireHostile;
+    Attacks.fireHostile = (x, y, d) => { list.push({ y, wy: w.y, wh: w.h, grounded: w.grounded }); orig(x, y, d); };
+    window.__fired = list; window.__w = w;
+    return 0;
+  });
+  for (let i = 0; i < 40 && !(await page.evaluate(() => __fired.length)); i++) await wait(page, 100);
+  const f = await page.evaluate(() => ({ f: __fired[0], feet: __w.y + __w.h, wgr: __w.grounded, pcy: __scene.player.y + 15 }));
+  assert.ok(f.f, 'warlord fired');
+  // Arrow is 4 px tall, so its centre is y + 2. Both stand on the same flat floor, so it must match the player centre.
+  assert.equal(f.f.y + 2, 418 + 15, JSON.stringify(f));
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 check('archer: an arrow hitting the player costs 2 HP', async (browser) => {
   const page = await newPage(browser);
   await archerScene(page, { hand: ['ranger'] });
