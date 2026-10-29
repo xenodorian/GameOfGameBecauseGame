@@ -139,6 +139,7 @@ Open work:
 | 2026-10-29 | 9dc906d (T12) | exit 0 | 52 passed, 0 failed | clean tree |
 | 2026-10-29 | 427aced (V7, Action Plan v2) | exit 0 | 53 passed, 0 failed | stomp check fixed (V0); beam test added (V1). Run once. |
 | 2026-10-29 | effects pass | exit 0 | 51 passed, 1 failed | mage beam, banded slash, thrust, bash, hits, flares, shake, flash. Screenshots checked: beam charge, sustain, fade; knight slash, thrust, bash; ranger shot. No page errors. Failed: `stomp defeats a grunt...; side contact respawns safely` (mode was play, not select, after the side contact). Not investigated or rerun: the user stopped test runs. UNVERIFIED cause: wall-clock waits in that check vs heavier effect drawing |
+| 2026-10-29 | X1 to X10 (Action Plan v3) | exit 0 | 51 passed, 2 failed | stomp side-contact timeout (also failed in effects pass); ranger hop vy -195 (timing). Not rerun. |
 
 ## 9. Decisions log (append one line per decision)
 
@@ -157,6 +158,8 @@ Open work:
 - Action Plan v3 (X8): the banner moved under the sprites but still draws only in play and dying modes, as before.
 - Action Plan v3: local `main` had 12 commits that `origin/main` lacks (origin was force-updated to `10c28e6`). Local `main` was left as it is. Work went to `origin/main` from a detached HEAD with `git push origin HEAD:main`.
 - Action Plan v3 (X3): `build_lpc.py` `item_folder` returns the whole path when no `{anim}` or `.png` part exists, so override folders can be credited.
+
+- Action Plan v3 (X11) suite, not rerun: `stomp defeats a grunt and drops a card; side contact respawns safely` failed with `page.waitForFunction: Timeout 5000ms exceeded.` (same check as the effects pass; cause not verified). `ability: ranger hop (X) gives upward speed in air` failed with `vy -195` (expects -250 to -320). Hop code is unchanged; the sample looks taken about 0.04 s late under load (cause not verified). Neither is arrow or shoot timing, so no rerun.
 
 ## 10. Environment and licenses
 

@@ -132,7 +132,7 @@ Rebuild sheets and run `check_sheets.py`. Enemies draw from the small sheet, so 
 2. Read only `knight` and `ranger` sheets plus the `archer` one. Write one line each under `CLAUDE.md` section 10 `Weapon visual check (X10):`. Say OK or what looks wrong. Do not fix anything here except the X9 archer rule.
 3. Update `CLAUDE.md` section 6 "Open work" art line to the new truth: knight sword on all rows but spellcast and shoot; bows on idle, walk, jump, shoot, hurt; mage staff still hidden on slash and shoot. Commit. Message `X10: weapon visual check`.
 
-## X11 [ ]: Close out (the only suite run)
+## X11 [x]: Close out (the only suite run)
 
 1. `git status` clean. Step B, then step D once in the background.
 2. If a check fails, write its name and the last 10 lines of its output in the Decisions log. Do not rerun. Exception: if the only failures are about arrow timing or the shoot frame, and they wait less than the arrow needs to travel the extra 5 px, raise that wait by 50 ms once and rerun once.
@@ -143,3 +143,5 @@ Rebuild sheets and run `check_sheets.py`. Enemies draw from the small sheet, so 
 - Mage staff on slash and shoot (no LPC frames). Weaver bow colour vs bone arrows. Licenses L1, L2.
 - Hostile archer arrow origin. Mage beam origin (V6 said it is fine).
 - Any level layout change, `method_*` folders, `reference/`.
+
+ACTION PLAN V3 COMPLETE
