@@ -94,6 +94,65 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
     - Chasm pocket power-up (col 70, row 13): knight (charge), ranger (rope and drop), mage (blink). Basic moves cannot reach it.
     - Main route: every character reaches the exit.
 
+## Review findings and task list for executor agents (2026-10-29)
+
+Written by a review pass for cheaper models to execute. Do the tasks in order. Each task is small. After every task, run the two checks below and do not move on until they match the expected result.
+
+Checks:
+- Rebuild: `python3 game/tools/build_single_html.py`
+- Gates: `python3 game/tools/validate_gates.py` (expect exit 0)
+- Suite: `NODE_PATH=$(npm root -g) node game/tests/suite.js` (expect "25 passed, 0 failed", about 5 to 8 minutes). Do not pipe it through `tail` if you need the exit code.
+
+Status when reviewed (verified by running both commands on commit dc37a7a): suite 21 of 25 pass. Gates exit 1. The "25 of 25" note in Build status is out of date. The last content commit (19c1df6) skipped testing, and it broke four checks.
+
+### Task 1: Fix the gate validator failure (small)
+- Failure text: `card at col 22 row 12 is reachable with basic moves, so it is not gated`.
+- Cause (verified): `validate_gates.py` treats every `c` and `p` in the level as a secret. The col 22 card was added on purpose as main-route content, so it is not meant to be gated.
+- Fix: in `game/tools/validate_gates.py`, add a set near the top, for example `MAIN_ROUTE_PICKUPS = {(22, 12)}` as (col, row). Skip the gated check for pickups in that set, but still print them as "main route pickup, reachable by: ...". Update the docstring at the top of the file to say so.
+- Done when: gates exits 0 and the suite check "gates: validate_gates.py exits 0" passes.
+
+### Task 2: Fix the three playthrough failures (medium; diagnose first)
+- Failure: `playthrough: keyboard bot reaches the exit as knight/ranger/mage` returns `{"ok":false,"mode":"play"}` after 90 s. The bot never reaches the flag.
+- Unverified hypothesis: the archer added at row 13, col 56 stands two tiles before the exit flag (col 58). The bot only walks right and jumps at walls and gaps. It likely touches the archer or its arrow, dies, respawns behind it, and loops. The grunt at col 34 may also play a part.
+- Diagnose step (do this before changing code): in the suite's playthrough check (`game/tests/suite.js`, around line 346), temporarily make the timeout result also return `x: Math.round(s.player.x / World.TILE)` and a death counter if one exists on the scene. Run only that check (comment out others locally, do not commit that). Record the column where the bot stalls.
+- Fix options, pick the smallest that works and say which in the commit message:
+  a. If the archer is the cause: move the archer so it is not on the last stretch before the flag (for example to col 50, `m` is at 52, so check spacing), or put it on a raised platform off the main path. Keep the "main level completable with any character" rule.
+  b. If the bot is simply bad at enemies: make the bot jump when an enemy is within 2 tiles ahead (`Enemies.list()` gives positions). Stomps defeat enemies, so jumping onto them is valid play.
+- Prefer option b if the stall is at an enemy, because it tests real play. Do not raise the 90 s timeout as the fix.
+- Done when: all three playthrough checks pass.
+
+### Task 3: Add tests for the untested archer (small)
+- The archer (`game/src/enemies.js`, `archer` entry at about line 37) has no suite check. Copy the shape of the rat king check (`enemy: rat king hops toward a nearby player`) and add two checks:
+  1. Archer fires an arrow when the player is level with it and within 200 px.
+  2. An arrow hitting the player opens the death selection (scene `mode` becomes `select`).
+- Update the expected count in this file from 25 to the new total.
+
+### Task 4: Correct the docs in this file (small, text only)
+- Build status says "Last run: 25 of 25 pass". Replace with the real result after Tasks 1 to 3.
+- Phase 6 and Phase 8 lines name `test_playthrough.js`, `test_menus.js`, and `test_phase5.js`. Those files no longer exist. They were merged into `game/tests/suite.js`. Replace the names.
+- "Open items for the next session" under Build status lists items that are now done (secret areas, gate tool, title, pause, credits). Remove the done ones.
+- Gated secret note says the col 47 card is reachable by "mage float plus jump". The validator says only ranger reaches it. Change the note to "ranger only (per validate_gates.py)". Do not change the level unless the user asks for the mage to reach it.
+- Phase 9 says "about 77 KB". Check with `ls -l game/changeling.html` and update.
+
+### Task 5: Repo hygiene (small)
+- `method_4_sourced_assets/__pycache__/build_walk.cpython-313.pyc` is committed even though `.gitignore` lists `__pycache__/`. Run `git rm --cached -r method_4_sourced_assets/__pycache__`.
+
+### Task 6: Untested code paths (small each, optional)
+Add one suite check each, copying the shape of nearby ability checks:
+- Thrust (knight ability 4) defeats an enemy at reach range.
+- Spell bolt (mage ability 1) defeats an enemy.
+- Q discards the current character (Down-hold is tested, Q is not).
+- One-way platform (`=`): the player can jump up through it from below and stand on it.
+
+### Out of scope for executor agents (needs the user)
+- Real-device checks (gamepad, phone, iOS full screen), other browsers, mage art, LPC attack animations, and sound. Do not start these without the user.
+
+### Rules for executor agents
+- Work on the current branch. Commit after each task with a clear message. Push with `git push -u origin <branch>`.
+- Always rebuild `game/changeling.html` after editing `game/src/` and commit the rebuilt file in the same commit.
+- Never mark a task done without running the checks. Write the real pass count into this file.
+- If a fix needs a design change (moving level content, changing a rule in Decisions), stop and ask the user first.
+
 ## Open work checklist (next round)
 
 Status key: [ ] not started, [~] in progress, [x] done. Hardware, other browsers, art, and sound are out of scope for this round.
