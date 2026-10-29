@@ -45,6 +45,14 @@ ABILITY_SETS = {
 
 LEVELS_JS = GAME / "src" / "levels.js"
 
+# Per-level minimums, keyed by level number (1-based). See Expansion_Plan.md, R2.
+ENEMY_MIN = {1: 5, 2: 8, 3: 8, 4: 11, 5: 11, 6: 13, 7: 14, 8: 1}
+SPIKE_MIN = {1: 0, 2: 4, 3: 0, 4: 6, 5: 2, 6: 10, 7: 6, 8: 0}
+CRACK_MIN = {1: 0, 2: 0, 3: 0, 4: 4, 5: 4, 6: 4, 7: 4, 8: 0}
+ENEMY_CHARS = "gmjaW"
+# Characters whose exclusive secrets the game-wide check looks for.
+EXCLUSIVE_CHARS = ["knight", "ranger", "rat", "weaver"]
+
 
 def load_levels():
     """All levels in levels.js, as (name, rows) pairs in play order."""
@@ -212,8 +220,11 @@ def reachable(rows, abilities, start):
         ropes |= new
 
 
-def check_level(number, name, rows):
-    """Gate checks for one level. Returns a list of failure messages."""
+def check_level(number, name, rows, secret_log):
+    """Gate checks for one level. Returns a list of failure messages.
+
+    Appends (level, label, reachers) for each secret to secret_log.
+    """
     print(f"Level {number}: {name}")
     spawns = [(x, y) for y, row in enumerate(rows) for x, ch in enumerate(row) if ch == "S"]
     flags = [(x, y) for y, row in enumerate(rows) for x, ch in enumerate(row) if ch == "F"]
@@ -224,6 +235,24 @@ def check_level(number, name, rows):
         return failures
     spawn, flag = spawns[0], flags[0]
     pickups = [(ch, x, y) for y, row in enumerate(rows) for x, ch in enumerate(row) if ch in "ckp"]
+
+    # Level rules: enemy and hazard spacing, and minimum counts.
+    enemies = [(x, y) for y, row in enumerate(rows) for x, ch in enumerate(row) if ch in ENEMY_CHARS]
+    for ex, ey in enemies:
+        if abs(ex - spawn[0]) <= 8:
+            failures.append(f"level {number}: enemy at col {ex} row {ey} is within 8 columns of the start")
+    for ax, ay in [(x, y) for x, y in enemies if rows[y][x] == "a"]:
+        if abs(ax - flag[0]) <= 5:
+            failures.append(f"level {number}: archer at col {ax} row {ay} is within 5 columns of the exit")
+    counts = {
+        "enemies": (len(enemies), ENEMY_MIN.get(number, 0)),
+        "spikes": (sum(row.count("^") for row in rows), SPIKE_MIN.get(number, 0)),
+        "cracked walls": (sum(row.count("x") for row in rows), CRACK_MIN.get(number, 0)),
+    }
+    for what, (have, need) in counts.items():
+        print(f"  {what}: {have} (minimum {need})")
+        if have < need:
+            failures.append(f"level {number}: {what} {have}, need at least {need}")
 
     results = {name_: reachable(rows, abilities, spawn) for name_, abilities in ABILITY_SETS.items()}
 
@@ -251,6 +280,7 @@ def check_level(number, name, rows):
             failures.append(f"level {number}: {label} is not reachable by any character")
         if not gated:
             failures.append(f"level {number}: {label} is reachable with basic moves, so it is not gated")
+        secret_log.append((number, label, by))
     return failures
 
 
@@ -294,10 +324,25 @@ def main():
 
     chosen = [args.level - 1] if args.level else range(len(levels))
     failures = []
+    secret_log = []
     for i in chosen:
         name, rows = levels[i]
-        failures += check_level(i + 1, name, rows)
+        failures += check_level(i + 1, name, rows, secret_log)
         print()
+
+    # Game-wide: which characters have a secret of their own.
+    print("Exclusive secrets (game-wide):")
+    for char in EXCLUSIVE_CHARS:
+        mine = [(n, lbl) for n, lbl, by in secret_log if by == [char]]
+        ok = bool(mine)
+        print(f"  {char:7s} {'OK' if ok else 'FAIL'}  " + ("; ".join(f"level {n} {lbl}" for n, lbl in mine) or "no secret only this character can reach"))
+        if not ok:
+            failures.append(f"no secret reachable only by {char}")
+    mage_alone = [(n, lbl) for n, lbl, by in secret_log if "mage" in by and len(by) <= 2]
+    ok = bool(mage_alone)
+    print(f"  mage    {'OK' if ok else 'FAIL'}  " + ("; ".join(f"level {n} {lbl}" for n, lbl in mage_alone) or "no secret with mage and at most one other"))
+    if not ok:
+        failures.append("no secret reachable by mage with at most one other character")
 
     if failures:
         print("FAILED:")

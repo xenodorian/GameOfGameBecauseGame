@@ -416,7 +416,7 @@ Problems found (verified by reading levels.js and the validator output):
 3. Add a suite check `rope: placing a second rope removes the first` (place two, assert `World.platforms.length === 1`).
 4. Run the gates. Some secrets will change who can reach them. That is expected; R3 fixes the levels. Do not change levels in this task. If the gates now fail, still commit this task with the note `gates fail until R3` in the commit message (this one exception to the rules is allowed).
 
-### [ ] R2: Validator enforces the level rules
+### [x] R2: Validator enforces the level rules
 Add these checks to `check_level` in `validate_gates.py`, each a failure with a clear message:
 1. No enemy marker (`g`, `m`, `j`, `a`, `W`) within 8 columns of `S`.
 2. No archer `a` within 5 columns of `F`.
@@ -464,6 +464,7 @@ Run all three checks. Record the real suite count and the gates summary (includi
 (Executor agents add one line per decision here: task id, what was unclear, what was chosen.)
 
 - E9: the level 2 keyboard bot check was dropped. The bot only looks at the tile ahead on its own row, so it walks into the step at column 40 and never jumps. The validator shows basic moves can clear the step, so the level is fine; the bot is the limit. No check added, per the E9 rule.
+- R1: suite 38 of 39 pass; the only failure is the gates check, as expected until R3 (secrets re-gated).
 - E9: a main-route card (k) was added at the quiet start of levels 1 to 4 (columns 5 to 7), so no 20-column stretch is empty.
 - Opus: exit zone stays 4 tiles tall (jumping over the flag completes the level).
 - C1: a rat or weaver card could be selected before C2/C3 existed, which left the active character undefined and froze play. Added their CHARACTERS entries (C2/C3 step 1) with unimplemented ability ids that do nothing.
