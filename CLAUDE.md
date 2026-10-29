@@ -140,6 +140,7 @@ Open work:
 | 2026-10-29 | 427aced (V7, Action Plan v2) | exit 0 | 53 passed, 0 failed | stomp check fixed (V0); beam test added (V1). Run once. |
 | 2026-10-29 | effects pass | exit 0 | 51 passed, 1 failed | mage beam, banded slash, thrust, bash, hits, flares, shake, flash. Screenshots checked: beam charge, sustain, fade; knight slash, thrust, bash; ranger shot. No page errors. Failed: `stomp defeats a grunt...; side contact respawns safely` (mode was play, not select, after the side contact). Not investigated or rerun: the user stopped test runs. UNVERIFIED cause: wall-clock waits in that check vs heavier effect drawing |
 | 2026-10-29 | X1 to X10 (Action Plan v3) | exit 0 | 51 passed, 2 failed | stomp side-contact timeout (also failed in effects pass); ranger hop vy -195 (timing). Not rerun. |
+| 2026-10-29 | 17dc508 (feedback pass, bridges) | exit 0 | 53 passed, 0 failed | full suite run on the committed build |
 
 ## 9. Decisions log (append one line per decision)
 
