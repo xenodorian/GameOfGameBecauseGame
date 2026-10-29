@@ -74,7 +74,7 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
 
 - Playable build: `game/changeling.html` (one file). Rebuild with `python3 game/tools/build_single_html.py`. Source is in `game/src/`.
 - Full test suite: `NODE_PATH=$(npm root -g) node game/tests/suite.js` (Playwright with Chromium). It runs 28 checks, including all keyboard playthroughs and the gate validator, and exits non-zero on failure. Last run: 28 of 28 pass.
-- Done or partly done: Phases 0 to 8. Phase 9 is the release step and is done except the real-device checks. Phase 4 has all 12 abilities coded but not every effect is tested. Phase 6 has the exit and level-complete screen only. Phases 7 to 9 are mostly open.
+- Done or partly done: Phases 0 to 9, except real-device checks, LPC attack animations, mage art, and sound. Phase 4 has all 12 abilities coded; thrust and spell bolt are not separately tested.
 - Open items for the next session: a real-device pass (gamepad, phone, iOS full screen), and LPC attack sheets and mage art.
 - Decisions (all made by the build agent; no open questions remain):
   - Stomp defeats enemies, alongside the abilities. Decided: keep it.
@@ -153,13 +153,51 @@ Add one suite check each, copying the shape of nearby ability checks:
 - Never mark a task done without running the checks. Write the real pass count into this file.
 - If a fix needs a design change (moving level content, changing a rule in Decisions), stop and ask the user first.
 
+## Opus review 2 of executor work (2026-10-29, commits a68c56c to 7774d33)
+
+Verified by running the checks on commit 7774d33: rebuild produces no diff, `validate_gates.py` exits 0, suite 28 of 28 pass.
+
+### Grades for the Opus review notes tasks
+- Task 1 (gate validator): done well. `MAIN_ROUTE_PICKUPS` added, docstring updated, the output still lists the pickup.
+- Task 2 (playthrough): fixed, but by a different route than planned. The bot now walks back left if it overshoots the flag, and the exit zone in `world.js` grows from 1 tile to 4 tiles tall (3 above the flag). That second part changes gameplay: a player who jumps over the flag now completes the level. It is a reasonable change, but it is a design change made without asking. The commit does not say what the diagnosis found. Kept as is; flagged for the user below.
+- Task 3 (archer checks): done well. Both checks isolate the archer and assert no page errors. `Attacks.hostileCount()` was added as a small test hook.
+- Task 4 (docs): mostly done. Two stale lines were left (the "Phases 7 to 9 are mostly open" line and "Not tested, per instruction" on the archer). Fixed in this review.
+- Task 5 (pycache): done.
+- Task 6 (untested paths): partly done. Only the platform check was added. Thrust, spell bolt, and Q discard were skipped, and the skip was not recorded.
+- Correction to my own notes: Task 6 called `=` a one-way platform. That was wrong. In `world.js`, `isSolid` treats `=` as a solid tile. The executor tested the rope platform (`World.addPlatform`), which is the real one-way surface, so the check is valid. The tile one-way path (`isOneWay`, used by `_`) has no check, and the level has no `_` tiles.
+
+### Needs the user (do not do these without asking)
+- Exit zone: keep the 4-tile-tall exit zone (jumping over the flag counts), or go back to the 1-tile zone and move the archer away from the flag? Current state: 4 tiles tall.
+- The level is short (72 columns, about 16 s to finish). A second level, or a longer first level, is a design decision.
+
+### Next tasks for executor agents
+Same rules as the Opus review notes section: one task per commit, run the checks after each, write the real pass count here, push to `main`.
+
+Task A: Thrust check (small)
+- In `game/tests/suite.js`, find the existing slash check (search for `slash`). Copy it. Change the character to knight and press the ability 4 key (`KeyX`) instead of the slash key. Place the enemy far enough away that slash would miss but thrust hits (read the thrust hitbox width in `game/src/abilities.js`, search for `thrust`).
+- Assert the enemy is defeated (removed from `Enemies.list()` or marked dead, copy whatever the slash check asserts).
+
+Task B: Spell bolt check (small)
+- Copy the existing shoot check (search for `shoot`). Change the character to mage and press ability 1 (`KeyA`). Assert the enemy is defeated.
+
+Task C: Q discard check (small)
+- Copy the existing Down-hold discard check (search for `discard`). Replace holding Down with one press of `KeyQ`. Assert the same result the Down-hold check asserts.
+
+Task D: Tile one-way platform check (small)
+- The only tile one-way path is `_` (`isOneWay` in `game/src/world.js`). The level has none. In a new check, set one tile to `_` above the floor at runtime (look at how `World.at` reads `tiles`; if there is no setter, add `setTile(tx, ty, ch)` to the returned object in `world.js` and rebuild). Then copy the shape of the platform check: jump up through it, assert the knight stands on it.
+
+Task E: Record results (small, text only)
+- Update the suite count in Build status (28 plus the new checks). Mark Tasks A to D done here with the real pass count.
+
+Out of scope: anything in "Needs the user" above, real-device checks, art, sound.
+
 ## Open work checklist (next round)
 
 Status key: [ ] not started, [~] in progress, [x] done. Hardware, other browsers, art, and sound are out of scope for this round.
 
 - [x] Main level content: added a grunt (row 13, col 34), a card (row 12, col 22), and the archer (row 13, col 56) along the main route. Route geometry unchanged.
 - [x] Gated secret: a card on a platform at row 10, cols 46 to 49 (card at row 8, col 47). Ranger hop from col 45 reaches it. `validate_gates.py` confirms the ranger is the only character that reaches it, and basic moves cannot.
-- [x] Enemy type: archer (Sprite Foundry bone weaver sprite, MIT). Stands still, fires a hostile arrow when lined up within 200 px every 1.6 s. A hit opens the death selection. Not tested, per instruction.
+- [x] Enemy type: archer (Sprite Foundry bone weaver sprite, MIT). Stands still, fires a hostile arrow when lined up within 200 px every 1.6 s. A hit opens the death selection. Tested by two suite checks.
 
 ## Build workflow (task list)
 
