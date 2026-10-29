@@ -825,7 +825,7 @@ class PlayScene {
     const p = this.player;
     if (p.action) {
       p.animT += dt;
-      if (p.animT > ACTION_LENGTH[p.action]) p.action = "";
+      if (p.animT > ACTION_LENGTH[p.action] && !p.holdPose) p.action = "";
     }
     if (p.landT > 0) p.landT -= dt;
     if (p.grounded) p.walkDist += Math.abs(p.vx) * dt;
@@ -862,6 +862,11 @@ class PlayScene {
       }
       // The body itself is drawn faded while the ghost ability lasts.
       ctx.globalAlpha = 0.5;
+    }
+    // Melee swings leave the weapon's afterimage behind the body (see drawWeaponTrail).
+    const weapon = IMG[LPC_KEY[this.active] + "_weapon_big"];
+    if (weapon && big && this.mode !== "dying" && (p.action === "slash" || p.action === "thrust")) {
+      drawWeaponTrail(ctx, weapon, frame.row, frame.col, 0, sx, sy, p.facing);
     }
     drawFrame(ctx, big || sheet, frame, sx, sy, p.facing, size);
     ctx.restore();

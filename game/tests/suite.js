@@ -214,12 +214,12 @@ const abilities = [
     check: (p) => p.evaluate(() => __scene.dashT > 0 && Math.abs(__scene.player.vx) > 300), want: true,
   },
   {
-    name: 'ranger shoot (A) defeats a grunt in line', who: 'ranger', key: 'KeyA', wait: 400,
+    name: 'ranger shoot (A) defeats a grunt in line', who: 'ranger', key: 'KeyA', wait: 600,
     setup: (p) => p.evaluate(() => {
-      const g = new Enemy('grunt', 900, 256);
+      const g = new Enemy('grunt', 900, 386);
       g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 };
       Enemies.list().push(g); window.__g = g;
-      __scene.player.x = 860; __scene.player.y = 256; __scene.player.facing = 1;
+      __scene.player.x = 860; __scene.player.y = 386; __scene.player.facing = 1;
     }),
     check: (p) => p.evaluate(() => __g.dead), want: true,
   },
@@ -238,21 +238,21 @@ const abilities = [
   {
     name: 'mage spell bolt (A) defeats a grunt in line', who: 'mage', key: 'KeyA', wait: 400,
     setup: (p) => p.evaluate(() => {
-      const g = new Enemy('grunt', 900, 256);
+      const g = new Enemy('grunt', 900, 386);
       g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 };
       Enemies.list().push(g); window.__g = g;
-      __scene.player.x = 860; __scene.player.y = 256; __scene.player.facing = 1;
+      __scene.player.x = 860; __scene.player.y = 386; __scene.player.facing = 1;
     }),
     check: (p) => p.evaluate(() => __g.dead), want: true,
   },
   {
-    name: 'mage beam (A) hits two grunts in a row', who: 'mage', key: 'KeyA', wait: 400,
+    name: 'mage beam (A) hits two grunts in a row', who: 'mage', key: 'KeyA', wait: 800,
     setup: (p) => p.evaluate(() => {
-      const a = new Enemy('grunt', 900, 256);
-      const b = new Enemy('grunt', 950, 256);
+      const a = new Enemy('grunt', 900, 386);
+      const b = new Enemy('grunt', 950, 386);
       for (const g of [a, b]) { g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 }; Enemies.list().push(g); }
       window.__g = a; window.__g2 = b;
-      __scene.player.x = 860; __scene.player.y = 256; __scene.player.facing = 1;
+      __scene.player.x = 860; __scene.player.y = 386; __scene.player.facing = 1;
     }),
     check: (p) => p.evaluate(() => __g.dead && __g2.dead), want: true,
   },
@@ -300,9 +300,11 @@ for (const a of abilities) {
       await page.keyboard.up(a.hold);
     } else {
       // The game clock runs slower than wall time in headless Chromium, so wait for the charge to set its speed.
-      const t0 = a.name.includes('charge') ? await page.evaluate(() => __scene.time) : null;
+      // Shots and beams release on a game-time frame (0.1 s and 0.3 s in), so those wait on the game clock too.
+      const gameWait = a.name.includes('charge') ? 0.08 : /ranger shoot|mage beam|mage spell bolt/.test(a.name) ? 0.6 : null;
+      const t0 = gameWait !== null ? await page.evaluate(() => __scene.time) : null;
       await page.keyboard.press(a.key); await wait(page, a.wait);
-      if (t0 !== null) await page.waitForFunction((t) => __scene.time >= t, t0 + 0.08);
+      if (t0 !== null) await page.waitForFunction((t) => __scene.time >= t, t0 + gameWait);
       const got = await a.check(page);
       if (a.want === 'upward') assert.ok(got < -250 && got > -320, 'vy ' + got);
       else if (a.want === 'leap') assert.ok(got < -500 && got > -560, 'vy ' + got);

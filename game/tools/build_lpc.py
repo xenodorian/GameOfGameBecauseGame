@@ -49,6 +49,10 @@ PATH_OVERRIDE = {
     "weapon/ranged/bow/normal/universal/foreground/{anim}/light.png": {
         "walk": "weapon/ranged/bow/normal/walk/foreground/light.png",
     },
+    # The mage's staff swings with the wand's slash frames (the library has no staff swing).
+    "weapon/magic/simple/foreground/{anim}/simple.png": {
+        "slash": "weapon/magic/wand/male/slash/wand.png",
+    },
 }
 
 # Each character is a list of (item folder, zPos). zPos values come from the generator's
@@ -171,9 +175,11 @@ def fit(frames, n):
     return frames
 
 
-def compose(lpc, key, layers, zmap, report):
+def compose(lpc, key, layers, zmap, report, weapons_only=False):
     big_sheet = Image.new("RGBA", (COLS * BIG, len(ANIMS) * BIG), (0, 0, 0, 0))
     ordered = sorted(layers, key=lambda L: L[1])
+    if weapons_only:
+        ordered = [L for L in ordered if "/weapon/" in f"/{L[0]}"]
     for r, anim in enumerate(ANIMS):
         row = 0 if anim == "hurt" else RIGHT_ROW
         n = COUNT[anim]
@@ -211,9 +217,10 @@ def compose(lpc, key, layers, zmap, report):
             x, y = c * BIG + (BIG - CELL) // 2, r * BIG + (BIG - CELL) // 2
             small.paste(big_sheet.crop((x, y, x + CELL, y + CELL)), (c * CELL, r * CELL))
     OUT.mkdir(parents=True, exist_ok=True)
-    small.save(OUT / f"{key}.png")
+    if not weapons_only:
+        small.save(OUT / f"{key}.png")
     if key in BIG_KEYS:
-        big_sheet.save(OUT / f"{key}_big.png")
+        big_sheet.save(OUT / (f"{key}_weapon_big.png" if weapons_only else f"{key}_big.png"))
     return small
 
 
@@ -250,6 +257,8 @@ def main():
     all_credit_lines = []
     for key, layers in CHARACTERS.items():
         compose(lpc, key, layers, zmap, report)
+        if key in BIG_KEYS:
+            compose(lpc, key, layers, zmap, report, weapons_only=True)
         folders = [f for f, _ in layers]
         folders += [str(pathlib.Path(p).parent) for f in list(folders) if f in PATH_OVERRIDE for p in PATH_OVERRIDE[f].values()]
         all_credit_lines += [f"[{key}]"] + credits_for(defs, {k: v[1] for k, v in zfound.items()}, folders)

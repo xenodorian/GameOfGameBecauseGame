@@ -19,7 +19,7 @@ const ACTION_LENGTH = { slash: 0.2, thrust: 0.24, spellcast: 0.3, shoot: 0.3, ju
 // The animation each ability plays. Abilities not listed play no action.
 const ACTION_FOR_ABILITY = {
   slash: "slash", thrust: "thrust", shield_bash: "slash", charge: "thrust",
-  shoot: "shoot", arrow_anchor: "shoot", spell_bolt: "spellcast", bone_bridge: "spellcast",
+  shoot: "shoot", arrow_anchor: "shoot", spell_bolt: "slash", bone_bridge: "spellcast",
   blink: "spellcast", float: "spellcast", ghost: "spellcast",
   leap: "jump", hop: "jump", scurry: "walk",
 };
@@ -79,5 +79,68 @@ function drawFrame(ctx, sheet, frame, x, y, facing, size = 64) {
     ctx.restore();
   } else {
     ctx.drawImage(sheet, sx, sy, size, size, x, y, size, size);
+  }
+}
+
+// Weapon-only sheets (<key>_weapon_big, made by build_lpc.py) show the blade alone. Which cells
+// have pixels is read once per sheet, so an action can tell if its weapon has a frame.
+const weaponCellCache = new WeakMap();
+function weaponCells(sheet) {
+  if (weaponCellCache.has(sheet)) return weaponCellCache.get(sheet);
+  const c = document.createElement("canvas");
+  c.width = sheet.width;
+  c.height = sheet.height;
+  const cx = c.getContext("2d", { willReadFrequently: true });
+  cx.drawImage(sheet, 0, 0);
+  const data = cx.getImageData(0, 0, c.width, c.height).data;
+  const cells = [];
+  for (let r = 0; r < sheet.height / 192; r++) {
+    cells.push([]);
+    for (let k = 0; k < sheet.width / 192; k++) {
+      let any = false;
+      for (let y = 0; y < 192 && !any; y++) {
+        for (let x = 0; x < 192 && !any; x++) {
+          any = data[((r * 192 + y) * c.width + k * 192 + x) * 4 + 3] > 0;
+        }
+      }
+      cells[r].push(any);
+    }
+  }
+  weaponCellCache.set(sheet, cells);
+  return cells;
+}
+
+// True when a character's weapon has any frame on this row (for example the knight's sword on slash).
+function weaponHasRow(key, row) {
+  const sheet = IMG[key + "_weapon_big"];
+  if (!sheet) return false;
+  return weaponCells(sheet)[row].some(Boolean);
+}
+
+// Afterimage of a melee swing: the weapon's frames from the last two steps, tinted pale steel
+// and drawn behind the body. The trail is the blade's own past positions, so it stays on the blade.
+const tintCanvas = (() => {
+  const c = document.createElement("canvas");
+  c.width = 192;
+  c.height = 192;
+  return c;
+})();
+function drawWeaponTrail(ctx, weaponSheet, row, col, first, x, y, facing) {
+  const cells = weaponCells(weaponSheet);
+  const tg = tintCanvas.getContext("2d");
+  const fades = [0.4, 0.18];
+  for (let k = 1; k <= fades.length; k++) {
+    const c = col - k;
+    if (c < first || !cells[row][c]) continue;
+    tg.globalCompositeOperation = "source-over";
+    tg.clearRect(0, 0, 192, 192);
+    tg.drawImage(weaponSheet, c * 192, row * 192, 192, 192, 0, 0, 192, 192);
+    tg.globalCompositeOperation = "source-in";
+    tg.fillStyle = "#cfe9ff";
+    tg.fillRect(0, 0, 192, 192);
+    ctx.save();
+    ctx.globalAlpha *= fades[k - 1];
+    drawFrame(ctx, tintCanvas, { row: 0, col: 0 }, x, y, facing, 192);
+    ctx.restore();
   }
 }

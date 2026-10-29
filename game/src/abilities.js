@@ -60,6 +60,11 @@ const Attacks = (() => {
   const MAX_PROJECTILES = 2;
   // Mage beam (spell_bolt). One at a time. Phases in seconds: charge, fire, sustain, fade.
   let beam = null;
+  // A ranger or weaver shot waiting for its release frame (see releaseShot).
+  let pendingShot = null;
+  // After the release, the shot pose holds for a short follow-through (shotHold seconds on shotBody).
+  let shotHold = 0;
+  let shotBody = null;
   const BEAM = { charge: 0.1, grow: 1400, range: 224, end: 0.42, fade: 0.14, half: 4 };
   // Set when an attack hits an enemy this step. The scene reads and clears it (hit stop).
   let hitThisStep = false;
@@ -90,10 +95,10 @@ const Attacks = (() => {
     Sfx.play(id === "spell_bolt" ? "beam" : "ability");
     switch (id) {
       case "slash":
-        hitboxes.push({ ...faceRect(p, 36, 24, 4), ...fx(p), t: 0.15, total: 0.15, kind: "slash" });
+        hitboxes.push({ ...faceRect(p, 36, 24, 4), ...fx(p), t: 0.15, total: 0.15, kind: "slash", weapon: weaponHasRow(LPC_KEY[scene.active], ANIM_ROWS.slash[0]) });
         break;
       case "thrust":
-        hitboxes.push({ ...faceRect(p, 56, 12, 10), ...fx(p), t: 0.15, total: 0.15, kind: "thrust" });
+        hitboxes.push({ ...faceRect(p, 56, 12, 10), ...fx(p), t: 0.15, total: 0.15, kind: "thrust", weapon: weaponHasRow(LPC_KEY[scene.active], ANIM_ROWS.thrust[0]) });
         break;
       case "shield_bash":
         hitboxes.push({ ...faceRect(p, 22, 30, 0), ...fx(p), t: 0.12, total: 0.12, kind: "bash", stun: 1.2 });
@@ -102,26 +107,12 @@ const Attacks = (() => {
         scene.dashT = 0.25;
         break;
       case "spell_bolt":
-        if (!beam) beam = { body: p, dir: p.facing, t: 0, len: 0, hitWall: false, hit: new Set(), seed: 1, motes: [] };
+        if (!beam) beam = { body: p, dir: p.facing, t: -0.2, len: 0, hitWall: false, hit: new Set(), seed: 1, motes: [] };
         break;
-      case "shoot": {
-        // The bow is held out in front of the body, so the arrow and its flare start there.
-        const cx = p.x + p.w / 2;
-        Effects.flare(cx + 22 * p.facing, p.y + 8, scene.active === "weaver" ? "bone" : "steel");
-        const live = projectiles.filter((q) => q.owner === scene.active).length;
-        if (live >= MAX_PROJECTILES) break;
-        projectiles.push({
-          x: p.facing > 0 ? cx + 14 : cx - 22,
-          y: p.y + 6,
-          w: 8,
-          h: 4,
-          vx: p.facing * 380,
-          life: 1.2,
-          owner: scene.active,
-          kind: id,
-        });
+      case "shoot":
+        // The arrow leaves the bowstring on the release frame, not when the key is pressed.
+        pendingShot = { t: 0, owner: scene.active, kind: id, scene };
         break;
-      }
       case "arrow_anchor": {
         // Rope platform three tiles long, one tile in front, two tiles above the feet.
         const x = p.facing > 0 ? p.x + p.w + 4 : p.x - 4 - 3 * World.TILE;
@@ -205,6 +196,24 @@ const Attacks = (() => {
     }
 
     if (beam) updateBeam(dt);
+    if (pendingShot) {
+      pendingShot.t += dt;
+      if (pendingShot.t >= SHOT_RELEASE) {
+        releaseShot(pendingShot);
+        pendingShot = null;
+      }
+    }
+    if (shotBody) {
+      // Pin the shoot pose through the follow-through, then let the body go back to idle.
+      shotHold -= dt;
+      shotBody.holdPose = shotHold > 0;
+      if (shotHold > 0) {
+        shotBody.action = "shoot";
+        shotBody.animT = Math.max(shotBody.animT, ACTION_LENGTH.shoot);
+      } else {
+        shotBody = null;
+      }
+    }
 
     for (const q of projectiles) {
       q.life -= dt;
@@ -237,10 +246,42 @@ const Attacks = (() => {
     }
   }
 
-  // Staff tip, where the beam starts.
+  // Release frame of the 0.3 s shoot action (frame 9 is 0.1 s in). Measured from ranger_weapon_big.
+  const SHOT_RELEASE = 0.1;
+  // The bowstring sits 4 px in front of the body centre and spans about 17 px up and down on the release frame.
+  // The arrow and its flare start on the string, inside the hitbox so the arrow can hit at the body's height.
+  function releaseShot(s) {
+    const p = s.scene.player;
+    const cx = p.x + p.w / 2;
+    const cy = p.y + p.h - 32;
+    const nock = cx + 4 * p.facing;
+    Effects.flare(nock, cy + 8, s.owner === "weaver" ? "bone" : "steel");
+    shotBody = p;
+    shotHold = 0.25;
+    const live = projectiles.filter((q) => q.owner === s.owner).length;
+    if (live >= MAX_PROJECTILES) return;
+    projectiles.push({
+      x: p.facing > 0 ? nock : nock - 8,
+      y: cy + 6,
+      w: 8,
+      h: 4,
+      vx: p.facing * 380,
+      life: 1.2,
+      owner: s.owner,
+      kind: s.kind,
+    });
+  }
+
+  // Staff tip offset from the body centre on each slash frame 0 to 5 (measured from mage_weapon_big).
+  // The swing ends pointing forward, so the last frame is the aim point the beam starts from.
+  const STAFF_TIP = [[23, 22], [11, 17], [8, 16], [18, 13], [31, -2], [31, -4]];
+  // The beam starts at the staff tip on the current swing frame.
   function beamOrigin(b) {
     const p = b.body;
-    return { x: b.dir > 0 ? p.x + p.w + 2 : p.x - 2, y: p.y + 12 };
+    const cx = p.x + p.w / 2;
+    const cy = p.y + p.h - 32;
+    const col = p.action === "slash" ? Math.min(5, Math.floor(p.animT / (ACTION_LENGTH.slash / 6))) : 5;
+    return { x: cx + b.dir * STAFF_TIP[col][0], y: cy + STAFF_TIP[col][1] };
   }
 
   // Beam: charge, then the head races out to range or the first wall.
@@ -248,6 +289,12 @@ const Attacks = (() => {
   function updateBeam(dt) {
     const b = beam;
     b.t += dt;
+    // Hold the swing's end pose while the beam lasts, so the staff stays at the tip the beam starts from.
+    b.body.holdPose = b.t < BEAM.end;
+    if (b.body.holdPose) {
+      b.body.action = "slash";
+      b.body.animT = Math.max(b.body.animT, ACTION_LENGTH.slash);
+    }
     b.seed = (Math.random() * 1e9) | 0;
     const o = beamOrigin(b);
     if (b.t < BEAM.charge) {
@@ -285,6 +332,7 @@ const Attacks = (() => {
       const d = Math.random() * b.len;
       b.motes.push({ x: o.x + b.dir * d, y: o.y, tx: o.x + b.dir * d, ty: o.y - 14, t: 0 });
     } else {
+      b.body.holdPose = false;
       beam = null;
       return;
     }
@@ -407,7 +455,7 @@ const Attacks = (() => {
       ctx.fillRect(Math.round(m.x - cx), Math.round(m.y - cy), 1, 1);
     }
     if (b.t < BEAM.charge) {
-      Glow.disc(ctx, ox, oy, 2 + (b.t / BEAM.charge) * 3, "arcane");
+      Glow.disc(ctx, ox, oy, 2 + (Math.max(0, b.t) / BEAM.charge) * 3, "arcane");
       return;
     }
     const fading = b.t >= BEAM.end;
@@ -478,8 +526,9 @@ const Attacks = (() => {
         ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
         ctx.strokeRect(Math.round(hb.x - cx), Math.round(hb.y - cy), hb.w, hb.h);
       }
-      if (hb.kind === "slash") drawSlash(ctx, hb, cx, cy);
-      else if (hb.kind === "thrust") drawThrust(ctx, hb, cx, cy);
+      // When the weapon has its own frames, the body draws the blade trail (drawWeaponTrail). Arcs are the fallback.
+      if (hb.kind === "slash" && !hb.weapon) drawSlash(ctx, hb, cx, cy);
+      else if (hb.kind === "thrust" && !hb.weapon) drawThrust(ctx, hb, cx, cy);
       else if (hb.kind === "bash") drawBash(ctx, hb, cx, cy);
     }
     if (beam) drawBeam(ctx, beam, cx, cy);
@@ -521,6 +570,9 @@ const Attacks = (() => {
     projectiles.length = 0;
     hostile.length = 0;
     beam = null;
+    pendingShot = null;
+    shotHold = 0;
+    shotBody = null;
   }
 
   return { use, update, draw, fireHostile, beamActive: () => !!beam, hitByHostile, hostileCount: () => hostile.length, reset, consumeHit, debug, COOLDOWN };

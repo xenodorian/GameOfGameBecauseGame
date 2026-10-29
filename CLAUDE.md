@@ -161,6 +161,12 @@ Open work:
 
 - Action Plan v3 (X11) suite, not rerun: `stomp defeats a grunt and drops a card; side contact respawns safely` failed with `page.waitForFunction: Timeout 5000ms exceeded.` (same check as the effects pass; cause not verified). `ability: ranger hop (X) gives upward speed in air` failed with `vy -195` (expects -250 to -320). Hop code is unchanged; the sample looks taken about 0.04 s late under load (cause not verified). Neither is arrow or shoot timing, so no rerun.
 
+- Attack visuals pass: knight and rat melee trails come from the weapon-only sheets (`<key>_weapon_big.png`), tinted, so they stay on the blade. The arc is the fallback when a weapon has no frame on that row.
+- Ranger arrow leaves the bowstring on the release frame (0.1 s into the shoot action), 4 px in front of the body centre, on the string span. A 0.25 s follow-through holds the shoot pose.
+- Mage beam: the staff swing uses the wand's slash frames from the LPC library (`magic/wand/male/slash`), since the library has no staff swing. The beam starts at the wand tip on the swing and holds the final swing frame while the beam lasts.
+- Suite: ranger shoot and mage beam checks now start on the ground and wait on the game clock, because the shot and beam release later in game time.
+- Known gap: a ranger's bow on idle uses the walk-art pose (LPC has no bow-idle frames), so it sits horizontal after a shot.
+
 ## 10. Environment and licenses
 
 - Sandbox network: PyPI, npm, GitHub reachable. `huggingface.co`, `kenney.nl`, `opengameart.org`, itch.io, Wikimedia, Archive.org, jsDelivr, unpkg blocked.
