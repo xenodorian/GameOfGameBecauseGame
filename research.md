@@ -225,7 +225,7 @@ Each line is a brief seed. The director or the worker expands it with the templa
 
 ### Round 5: sound
 - [x] A1 ZzFXM player in code (`game/src/music.js`), field and dungeon loops, mute in pause menu.
-- [ ] A2 Boss loop and stingers (card pickup, level clear, boss down).
+- [x] A2 Boss loop and stingers (card pickup, level clear, boss down).
 - [ ] A3 ZzFX per-action SFX with a timbre per character; replace the shared "ability" sound.
 
 ### Round 6: look

@@ -455,7 +455,7 @@ const Enemies = (() => {
       return;
     }
     enemy.dead = true;
-    Sfx.play("hit");
+    Sfx.play(enemy.kind === "warlord" ? "bossdown" : "hit");
     Effects.burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, CARD_DEFS[ENEMY_DEFS[enemy.kind].card].color);
     dropCard(enemy);
   }

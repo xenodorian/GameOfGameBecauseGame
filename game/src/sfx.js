@@ -58,6 +58,7 @@ const Sfx = {
           this.tone("triangle", 110, 60, t, 0.12, 0.08);
           break;
         case "pickup":
+          if (Music.stinger("card")) break;
           this.tone("triangle", 660, null, t, 0.06, 0.1);
           this.tone("triangle", 880, null, t + 0.06, 0.06, 0.1);
           break;
@@ -74,7 +75,11 @@ const Sfx = {
           this.tone("square", 110, 90, t + 0.1, 0.35, 0.04);
           break;
         case "complete":
+          if (Music.stinger("clear")) break;
           [523, 659, 784, 1047].forEach((f, i) => this.tone("triangle", f, null, t + i * 0.1, 0.1, 0.1));
+          break;
+        case "bossdown":
+          if (!Music.stinger("bossdown")) this.tone("sawtooth", 110, 55, t, 0.6, 0.12);
           break;
         case "boss":
           this.tone("sawtooth", 110, null, t, 0.4, 0.12);

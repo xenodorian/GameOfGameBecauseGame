@@ -354,7 +354,7 @@ const HIT_DAMAGE = 2;
 class PlayScene {
   constructor(levelIndex = 0, active = "knight") {
     World.load(levelIndex);
-    Music.setTheme(World.level.theme);
+    Music.setTheme(World.level.boss ? "boss" : World.level.theme);
     Attacks.reset();
     // Seconds of play. Idle animation and blinks read it; draw never advances it.
     this.time = 0;

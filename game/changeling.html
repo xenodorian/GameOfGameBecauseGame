@@ -435,6 +435,7 @@ const Sfx = {
           this.tone("triangle", 110, 60, t, 0.12, 0.08);
           break;
         case "pickup":
+          if (Music.stinger("card")) break;
           this.tone("triangle", 660, null, t, 0.06, 0.1);
           this.tone("triangle", 880, null, t + 0.06, 0.06, 0.1);
           break;
@@ -451,7 +452,11 @@ const Sfx = {
           this.tone("square", 110, 90, t + 0.1, 0.35, 0.04);
           break;
         case "complete":
+          if (Music.stinger("clear")) break;
           [523, 659, 784, 1047].forEach((f, i) => this.tone("triangle", f, null, t + i * 0.1, 0.1, 0.1));
+          break;
+        case "bossdown":
+          if (!Music.stinger("bossdown")) this.tone("sawtooth", 110, 55, t, 0.6, 0.12);
           break;
         case "boss":
           this.tone("sawtooth", 110, null, t, 0.4, 0.12);
@@ -484,8 +489,9 @@ const MUSIC_INSTR = {
   hat: [0.18, 0, 3000, 0, 0.004, 0.04, 4, 1, 0, 0, 0, 0, 0, 1],
   snare: [0.3, 0, 400, 0, 0.02, 0.12, 4, 1, 0, 0, 0, 0, 0, 2],
   tom: [0.7, 0, 90, 0, 0.03, 0.2, 0, 1, -0.5],
+  horn: [0.5, 0, 261.63, 0.02, 0.3, 0.3, 1],
 };
-const MUSIC_ORDER = ["lead", "stab", "arp", "bass", "drone", "kick", "hat", "snare", "tom"];
+const MUSIC_ORDER = ["lead", "stab", "arp", "bass", "drone", "kick", "hat", "snare", "tom", "horn"];
 const MI = {};
 MUSIC_ORDER.forEach((k, i) => (MI[k] = i));
 
@@ -575,11 +581,89 @@ const MUSIC_SONGS = {
       ["G", [14, null, 11, null, 14, null, null, null]],
     ],
   },
+  // Boss: A minor, Am F G Am three times, fast and driving. 12 bars at 150 bpm = 19.2 s.
+  boss: {
+    bpm: 150,
+    bar(chord, melody) {
+      return [
+        musicLead("stab", melody),
+        musicArp(chord, 2),
+        musicBass(chord, { 0: 0, 2: 0, 4: 12, 6: 0, 8: 0, 10: 0, 12: 12, 14: 7 }),
+        musicDrums("kick", [0, 4, 8, 12]),
+        musicDrums("snare", [4, 12], 0.1),
+        musicDrums("hat", [2, 6, 10, 14], 0.2),
+      ];
+    },
+    bars: [
+      ...[
+        ["Am", [21, null, 24, null, 21, 19, 16, null]],
+        ["F", [24, null, 21, null, 17, null, 21, null]],
+        ["G", [23, null, 19, null, 14, null, 19, 23]],
+        ["Am", [21, null, 16, null, 19, null, 21, null]],
+      ],
+      ...[
+        ["Am", [24, null, 28, null, 24, 21, 19, null]],
+        ["F", [28, null, 24, null, 21, null, 24, null]],
+        ["G", [26, null, 23, null, 19, null, 23, 26]],
+        ["Am", [24, null, 21, null, 19, 21, 24, null]],
+      ],
+      ...[
+        ["Am", [21, null, 24, null, 21, 19, 16, null]],
+        ["F", [24, null, 21, null, 17, null, 21, null]],
+        ["G", [23, null, 19, null, 14, null, 19, 23]],
+        ["Am", [21, null, 16, null, 19, null, 21, 24]],
+      ],
+    ],
+  },
+  // Stingers: short one-shot tunes played over the music. Each is one pattern.
+  card: { bpm: 160, once: true, notes: { horn: [[0, 24], [1, 28], [2, 31], [3, 36]] }, len: 8 },
+  clear: {
+    bpm: 120,
+    once: true,
+    len: 16,
+    notes: {
+      horn: [[0, 24], [2, 28], [4, 31], [8, 36]],
+      stab: [[8, 24]],
+      arp: [[8, 28]],
+      bass: [[0, 12], [8, 12]],
+    },
+  },
+  bossdown: {
+    bpm: 130,
+    once: true,
+    len: 32,
+    notes: {
+      horn: [[0, 24], [2, 28], [4, 31], [6, 36], [10, 31], [12, 36], [16, 40], [20, 43]],
+      stab: [[16, 28], [20, 31]],
+      arp: [[16, 36], [20, 40]],
+      bass: [[0, 12], [8, 7], [16, 12], [24, 12]],
+      kick: [[0, 12], [16, 12]],
+    },
+  },
 };
 
 // Builds a song's ZzFXM arguments: instruments, patterns, sequence, bpm.
 function musicBuild(name) {
   const s = MUSIC_SONGS[name];
+  if (s.once) {
+    // A stinger: notes by instrument, as [slot, note] pairs. One channel per note at a slot would
+    // overlap, so each instrument gets as many channels as it needs.
+    const channels = [];
+    for (const [inst, list] of Object.entries(s.notes)) {
+      const rows = [];
+      for (const [slot, note] of list) {
+        let row = rows.find((r) => r[slot + 2] === 0);
+        if (!row) {
+          row = [MI[inst], 0, ...new Array(s.len).fill(0)];
+          rows.push(row);
+        }
+        row[slot + 2] = note;
+      }
+      channels.push(...rows);
+    }
+    // The first channel sets the length, so put the longest row first.
+    return [MUSIC_ORDER.map((k) => MUSIC_INSTR[k]), [channels], [0], s.bpm];
+  }
   const patterns = s.bars.map(([chord, melody]) => s.bar(chord, melody));
   return [MUSIC_ORDER.map((k) => MUSIC_INSTR[k]), patterns, patterns.map((_, i) => i), s.bpm];
 }
@@ -703,6 +787,34 @@ const Music = {
       this.node = { src, gain };
     } catch (e) {
       this.current = null;
+    }
+  },
+
+  // Plays a stinger over the music and ducks the music to half while it sounds.
+  // Returns false when music is off or has not started, so the caller may play a plain blip instead.
+  stinger(name) {
+    if (!this.started || !this.enabled || !MUSIC_SONGS[name]) return false;
+    try {
+      const ctx = Sfx.ctx;
+      const t = ctx.currentTime;
+      const buf = this.buffer(name);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const gain = ctx.createGain();
+      gain.gain.value = 0.5;
+      src.connect(gain);
+      gain.connect(ctx.destination);
+      src.start(t);
+      const g = this.master.gain;
+      const low = this.VOLUME * 0.5;
+      g.cancelScheduledValues(t);
+      g.setValueAtTime(g.value, t);
+      g.linearRampToValueAtTime(low, t + 0.05);
+      g.setValueAtTime(low, t + buf.duration);
+      g.linearRampToValueAtTime(this.VOLUME, t + buf.duration + 0.4);
+      return true;
+    } catch (e) {
+      return false;
     }
   },
 
@@ -2199,7 +2311,7 @@ const Enemies = (() => {
       return;
     }
     enemy.dead = true;
-    Sfx.play("hit");
+    Sfx.play(enemy.kind === "warlord" ? "bossdown" : "hit");
     Effects.burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, CARD_DEFS[ENEMY_DEFS[enemy.kind].card].color);
     dropCard(enemy);
   }
@@ -3327,7 +3439,7 @@ const HIT_DAMAGE = 2;
 class PlayScene {
   constructor(levelIndex = 0, active = "knight") {
     World.load(levelIndex);
-    Music.setTheme(World.level.theme);
+    Music.setTheme(World.level.boss ? "boss" : World.level.theme);
     Attacks.reset();
     // Seconds of play. Idle animation and blinks read it; draw never advances it.
     this.time = 0;
