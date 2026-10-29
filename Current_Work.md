@@ -70,27 +70,35 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
 
 ---
 
+## Build status (updated this session)
+
+- Playable slice: `game/changeling.html` (one file, rebuild with `python3 game/tools/build_single_html.py`). Source is in `game/src/`.
+- Phases 0 to 2 are done or partly done (see the checklist). Phases 3 to 9 are not started.
+- Test: headless Chromium (Playwright) loads the file with no console errors, shows the input test, opens the play slice with Enter, walks right, jumps, and lands on the ground tile. Portrait overlay turns on at phone portrait size.
+- Not yet tested: gamepad, touch buttons, full screen, Firefox, Safari, Android, and the one-way platform.
+- Known gap: `Phase 2` parallax is missing. Gameplay cards, abilities, and the level content are next.
+
 ## Build workflow (task list)
 
 Status key: [ ] not started, [~] in progress, [x] done.
 
 ### Phase 0: Project setup
-- [ ] Create folder layout: `game/src/` (engine, scenes, cards, abilities), `game/assets/` (sheets copied from the method folders), `game/tools/build_single_html.py`.
-- [ ] Write the build script. It inlines all sprites and tiles as base64 into one `changeling.html`.
-- [ ] Confirm the single HTML file loads offline in Chrome, Firefox, Safari, and Chrome on Android.
+- [x] Create folder layout: `game/src/` (engine, input, world, scenes, main, style, index), `game/assets/` (sprites and tiles copied from method folders with licenses), `game/tools/build_single_html.py`. Cards and abilities modules come in Phases 3 and 4.
+- [x] Write the build script. `python3 game/tools/build_single_html.py` inlines the CSS and JS in load order and embeds every asset as a base64 data URI into `game/changeling.html` (about 37 KB now).
+- [~] Confirm the single HTML file loads offline. Verified in headless Chromium: no network, no console errors, scenes and assets load. Firefox, Safari, and Chrome on Android not yet tested.
 
 ### Phase 1: Engine and display
-- [ ] Canvas game loop with fixed-timestep updates.
-- [ ] Landscape-only scaling. Portrait shows a "rotate your device" overlay and pauses.
-- [ ] Full screen toggle (Fullscreen API), with a fallback message on iOS Safari.
-- [ ] Input layer: keyboard (arrows and A, S, Z, X, Q, C), gamepad (d-pad and A, B, X, Y) via the Gamepad API, and on-screen touch buttons for mobile.
-- [ ] Input mapping test scene that shows which key or button is pressed.
+- [x] Canvas game loop with fixed-timestep updates (60 Hz step, render every frame, paused in portrait).
+- [x] Landscape-only scaling. Letterboxed 480x270 logical canvas. Portrait shows the "rotate your device" overlay and pauses. Verified in headless Chromium.
+- [~] Full screen toggle (Fullscreen API) with a fallback message when `document.fullscreenEnabled` is false. Implemented; not yet tested on a real device, including iOS Safari.
+- [~] Input layer. Keyboard (arrows, A, S, Z, X, Q, C, Enter) verified in headless Chromium. Gamepad (d-pad, A, B, X, Y, Start, left stick) and on-screen touch buttons are implemented but not yet tested on hardware. Quick taps are latched so they are never lost between frames.
+- [x] Input mapping test scene (the first screen). Lights each action while held and flashes on press. Enter or Start opens the play slice. Verified in headless Chromium.
 
 ### Phase 2: Movement and world
-- [ ] Tile map loader and collision (grounded, wall, one-way platform).
-- [ ] Player physics: walk, jump (Up), variable jump height.
-- [ ] Camera follow with level bounds.
-- [ ] Tile render using DCSS tiles, with a layer for background parallax (reuse the method_5 door and parallax logic).
+- [x] Tile map loader and collision (grounded, wall, one-way platform). Axis-separated AABB against the tile grid. One-way platform logic is implemented; not yet exercised by a test.
+- [x] Player physics: walk, jump (Up), variable jump height (releasing Up cuts the arc). Verified in headless Chromium.
+- [x] Camera follow with level bounds (eased follow, clamped to the level).
+- [~] Tile render using DCSS tiles (walls, grass, dirt, trees). Background parallax from method_5 is not done yet.
 
 ### Phase 3: Enemies and cards
 - [ ] Basic enemy AI (patrol, chase in range, attack).
