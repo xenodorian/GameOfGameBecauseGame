@@ -231,11 +231,17 @@ const Effects = {
   // Shake offset for this step, set in update so draw only reads it.
   shakeX: 0,
   shakeY: 0,
+  shakeAmp: 3,
+  // White screen flash time left (beam fire).
+  flashT: 0,
   bursts: [],
   // Short effects: sparks (hit points), dust squares, and rings. All move in update, never in draw.
   sparks: [],
   dusts: [],
   rings: [],
+  // Hot particles with a 1 px trail, and muzzle flares.
+  bits: [],
+  flares: [],
   reset() {
     this.shakeT = 0;
     this.shakeX = 0;
@@ -244,10 +250,37 @@ const Effects = {
     this.sparks.length = 0;
     this.dusts.length = 0;
     this.rings.length = 0;
+    this.bits.length = 0;
+    this.flares.length = 0;
+    this.flashT = 0;
   },
-  // Six white lines at fixed angles, 4 to 7 px long, for 0.12 s.
-  spark(x, y) {
-    this.sparks.push({ x, y, t: 0 });
+  // Shake for t seconds, up to amp px. A stronger shake is never cut short by a weaker one.
+  shake(t, amp) {
+    if (this.shakeT > 0 && this.shakeAmp > amp) return;
+    this.shakeT = Math.max(this.shakeT, t);
+    this.shakeAmp = amp;
+  },
+  flash(t) {
+    this.flashT = Math.max(this.flashT, t);
+  },
+  // n hot bits thrown toward dir (1 right, -1 left), in a ramp from Glow.RAMPS.
+  spray(x, y, dir, ramp = "ember", n = 4) {
+    for (let i = 0; i < n; i++) {
+      const a = (Math.random() - 0.5) * 1.6;
+      const v = 80 + Math.random() * 90;
+      this.bits.push({ x, y, px: x, py: y, vx: dir * Math.cos(a) * v, vy: Math.sin(a) * v - 60, ramp, t: 0, life: 0.25 + Math.random() * 0.15 });
+    }
+  },
+  // A four-ray glint at a bow or staff on release.
+  flare(x, y, ramp = "steel") {
+    this.flares.push({ x, y, ramp, t: 0 });
+  },
+  // Impact: a banded flash, six jagged rays for 0.12 s, hot bits thrown back
+  // toward the attacker (dir is the attack direction), and a small shake.
+  spark(x, y, dir = 0, ramp = "ember") {
+    this.sparks.push({ x, y, t: 0, ramp, seed: (Math.random() * 1e9) | 0 });
+    if (dir) this.spray(x, y, -dir, ramp, 4);
+    this.shake(0.06, 1);
   },
   // n small squares. vy is the starting upward speed (negative rises). Lives for life seconds.
   dust(x, y, color, n, size = 2, life = 0.25, vy = 0) {
@@ -271,8 +304,8 @@ const Effects = {
   update(dt) {
     if (this.shakeT > 0) {
       this.shakeT -= dt;
-      this.shakeX = Math.round((Math.random() * 2 - 1) * 3);
-      this.shakeY = Math.round((Math.random() * 2 - 1) * 3);
+      this.shakeX = Math.round((Math.random() * 2 - 1) * this.shakeAmp);
+      this.shakeY = Math.round((Math.random() * 2 - 1) * this.shakeAmp);
     } else {
       this.shakeX = 0;
       this.shakeY = 0;
@@ -297,6 +330,17 @@ const Effects = {
     this.dusts = this.dusts.filter((q) => q.t < q.life);
     for (const r of this.rings) r.t += dt;
     this.rings = this.rings.filter((r) => r.t < 0.2);
+    if (this.flashT > 0) this.flashT -= dt;
+    for (const q of this.bits) {
+      q.t += dt;
+      q.px = q.x; q.py = q.y;
+      q.vy += 400 * dt;
+      q.x += q.vx * dt;
+      q.y += q.vy * dt;
+    }
+    this.bits = this.bits.filter((q) => q.t < q.life);
+    for (const f of this.flares) f.t += dt;
+    this.flares = this.flares.filter((f) => f.t < 0.1);
   },
   draw(ctx, camX, camY) {
     for (const b of this.bursts) {
@@ -308,17 +352,37 @@ const Effects = {
     for (const s of this.sparks) {
       const cx = s.x - camX;
       const cy = s.y - camY;
-      const len = 4 + (s.t / 0.12) * 3;
-      ctx.globalAlpha = 1 - s.t / 0.12;
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      for (let k = 0; k < 6; k++) {
-        const a = (k * Math.PI) / 3;
-        ctx.moveTo(Math.round(cx + Math.cos(a) * 2), Math.round(cy + Math.sin(a) * 2));
-        ctx.lineTo(Math.round(cx + Math.cos(a) * (2 + len)), Math.round(cy + Math.sin(a) * (2 + len)));
+      const k = s.t / 0.12;
+      if (k < 0.5) {
+        Glow.light(ctx, cx, cy, 14, Glow.RAMPS[s.ramp][3], 0.3);
+        Glow.disc(ctx, cx, cy, 6 - k * 6, s.ramp);
       }
-      ctx.stroke();
+      const rand = Glow.rng(s.seed);
+      ctx.globalAlpha = 1 - k;
+      for (let r = 0; r < 6; r++) {
+        const a = (r * Math.PI) / 3 + (rand() - 0.5) * 0.5;
+        const len = 4 + k * 3 + rand() * 2;
+        const x0 = cx + Math.cos(a) * 2;
+        const y0 = cy + Math.sin(a) * 2;
+        Glow.bolt(ctx, x0, y0, cx + Math.cos(a) * (2 + len), cy + Math.sin(a) * (2 + len), s.ramp, rand, 2, 1);
+      }
+      ctx.globalAlpha = 1;
+    }
+    for (const q of this.bits) {
+      const c = Glow.RAMPS[q.ramp];
+      const young = q.t < q.life * 0.4;
+      ctx.globalAlpha = 1 - q.t / q.life;
+      if (young) {
+        ctx.fillStyle = c[3];
+        ctx.fillRect(Math.round(q.px - camX), Math.round(q.py - camY), 1, 1);
+      }
+      ctx.fillStyle = young ? c[0] : c[2];
+      ctx.fillRect(Math.round(q.x - camX), Math.round(q.y - camY), 1, 1);
+    }
+    ctx.globalAlpha = 1;
+    for (const f of this.flares) {
+      Glow.disc(ctx, f.x - camX, f.y - camY, 3, f.ramp, 1 - f.t / 0.1);
+      Glow.star(ctx, f.x - camX, f.y - camY, 5, Math.floor(f.t * 60), f.ramp, 1 - f.t / 0.1);
     }
     for (const q of this.dusts) {
       ctx.globalAlpha = 1 - q.t / q.life;
@@ -332,8 +396,13 @@ const Effects = {
       ctx.beginPath();
       ctx.arc(Math.round(r.x - camX), Math.round(r.y - camY), 6 + (r.t / 0.2) * 10, 0, Math.PI * 2);
       ctx.stroke();
+      Glow.light(ctx, r.x - camX, r.y - camY, 20, r.color, 0.25 * (1 - r.t / 0.2));
     }
     ctx.globalAlpha = 1;
+    if (this.flashT > 0) {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
+      ctx.fillRect(-4, -4, Engine.W + 8, Engine.H + 8);
+    }
   },
 };
 
@@ -367,7 +436,7 @@ const Enemies = (() => {
         enemy.knockVx = enemy.x + enemy.w / 2 >= fromX ? 160 : -160;
       }
       Sfx.play(enemy.kind === "warlord" ? "boss" : "hit");
-      if (enemy.kind === "warlord") Effects.shakeT = 0.15;
+      if (enemy.kind === "warlord") Effects.shake(0.15, 3);
       return;
     }
     enemy.dead = true;

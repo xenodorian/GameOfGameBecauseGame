@@ -40,7 +40,7 @@ const ABILITY_NAMES = {
   shoot: "Shoot",
   arrow_anchor: "Arrow anchor",
   hop: "Hop",
-  spell_bolt: "Spell bolt",
+  spell_bolt: "Beam",
   float: "Float",
   blink: "Blink",
   leap: "Leap",
@@ -58,11 +58,14 @@ const Attacks = (() => {
   // Enemy arrows. They fly until they hit a wall or the player.
   const hostile = [];
   const MAX_PROJECTILES = 2;
+  // Mage beam (spell_bolt). One at a time. Phases in seconds: charge, fire, sustain, fade.
+  let beam = null;
+  const BEAM = { charge: 0.1, grow: 1400, range: 224, end: 0.42, fade: 0.14, half: 4 };
   // Set when an attack hits an enemy this step. The scene reads and clears it (hit stop).
   let hitThisStep = false;
   // Seconds before each ability can fire again.
   const COOLDOWN = {
-    slash: 0.18, thrust: 0.28, shield_bash: 0.45, charge: 0.6, shoot: 0.25, spell_bolt: 0.3,
+    slash: 0.18, thrust: 0.28, shield_bash: 0.45, charge: 0.6, shoot: 0.25, spell_bolt: 0.5,
     arrow_anchor: 0.8, bone_bridge: 1.0, hop: 0, float: 0, blink: 0.4, leap: 0, scurry: 3.0, ghost: 4.0,
   };
 
@@ -84,7 +87,7 @@ const Attacks = (() => {
   // are stored on the scene and read in its update.
   function use(id, scene) {
     const p = scene.player;
-    Sfx.play("ability");
+    Sfx.play(id === "spell_bolt" ? "beam" : "ability");
     switch (id) {
       case "slash":
         hitboxes.push({ ...faceRect(p, 36, 24, 4), ...fx(p), t: 0.15, total: 0.15, kind: "slash" });
@@ -98,9 +101,11 @@ const Attacks = (() => {
       case "charge":
         scene.dashT = 0.25;
         break;
-      case "shoot":
-      case "spell_bolt": {
-        const magic = id === "spell_bolt";
+      case "spell_bolt":
+        if (!beam) beam = { body: p, dir: p.facing, t: 0, len: 0, hitWall: false, hit: new Set(), seed: 1, motes: [] };
+        break;
+      case "shoot": {
+        Effects.flare(p.facing > 0 ? p.x + p.w + 2 : p.x - 2, p.y + 13, "steel");
         const live = projectiles.filter((q) => q.owner === scene.active).length;
         if (live >= MAX_PROJECTILES) break;
         projectiles.push({
@@ -108,7 +113,7 @@ const Attacks = (() => {
           y: p.y + 12,
           w: 8,
           h: 4,
-          vx: p.facing * (magic ? 300 : 380),
+          vx: p.facing * 380,
           life: 1.2,
           owner: scene.active,
           kind: id,
@@ -187,7 +192,7 @@ const Attacks = (() => {
       Enemies.list().forEach((e) => {
         if (e.dead || !overlaps(hb, e)) return;
         hitThisStep = true;
-        Effects.spark(e.x + e.w / 2, e.y + e.h / 2);
+        Effects.spark(e.x + e.w / 2, e.y + e.h / 2, hb.dir);
         if (hb.stun) e.stunT = hb.stun;
         else Enemies.defeat(e, hb.x + hb.w / 2);
       });
@@ -196,18 +201,20 @@ const Attacks = (() => {
       if (hitboxes[i].t <= 0) hitboxes.splice(i, 1);
     }
 
+    if (beam) updateBeam(dt);
+
     for (const q of projectiles) {
       q.life -= dt;
       q.x += q.vx * dt;
       if (World.overlapping(q.x, q.y, q.w, q.h).some((c) => World.isSolid(c.ch))) {
         // Hitting a wall: a few dust squares in the arrow's colour.
-        Effects.dust(q.x, q.y, q.kind === "spell_bolt" ? "#b9a2f0" : "#e8e4d8", 3, 2, 0.25);
+        Effects.dust(q.x, q.y, "#e8e4d8", 3, 2, 0.25);
         q.life = 0;
       }
       for (const e of Enemies.list()) {
         if (!e.dead && overlaps(q, e)) {
           hitThisStep = true;
-          Effects.spark(q.x, q.y);
+          Effects.spark(q.x, q.y, q.vx > 0 ? 1 : -1);
           Enemies.defeat(e, q.x);
           q.life = 0;
         }
@@ -227,11 +234,71 @@ const Attacks = (() => {
     }
   }
 
+  // Staff tip, where the beam starts.
+  function beamOrigin(b) {
+    const p = b.body;
+    return { x: b.dir > 0 ? p.x + p.w + 2 : p.x - 2, y: p.y + 12 };
+  }
+
+  // Beam: charge, then the head races out to range or the first wall.
+  // Every enemy along it is hit once. Then it breaks up into motes.
+  function updateBeam(dt) {
+    const b = beam;
+    b.t += dt;
+    b.seed = (Math.random() * 1e9) | 0;
+    const o = beamOrigin(b);
+    if (b.t < BEAM.charge) {
+      // Motes spiral in to the staff tip.
+      const a = Math.random() * Math.PI * 2;
+      b.motes.push({ x: o.x + Math.cos(a) * 14, y: o.y + Math.sin(a) * 14, tx: o.x, ty: o.y, t: 0 });
+    } else if (b.t < BEAM.end) {
+      if (b.len === 0) {
+        Effects.flash(0.05);
+        Effects.shake(0.12, 1);
+      }
+      if (!b.hitWall) {
+        const step = 4;
+        const target = Math.min(BEAM.range, b.len + BEAM.grow * dt);
+        while (b.len < target) {
+          const nx = o.x + b.dir * (b.len + step);
+          if (World.overlapping(nx - 2, o.y - 2, 4, 4).some((c) => World.isSolid(c.ch))) {
+            b.hitWall = true;
+            break;
+          }
+          b.len += step;
+        }
+      }
+      const rect = { x: b.dir > 0 ? o.x : o.x - b.len, y: o.y - BEAM.half - 1, w: b.len, h: BEAM.half * 2 + 2 };
+      for (const e of Enemies.list()) {
+        if (e.dead || b.hit.has(e) || !overlaps(rect, e)) continue;
+        b.hit.add(e);
+        hitThisStep = true;
+        Effects.spark(e.x + e.w / 2, o.y, b.dir, "arcane");
+        Enemies.defeat(e, o.x);
+      }
+      if (b.hitWall && Math.random() < 0.5) Effects.spray(o.x + b.dir * b.len, o.y, -b.dir, "arcane", 1);
+    } else if (b.t < BEAM.end + BEAM.fade) {
+      // Rising motes where the beam breaks.
+      const d = Math.random() * b.len;
+      b.motes.push({ x: o.x + b.dir * d, y: o.y, tx: o.x + b.dir * d, ty: o.y - 14, t: 0 });
+    } else {
+      beam = null;
+      return;
+    }
+    for (const m of b.motes) {
+      m.t += dt;
+      m.x += (m.tx - m.x) * Math.min(1, dt * 12);
+      m.y += (m.ty - m.y) * Math.min(1, dt * 12);
+    }
+    b.motes = b.motes.filter((m) => m.t < 0.25);
+  }
+
   // Set to true to outline the hitboxes, for checking reach.
   const debug = { on: false };
   const DEG = Math.PI / 180;
 
-  // Slash: a crescent sweeping from -70 to +50 degrees over the hitbox's life. Only the last 60 degrees are drawn.
+  // Slash: a smear crescent sweeping from -70 to +50 degrees over the hitbox's life.
+  // Only the last 60 degrees are drawn. Bands: faint halo, deep, pale, white core.
   function drawSlash(ctx, hb, cx, cy) {
     const prog = 1 - Math.max(0, hb.t) / hb.total;
     const a = 1 - prog;
@@ -239,40 +306,69 @@ const Attacks = (() => {
     const start = end - 60;
     const x = hb.ox - cx;
     const y = hb.oy - cy;
-    ctx.beginPath();
-    if (hb.dir > 0) ctx.arc(x, y, 22, start * DEG, end * DEG);
-    else ctx.arc(x, y, 22, (180 - end) * DEG, (180 - start) * DEG);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = `rgba(255, 255, 255, ${a})`;
-    ctx.stroke();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = `rgba(180, 220, 255, ${a})`;
-    ctx.stroke();
+    const c = Glow.RAMPS.steel;
+    const arc = (r) => {
+      ctx.beginPath();
+      if (hb.dir > 0) ctx.arc(x, y, r, start * DEG, end * DEG);
+      else ctx.arc(x, y, r, (180 - end) * DEG, (180 - start) * DEG);
+    };
+    ctx.globalAlpha = a * 0.3;
+    arc(22); ctx.lineWidth = 8; ctx.strokeStyle = c[3]; ctx.stroke();
+    ctx.globalAlpha = a;
+    arc(22); ctx.lineWidth = 5; ctx.strokeStyle = c[3]; ctx.stroke();
+    arc(22); ctx.lineWidth = 3; ctx.strokeStyle = c[1]; ctx.stroke();
+    arc(23); ctx.lineWidth = 1; ctx.strokeStyle = c[0]; ctx.stroke();
+    ctx.globalAlpha = 1;
+    // Glint on the leading tip for the first half of the swing.
+    if (prog < 0.5) {
+      const ang = (hb.dir > 0 ? end : 180 - end) * DEG;
+      Glow.star(ctx, x + Math.cos(ang) * 22, y + Math.sin(ang) * 22, 4, Math.floor(prog * 8), "steel", a);
+    }
   }
 
-  // Thrust: a white streak along the reach, fading in from the body.
+  // Thrust: a banded streak along the reach, fading in from the body, with a tip glint.
   function drawThrust(ctx, hb, cx, cy) {
+    const prog = 1 - Math.max(0, hb.t) / hb.total;
     const x = Math.round(hb.x - cx);
     const y = Math.round(hb.y - cy + hb.h / 2 - 1.5);
-    const grad = ctx.createLinearGradient(x, 0, x + hb.w, 0);
-    grad.addColorStop(0, "rgba(255, 255, 255, 0)");
-    grad.addColorStop(1, "rgba(255, 255, 255, 0.9)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(x, y, hb.w, 3);
+    const c = Glow.RAMPS.steel;
+    const streak = (h, color, alpha) => {
+      const grad = ctx.createLinearGradient(hb.dir > 0 ? x : x + hb.w, 0, hb.dir > 0 ? x + hb.w : x, 0);
+      grad.addColorStop(0, "rgba(255, 255, 255, 0)");
+      grad.addColorStop(1, color);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y + 1 - Math.floor(h / 2), hb.w, h);
+    };
+    streak(5, c[3], 0.4 * (1 - prog));
+    streak(3, c[2], 0.9);
+    streak(1, c[0], 1);
+    ctx.globalAlpha = 1;
+    const tip = hb.dir > 0 ? x + hb.w : x;
+    Glow.star(ctx, tip, y + 1, 4, Math.floor(prog * 8), "steel", 1 - prog);
   }
 
-  // Shield bash: a half ring in front of the body, growing and fading.
+  // Shield bash: a banded half ring in front of the body, growing and fading.
   function drawBash(ctx, hb, cx, cy) {
     const prog = 1 - Math.max(0, hb.t) / hb.total;
     const x = hb.ox - cx + hb.dir * 6;
     const y = hb.oy - cy + 8;
     const r = 10 + 18 * prog;
-    ctx.beginPath();
-    if (hb.dir > 0) ctx.arc(x, y, r, -90 * DEG, 90 * DEG);
-    else ctx.arc(x, y, r, 90 * DEG, 270 * DEG);
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = `rgba(170, 215, 255, ${1 - prog})`;
-    ctx.stroke();
+    const c = Glow.RAMPS.steel;
+    const half = (rr, w, color, alpha) => {
+      ctx.beginPath();
+      if (hb.dir > 0) ctx.arc(x, y, rr, -90 * DEG, 90 * DEG);
+      else ctx.arc(x, y, rr, 90 * DEG, 270 * DEG);
+      ctx.lineWidth = w;
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = alpha;
+      ctx.stroke();
+    };
+    half(r, 6, c[3], 0.3 * (1 - prog));
+    half(r, 3, c[2], 1 - prog);
+    half(r, 1, c[0], 1 - prog);
+    ctx.globalAlpha = 1;
+    Glow.light(ctx, x, y, r + 6, c[3], 0.25 * (1 - prog));
   }
 
   // A 14 by 3 arrow pointing along its direction: shaft, head, and two fletching pixels.
@@ -293,16 +389,84 @@ const Attacks = (() => {
     ctx.fillRect(tail - (dir > 0 ? 2 : -1), y + 2, 1, 1);
   }
 
-  // Spell bolt: a glowing orb with a short trail.
-  function drawOrb(ctx, q, cx, cy) {
-    const x = q.x - cx + q.w / 2;
-    const y = q.y - cy + q.h / 2;
-    ctx.fillStyle = "rgba(185, 162, 240, 0.35)";
-    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#d9c8ff";
-    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI * 2); ctx.fill();
+  // Mage beam. Per column, separate upper and lower half widths with jitter, a
+  // wobble, and a pulse that travels out from the staff. Each column is cut into
+  // the arcane bands. Lightning, a flare at the staff, and an impact at a wall.
+  function drawBeam(ctx, b, cx, cy) {
+    const o = beamOrigin(b);
+    const ox = Math.round(o.x - cx);
+    const oy = Math.round(o.y - cy);
+    const rand = Glow.rng(b.seed);
+    const c = Glow.RAMPS.arcane;
+    const frame = Math.floor(b.t * 60);
+    for (const m of b.motes) {
+      ctx.fillStyle = m.t < 0.12 ? c[1] : c[3];
+      ctx.fillRect(Math.round(m.x - cx), Math.round(m.y - cy), 1, 1);
+    }
+    if (b.t < BEAM.charge) {
+      Glow.disc(ctx, ox, oy, 2 + (b.t / BEAM.charge) * 3, "arcane");
+      return;
+    }
+    const fading = b.t >= BEAM.end;
+    const f = fading ? (b.t - BEAM.end) / BEAM.fade : 0;
+    for (let d = 0; d <= b.len; d += 40) Glow.light(ctx, ox + b.dir * d, oy, 20, c[3], 0.16 * (1 - f));
+    for (let d = 0; d < b.len; d++) {
+      // Breaking up: random gaps mixed with a slow wave, more of them as it fades.
+      if (fading && rand() * 0.7 + 0.3 * Math.sin(d * 0.08 + b.t * 9) < f * 1.2) continue;
+      const taper = Math.min(1, (d + 2) / 10);
+      const wobble = Math.sin(d * 0.21 + b.t * 30) * 0.6 + Math.sin(d * 0.07 - b.t * 17) * 0.5;
+      const pulse = Math.pow(Math.max(0, Math.sin(d * 0.12 - b.t * 40)), 6) * 1.5;
+      const base = (BEAM.half + pulse) * taper * (1 - f * 0.6);
+      const up = bandsAt(base + wobble * 0.5 + (rand() - 0.5) * 1.2);
+      const dn = bandsAt(base - wobble * 0.5 + (rand() - 0.5) * 1.2);
+      const x = ox + b.dir * d;
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = c[4];
+      ctx.fillRect(x, oy - Math.round(up[4] + 2), 1, Math.round(up[4] + dn[4] + 4));
+      ctx.globalAlpha = 1;
+      for (let i = 4; i >= 0; i--) {
+        const u = Math.round(up[i]);
+        const l = Math.round(dn[i]);
+        if (u + l < 1) continue;
+        ctx.fillStyle = c[i];
+        ctx.fillRect(x, oy - u, 1, u + l);
+      }
+    }
+    if (!fading) {
+      // Fresh lightning every step, a few with a short branch.
+      const n = 2 + Math.floor(rand() * 2);
+      for (let k = 0; k < n; k++) {
+        const a = rand() * b.len;
+        const l = 18 + rand() * 30;
+        const side = rand() < 0.5 ? -1 : 1;
+        const x0 = ox + b.dir * a;
+        const x1 = ox + b.dir * Math.min(b.len, a + l);
+        const pts = Glow.bolt(ctx, x0, oy + side * (BEAM.half + 1), x1, oy + side * (BEAM.half + 2 + rand() * 3), "arcane", rand, 7);
+        if (rand() < 0.5) {
+          const [bx, by] = pts[Math.floor(pts.length / 2)];
+          Glow.bolt(ctx, bx, by, bx + b.dir * 8, by + side * (4 + rand() * 4), "arcane", rand, 4, 2);
+        }
+      }
+      // Flare at the staff tip.
+      Glow.disc(ctx, ox, oy, 6 + (frame % 4 < 2 ? 1 : 0), "arcane");
+      Glow.star(ctx, ox, oy, 8, frame, "arcane");
+      if (b.hitWall) {
+        // Impact: a pulsing disc and short jagged rays aimed back at the caster.
+        const hx = ox + b.dir * b.len;
+        Glow.disc(ctx, hx, oy, 5 + (frame % 3), "arcane");
+        for (let k = 0; k < 5; k++) {
+          const ang = (rand() - 0.5) * 2.2;
+          const len = 6 + rand() * 8;
+          Glow.bolt(ctx, hx, oy, hx - b.dir * Math.cos(ang) * len, oy + Math.sin(ang) * len, "arcane", rand, 3, 2);
+        }
+        Glow.light(ctx, hx, oy, 20, c[3], 0.25);
+      }
+    }
+  }
+
+  // Band half widths for one side of a beam column.
+  function bandsAt(w) {
+    return w <= 0 ? [0, 0, 0, 0, 0] : Glow.bandWidths(w).map((v) => Math.max(0, v - 1.5));
   }
 
   function draw(ctx, cx, cy) {
@@ -315,10 +479,10 @@ const Attacks = (() => {
       else if (hb.kind === "thrust") drawThrust(ctx, hb, cx, cy);
       else if (hb.kind === "bash") drawBash(ctx, hb, cx, cy);
     }
+    if (beam) drawBeam(ctx, beam, cx, cy);
     for (const q of projectiles) {
       const dir = q.vx > 0 ? 1 : -1;
-      if (q.kind === "spell_bolt") drawOrb(ctx, q, cx, cy);
-      else drawArrow(ctx, Math.round(q.x - cx), Math.round(q.y - cy), dir, "#c8a46a", "#d8d8e0", "#e8e4d8");
+      drawArrow(ctx, Math.round(q.x - cx), Math.round(q.y - cy), dir, "#c8a46a", "#d8d8e0", "#e8e4d8");
     }
     for (const h of hostile) {
       drawArrow(ctx, Math.round(h.x - cx), Math.round(h.y - cy), h.vx > 0 ? 1 : -1, "#5a3a2a", "#d8d8e0", "#c2452d");
@@ -351,7 +515,8 @@ const Attacks = (() => {
     hitboxes.length = 0;
     projectiles.length = 0;
     hostile.length = 0;
+    beam = null;
   }
 
-  return { use, update, draw, fireHostile, hitByHostile, hostileCount: () => hostile.length, reset, consumeHit, debug, COOLDOWN };
+  return { use, update, draw, fireHostile, beamActive: () => !!beam, hitByHostile, hostileCount: () => hostile.length, reset, consumeHit, debug, COOLDOWN };
 })();

@@ -49,7 +49,9 @@ const Sfx = {
           this.tone("square", 440, 660, t, 0.1, 0.08);
           break;
         case "hit":
+          // A thud under a short crack.
           this.tone("square", 220, null, t, 0.08, 0.1);
+          this.tone("triangle", 110, 60, t, 0.12, 0.08);
           break;
         case "pickup":
           this.tone("triangle", 660, null, t, 0.06, 0.1);
@@ -60,6 +62,12 @@ const Sfx = {
           break;
         case "ability":
           this.tone("triangle", 520, null, t, 0.05, 0.06);
+          break;
+        case "beam":
+          // Charge hum rising into the zap, then a buzzing tail.
+          this.tone("sine", 220, 880, t, 0.1, 0.06);
+          this.tone("sawtooth", 1400, 300, t + 0.1, 0.12, 0.05);
+          this.tone("square", 110, 90, t + 0.1, 0.35, 0.04);
           break;
         case "complete":
           [523, 659, 784, 1047].forEach((f, i) => this.tone("triangle", f, null, t + i * 0.1, 0.1, 0.1));
