@@ -404,3 +404,10 @@ Only the files listed here were opened and looked at.
 - z_select.png: OK after the label color fix. Card names read clearly.
 - l3_mid.png: taken before the duplicate-name fix. The duplicate name is gone in the build; not re-opened.
 - Not opened: l1_mid, l2 to l7 (start and mid), l4 to l7 mid, the c_* ability shots, z_ending.
+
+## LPC sprites (2026-10-29, user request)
+
+- All character and enemy sprites are Liberated Pixel Cup sheets in `game/assets/lpc/`, composed by `game/tools/build_lpc.py` (8 rows of 64 px cells, 13 columns). Credits: `game/assets/lpc/CREDITS.txt`.
+- Suite: 49 passed, 0 failed (exit 0). Gates: exit 0 (see Expansion_Plan.md LPC entries for the decisions).
+- Not done: sword, bow, and staff are not on the sheets yet (the knight, ranger, and mage show no weapon). Rat king has no crown. Shield has no frames for slash or thrust (it is hidden for those).
+- Old Sprite Foundry sprites and the 48 px atlases were removed. `game/tools/build_atlases.py` was removed with them.

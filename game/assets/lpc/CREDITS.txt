@@ -1,0 +1,382 @@
+[knight]
+body/bodies/male
+  authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-runcycle-for-male-muscular-and-pregnant-character-bases-with-modular-heads https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases
+body/bodies/female
+  authors: Benjamin K. Smith (BenCreating), bluecarrot16, TheraHedwig, Evert, MuffinElZangano, Durrani, Pierre Vigier (pvigier), ElizaWy, Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-revised-character-basics https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/muscular
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Sander Frenken (castelonia), Benjamin K. Smith (BenCreating), Eliza Wyatt (ElizaWy), dalonedrau, Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-barbarian-sprite-base https://opengameart.org/content/lpc-muscular-swing-animation https://opengameart.org/content/lpc-muscular-hurt-animation https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases https://opengameart.org/content/lpc-male-jumping-animation-by-durrani
+body/bodies/teen
+  authors: bluecarrot16, Evert, TheraHedwig, Benjamin K. Smith (BenCreating), MuffinElZangano, Durrani, Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-teen-unisex-base-clothes https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded
+body/bodies/pregnant
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Benjamin K. Smith (BenCreating), Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-pregnancy-bases-maternity-wear https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/child
+  authors: bluecarrot16, Benjamin K. Smith (BenCreating), ElizaWy, MuffinElZangano, Durrani, Nila122, kheftel, Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-child-standing-template https://opengameart.org/content/lpc-children-walk-animation https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-jump-expanded
+head/heads/human/male
+  authors: bluecarrot16, Benjamin K. Smith (BenCreating), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-character-bases
+legs/armour/plate
+  authors: bluecarrot16, JaidynReiman, Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites
+feet/armour/plate
+  authors: Matthew Krohn (makrohn), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites
+feet/armour/plate/female
+  authors: Matthew Krohn (makrohn), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites
+torso/armour/plate/male
+  authors: Napsio (Vitruvian Studio), JaidynReiman, bluecarrot16, Michael Whitlock (bigbeargames), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women
+torso/armour/plate/female
+  authors: JaidynReiman, bluecarrot16, Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women http://opengameart.org/content/lpc-clothing-updates
+torso/armour/plate/teen
+  authors: JaidynReiman, bluecarrot16, Michael Whitlock (bigbeargames), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women
+arms/armour/plate/male
+  authors: Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites http://opengameart.org/content/lpc-clothing-updates
+arms/armour/plate/thin
+  authors: Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women http://opengameart.org/content/lpc-clothing-updates
+hat/helmet/greathelm
+  authors: bluecarrot16
+  licenses: OGA-BY 3.0, CC-BY 3.0, CC-BY 4.0, GPL 2.0, GPL 3.0
+  https://opengameart.org/content/lpc-helmets https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+shield/heater/revised/trim
+  authors: bluecarrot16, Sander Frenken (castelonia), ElizaWy, JaidynReiman
+  licenses: OGA-BY 3.0
+  https://opengameart.org/content/lpc-shields
+[ranger]
+body/bodies/male
+  authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-runcycle-for-male-muscular-and-pregnant-character-bases-with-modular-heads https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases
+body/bodies/female
+  authors: Benjamin K. Smith (BenCreating), bluecarrot16, TheraHedwig, Evert, MuffinElZangano, Durrani, Pierre Vigier (pvigier), ElizaWy, Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-revised-character-basics https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/muscular
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Sander Frenken (castelonia), Benjamin K. Smith (BenCreating), Eliza Wyatt (ElizaWy), dalonedrau, Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-barbarian-sprite-base https://opengameart.org/content/lpc-muscular-swing-animation https://opengameart.org/content/lpc-muscular-hurt-animation https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases https://opengameart.org/content/lpc-male-jumping-animation-by-durrani
+body/bodies/teen
+  authors: bluecarrot16, Evert, TheraHedwig, Benjamin K. Smith (BenCreating), MuffinElZangano, Durrani, Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-teen-unisex-base-clothes https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded
+body/bodies/pregnant
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Benjamin K. Smith (BenCreating), Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-pregnancy-bases-maternity-wear https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/child
+  authors: bluecarrot16, Benjamin K. Smith (BenCreating), ElizaWy, MuffinElZangano, Durrani, Nila122, kheftel, Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-child-standing-template https://opengameart.org/content/lpc-children-walk-animation https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-jump-expanded
+head/heads/human/male
+  authors: bluecarrot16, Benjamin K. Smith (BenCreating), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-character-bases
+legs/pants/male
+  authors: bluecarrot16, JaidynReiman, ElizaWy, Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, GPL 3.0, CC-BY-SA 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-expanded-pants
+legs/pants/thin
+  authors: bluecarrot16, JaidynReiman, ElizaWy, Joe White, Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, GPL 3.0, CC-BY-SA 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites http://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-pants
+feet/shoes
+  authors: JaidynReiman, bluecarrot16, Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites http://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-socks-shoes
+feet/shoes/basic/thin
+  authors: JaidynReiman, Joe White, Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites http://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-socks-shoes
+torso/armour/leather
+  authors: Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-armor
+torso/armour/leather/female
+  authors: Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women https://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-armor
+torso/armour/leather/teen
+  authors: Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women https://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-armor
+hat/cloth/hood
+  authors: Johannes Sjölund (wulax), JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+[mage]
+body/bodies/male
+  authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-runcycle-for-male-muscular-and-pregnant-character-bases-with-modular-heads https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases
+body/bodies/female
+  authors: Benjamin K. Smith (BenCreating), bluecarrot16, TheraHedwig, Evert, MuffinElZangano, Durrani, Pierre Vigier (pvigier), ElizaWy, Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-revised-character-basics https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/muscular
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Sander Frenken (castelonia), Benjamin K. Smith (BenCreating), Eliza Wyatt (ElizaWy), dalonedrau, Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-barbarian-sprite-base https://opengameart.org/content/lpc-muscular-swing-animation https://opengameart.org/content/lpc-muscular-hurt-animation https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases https://opengameart.org/content/lpc-male-jumping-animation-by-durrani
+body/bodies/teen
+  authors: bluecarrot16, Evert, TheraHedwig, Benjamin K. Smith (BenCreating), MuffinElZangano, Durrani, Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-teen-unisex-base-clothes https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded
+body/bodies/pregnant
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Benjamin K. Smith (BenCreating), Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-pregnancy-bases-maternity-wear https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/child
+  authors: bluecarrot16, Benjamin K. Smith (BenCreating), ElizaWy, MuffinElZangano, Durrani, Nila122, kheftel, Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-child-standing-template https://opengameart.org/content/lpc-children-walk-animation https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-jump-expanded
+head/heads/human/female
+  authors: bluecarrot16, Benjamin K. Smith (BenCreating), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/ https://opengameart.org/content/lpc-character-bases
+torso/clothes/robe
+  authors: Luke Mehl
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/female-mage-clothing-set
+hat/magic/wizard
+  authors: Michael Whitlock (bigbeargames), Tuomo Untinen (reemax), JaidynReiman
+  licenses: CC-BY-SA 3.0, GPL 2.0, GPL 3.0
+  https://opengameart.org/content/lpc-items-and-game-effects https://opengameart.org/content/lpc-pointed-hats https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+[rat]
+body/bodies/male
+  authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-runcycle-for-male-muscular-and-pregnant-character-bases-with-modular-heads https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases
+body/bodies/female
+  authors: Benjamin K. Smith (BenCreating), bluecarrot16, TheraHedwig, Evert, MuffinElZangano, Durrani, Pierre Vigier (pvigier), ElizaWy, Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-revised-character-basics https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/muscular
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Sander Frenken (castelonia), Benjamin K. Smith (BenCreating), Eliza Wyatt (ElizaWy), dalonedrau, Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-barbarian-sprite-base https://opengameart.org/content/lpc-muscular-swing-animation https://opengameart.org/content/lpc-muscular-hurt-animation https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases https://opengameart.org/content/lpc-male-jumping-animation-by-durrani
+body/bodies/teen
+  authors: bluecarrot16, Evert, TheraHedwig, Benjamin K. Smith (BenCreating), MuffinElZangano, Durrani, Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-teen-unisex-base-clothes https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded
+body/bodies/pregnant
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Benjamin K. Smith (BenCreating), Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-pregnancy-bases-maternity-wear https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/child
+  authors: bluecarrot16, Benjamin K. Smith (BenCreating), ElizaWy, MuffinElZangano, Durrani, Nila122, kheftel, Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-child-standing-template https://opengameart.org/content/lpc-children-walk-animation https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-jump-expanded
+head/heads/rat
+  authors: bluecarrot16, Stephen Challener (Redshrike), Napsio (Vitruvian Studio), JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY 3.0, CC-BY-SA 3.0
+  https://opengameart.org/content/bunny-rabbit-lpc-style-for-pixelfarm http://opengameart.org/content/lpc-folk
+torso/armour/leather
+  authors: Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-armor
+torso/armour/leather/female
+  authors: Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women https://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-armor
+torso/armour/leather/teen
+  authors: Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women https://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-armor
+[weaver]
+body/bodies/skeleton
+  authors: bluecarrot16, Napsio, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-skeleton https://opengameart.org/content/lpc-character-bases
+head/heads/skeleton
+  authors: bluecarrot16, Napsio, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-skeleton https://opengameart.org/content/lpc-character-bases
+[archer]
+body/bodies/skeleton
+  authors: bluecarrot16, Napsio, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-skeleton https://opengameart.org/content/lpc-character-bases
+head/heads/skeleton
+  authors: bluecarrot16, Napsio, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-skeleton https://opengameart.org/content/lpc-character-bases
+[grunt]
+body/bodies/male
+  authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-runcycle-for-male-muscular-and-pregnant-character-bases-with-modular-heads https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases
+body/bodies/female
+  authors: Benjamin K. Smith (BenCreating), bluecarrot16, TheraHedwig, Evert, MuffinElZangano, Durrani, Pierre Vigier (pvigier), ElizaWy, Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-revised-character-basics https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/muscular
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Sander Frenken (castelonia), Benjamin K. Smith (BenCreating), Eliza Wyatt (ElizaWy), dalonedrau, Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-barbarian-sprite-base https://opengameart.org/content/lpc-muscular-swing-animation https://opengameart.org/content/lpc-muscular-hurt-animation https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases https://opengameart.org/content/lpc-male-jumping-animation-by-durrani
+body/bodies/teen
+  authors: bluecarrot16, Evert, TheraHedwig, Benjamin K. Smith (BenCreating), MuffinElZangano, Durrani, Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-teen-unisex-base-clothes https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded
+body/bodies/pregnant
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Benjamin K. Smith (BenCreating), Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-pregnancy-bases-maternity-wear https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/child
+  authors: bluecarrot16, Benjamin K. Smith (BenCreating), ElizaWy, MuffinElZangano, Durrani, Nila122, kheftel, Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-child-standing-template https://opengameart.org/content/lpc-children-walk-animation https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-jump-expanded
+head/heads/goblin
+  authors: bluecarrot16, Stephen Challener (Redshrike), William.Thomsponj
+  licenses: OGA-BY 3.0, CC-BY 4.0, GPL 2.0, GPL 3.0
+  https://opengameart.org/content/lpc-goblin https://opengameart.org/content/lpc-folk
+torso/armour/leather
+  authors: Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-armor
+torso/armour/leather/female
+  authors: Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women https://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-armor
+torso/armour/leather/teen
+  authors: Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women https://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-armor
+[mud_revenant]
+body/bodies/zombie
+  authors: Stephen Challener (Redshrike), Johannes Sjölund (wulax), Sander Frenken (castelonia), Benjamin K. Smith (BenCreating), bluecarrot16
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-zombie https://opengameart.org/content/lpc-character-bases
+head/heads/zombie
+  authors: bluecarrot16, Benjamin K. Smith (BenCreating), Sander Frenken (castelonia), Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-zombie https://opengameart.org/content/lpc-character-bases
+[rat_king]
+body/bodies/male
+  authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-runcycle-for-male-muscular-and-pregnant-character-bases-with-modular-heads https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases
+body/bodies/female
+  authors: Benjamin K. Smith (BenCreating), bluecarrot16, TheraHedwig, Evert, MuffinElZangano, Durrani, Pierre Vigier (pvigier), ElizaWy, Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-revised-character-basics https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/muscular
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Sander Frenken (castelonia), Benjamin K. Smith (BenCreating), Eliza Wyatt (ElizaWy), dalonedrau, Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-barbarian-sprite-base https://opengameart.org/content/lpc-muscular-swing-animation https://opengameart.org/content/lpc-muscular-hurt-animation https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases https://opengameart.org/content/lpc-male-jumping-animation-by-durrani
+body/bodies/teen
+  authors: bluecarrot16, Evert, TheraHedwig, Benjamin K. Smith (BenCreating), MuffinElZangano, Durrani, Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-teen-unisex-base-clothes https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded
+body/bodies/pregnant
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Benjamin K. Smith (BenCreating), Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-pregnancy-bases-maternity-wear https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/child
+  authors: bluecarrot16, Benjamin K. Smith (BenCreating), ElizaWy, MuffinElZangano, Durrani, Nila122, kheftel, Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-child-standing-template https://opengameart.org/content/lpc-children-walk-animation https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-jump-expanded
+head/heads/rat
+  authors: bluecarrot16, Stephen Challener (Redshrike), Napsio (Vitruvian Studio), JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY 3.0, CC-BY-SA 3.0
+  https://opengameart.org/content/bunny-rabbit-lpc-style-for-pixelfarm http://opengameart.org/content/lpc-folk
+torso/armour/plate/male
+  authors: Napsio (Vitruvian Studio), JaidynReiman, bluecarrot16, Michael Whitlock (bigbeargames), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women
+torso/armour/plate/female
+  authors: JaidynReiman, bluecarrot16, Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women http://opengameart.org/content/lpc-clothing-updates
+torso/armour/plate/teen
+  authors: JaidynReiman, bluecarrot16, Michael Whitlock (bigbeargames), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women
+[warlord]
+body/bodies/male
+  authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-runcycle-for-male-muscular-and-pregnant-character-bases-with-modular-heads https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases
+body/bodies/female
+  authors: Benjamin K. Smith (BenCreating), bluecarrot16, TheraHedwig, Evert, MuffinElZangano, Durrani, Pierre Vigier (pvigier), ElizaWy, Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-revised-character-basics https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/muscular
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Sander Frenken (castelonia), Benjamin K. Smith (BenCreating), Eliza Wyatt (ElizaWy), dalonedrau, Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-barbarian-sprite-base https://opengameart.org/content/lpc-muscular-swing-animation https://opengameart.org/content/lpc-muscular-hurt-animation https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-character-bases https://opengameart.org/content/lpc-male-jumping-animation-by-durrani
+body/bodies/teen
+  authors: bluecarrot16, Evert, TheraHedwig, Benjamin K. Smith (BenCreating), MuffinElZangano, Durrani, Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-teen-unisex-base-clothes https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-revised-character-basics https://opengameart.org/content/lpc-be-seated https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded
+body/bodies/pregnant
+  authors: bluecarrot16, JaidynReiman, Evert, TheraHedwig, MuffinElZangano, Durrani, Benjamin K. Smith (BenCreating), Pierre Vigier (pvigier), Eliza Wyatt (ElizaWy), Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+  licenses: CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-ladies https://opengameart.org/content/lpc-pregnancy-bases-maternity-wear https://opengameart.org/content/lpc-7-womens-shirts https://opengameart.org/content/lpc-jump-expanded https://gitlab.com/vagabondgame/lpc-characters https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+body/bodies/child
+  authors: bluecarrot16, Benjamin K. Smith (BenCreating), ElizaWy, MuffinElZangano, Durrani, Nila122, kheftel, Stephen Challener (Redshrike)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-child-standing-template https://opengameart.org/content/lpc-children-walk-animation https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-male-jumping-animation-by-durrani https://opengameart.org/content/lpc-jump-expanded https://opengameart.org/content/lpc-jump-expanded
+head/heads/orc/male
+  authors: bluecarrot16, Matthew Krohn (makrohn), Stephen Challener (Redshrike), Zi Ye
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/four-characters-my-lpc-entries https://opengameart.org/content/sinbad-the-ogre https://opengameart.org/content/lpc-male-sheets https://opengameart.org/content/lpc-character-bases
+legs/armour/plate
+  authors: bluecarrot16, JaidynReiman, Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites
+feet/armour/plate
+  authors: Matthew Krohn (makrohn), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites
+feet/armour/plate/female
+  authors: Matthew Krohn (makrohn), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites
+torso/armour/plate/male
+  authors: Napsio (Vitruvian Studio), JaidynReiman, bluecarrot16, Michael Whitlock (bigbeargames), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women
+torso/armour/plate/female
+  authors: JaidynReiman, bluecarrot16, Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women http://opengameart.org/content/lpc-clothing-updates
+torso/armour/plate/teen
+  authors: JaidynReiman, bluecarrot16, Michael Whitlock (bigbeargames), Johannes Sjölund (wulax)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women
+arms/armour/plate/male
+  authors: Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites http://opengameart.org/content/lpc-clothing-updates
+arms/armour/plate/thin
+  authors: Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-combat-armor-for-women http://opengameart.org/content/lpc-clothing-updates
+hat/helmet/greathelm
+  authors: bluecarrot16
+  licenses: OGA-BY 3.0, CC-BY 3.0, CC-BY 4.0, GPL 2.0, GPL 3.0
+  https://opengameart.org/content/lpc-helmets https://opengameart.org/content/lpc-expanded-hats-facial-helmets

@@ -105,7 +105,7 @@ function drawTitle(ctx, scene) {
     const span = Engine.W + 120;
     const x = ((scene.t * 40 + i * 96) % span) - 60;
     const col = Math.floor(scene.t * 8 + i) % 6;
-    drawFrame(ctx, IMG[ATLAS_KEY[id]], { row: 1, col }, Math.round(x), Engine.H - 74, 1);
+    drawFrame(ctx, IMG[LPC_KEY[id]] || IMG["lpc_" + id], { row: 1, col }, Math.round(x - 32), Engine.H - 96, 1);
   });
 
   ctx.textAlign = "center";
@@ -293,11 +293,9 @@ class CreditsScene {
     drawText(ctx, "Credits", 16, 28);
     ctx.font = "10px GameFont, system-ui, sans-serif";
     const lines = [
-      "Liberated Pixel Cup (LPC) base sprites and animations: many authors (see method_5 CREDITS.csv).",
-      "  Licensed OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0.",
+      "Character and enemy sprites: Liberated Pixel Cup (LPC) sheets, many authors, CC-BY-SA, GPL, OGA-BY, CC0.",
+      "  Full author list and licenses: assets/lpc/CREDITS.txt.",
       "Dungeon Crawl Stone Soup tiles: DCSS team. Mostly CC0; see assets/tiles/LICENSE_DCSS.txt.",
-      "Sprite Foundry Fantasy Heroes (48px and HD), Monster Pack, Goblin Warband: MIT.",
-      "Font: Pixelify Sans, SIL Open Font License 1.1 (assets/fonts).",
       "Game code and build: this repository.",
       "Design and code: built with Claude Code",
     ];
@@ -360,18 +358,10 @@ class PlayScene {
     this.cooldowns = [0, 0, 0, 0];
     this.abBuf = [0, 0, 0, 0];
     this.images = {
-      knight: IMG.knight_right,
-      ranger_right: IMG.ranger_right,
-      grunt: IMG.grunt,
-      mud_revenant: IMG.mud_revenant,
-      rat_king: IMG.rat_king,
-      bone_weaver: IMG.bone_weaver,
       wall: IMG.wall,
       grass: IMG.grass,
       dirt: IMG.dirt,
       tree: IMG.tree,
-      mage_right: IMG.mage_right,
-      warlord: IMG.warlord,
     };
     this.cam = { x: 0, y: 0 };
     this.active = active;
@@ -804,13 +794,14 @@ class PlayScene {
     // Flash after a respawn: skip every other 0.1 s.
     if (this.flashT > 0 && Math.floor(this.flashT / 0.1) % 2 === 0) return;
     const p = this.player;
-    const atlas = IMG[ATLAS_KEY[this.active]];
-    const sx = Math.round(p.x + p.w / 2 - 24 - cx);
-    const sy = Math.round(p.y + p.h - 48 - cy);
+    const sheet = IMG[LPC_KEY[this.active]];
+    // The 64 px cell is centred on the body and its bottom sits on the feet.
+    const sx = Math.round(p.x + p.w / 2 - 32 - cx);
+    const sy = Math.round(p.y + p.h - 64 - cy);
     ctx.save();
     // Ghost: the body is drawn faded while the ghost ability lasts.
     if (this.ghostT > 0) ctx.globalAlpha = 0.5;
-    drawFrame(ctx, atlas, this.frame, sx, sy, p.facing);
+    drawFrame(ctx, sheet, this.frame, sx, sy, p.facing);
     ctx.restore();
   }
 
@@ -933,7 +924,8 @@ const HUD = (() => {
 
   // Idle frame of a character, from its atlas.
   function idleIcon(ctx, cardId, x, y, size) {
-    ctx.drawImage(IMG[ATLAS_KEY[cardId]], 0, 0, 48, 48, x, y, size, size);
+    // The figure fills the middle of the 64 px idle cell, so crop to it.
+    ctx.drawImage(IMG[LPC_KEY[cardId]], 16, 8, 32, 56, x, y, size * 32 / 56, size);
   }
 
   // Top-left panel: the active character, its name, and a small secrets count at the top right.

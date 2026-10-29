@@ -46,8 +46,6 @@ function waitForFonts() {
 loadImages(ASSET_URLS)
   .then(() => waitForFonts())
   .then(() => {
-    IMG.warlord = tint(IMG.grunt, "rgba(150, 30, 30, 0.45)");
-    IMG.atlas_warlord = tint(IMG.atlas_grunt, "rgba(150, 30, 30, 0.45)");
     Engine.start(new TitleScene());
   })
   .catch((err) => {

@@ -39,8 +39,8 @@ const ENEMY_DEFS = {
     sprite: "warlord",
     w: 44,
     h: 58,
-    drawW: 44,
-    drawH: 58,
+    drawW: 128,
+    drawH: 128,
     speed: 50,
     chaseSpeed: 80,
     sight: 400,
@@ -149,8 +149,8 @@ class Enemy {
   }
 
   draw(ctx, images, camX, camY) {
-    const dw = this.def.drawW || 48;
-    const dh = this.def.drawH || 48;
+    const dw = this.def.drawW || 64;
+    const dh = this.def.drawH || 64;
     const sx = Math.round(this.x + this.w / 2 - dw / 2 - camX);
     const sy = Math.round(this.y + this.h - dh - camY);
     // Hurt: the hurt row, a white silhouette. Archers stand and idle. Others walk.
@@ -158,14 +158,14 @@ class Enemy {
     if (this.hurtT > 0) frame = { row: 6, col: 0 };
     else if (this.def.idle) frame = { row: 0, col: Math.floor(this.animT * 3) % 4 };
     else frame = { row: 1, col: Math.floor(this.animT * 6) % 6 };
-    const atlas = IMG[this.kind === "warlord" ? "atlas_warlord" : "atlas_" + this.def.sprite];
+    const sheet = IMG["lpc_" + this.kind];
     ctx.save();
     if (this.dir > 0) {
       ctx.translate(sx + dw, sy);
       ctx.scale(-1, 1);
-      ctx.drawImage(atlas, frame.col * 48, frame.row * 48, 48, 48, 0, 0, dw, dh);
+      ctx.drawImage(sheet, frame.col * 64, frame.row * 64, 64, 64, 0, 0, dw, dh);
     } else {
-      ctx.drawImage(atlas, frame.col * 48, frame.row * 48, 48, 48, sx, sy, dw, dh);
+      ctx.drawImage(sheet, frame.col * 64, frame.row * 64, 64, 64, sx, sy, dw, dh);
     }
     ctx.restore();
   }
