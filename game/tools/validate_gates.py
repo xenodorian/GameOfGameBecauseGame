@@ -75,6 +75,7 @@ class Grid:
         solid_chars = "#=" if breakable else "#=x"
         self.solid = [[rows[y][x] in solid_chars for x in range(self.w)] for y in range(self.h)]
         self.ropes = ropes
+        self.rows = rows
         # land[y][x]: row where a body falling from (x, y) comes to rest, or None.
         self.land = [[None] * self.w for _ in range(self.h)]
         for x in range(self.w):
@@ -90,6 +91,9 @@ class Grid:
         return self.solid[y][x]
 
     def supports(self, x, y):
+        # One-way tiles (_) catch a falling body, but do not block a body moving up.
+        if 0 <= x < self.w and 0 <= y < self.h and self.rows[y][x] == "_":
+            return True
         return self.is_solid(x, y) or (x, y) in self.ropes
 
     def air(self, x, y):
