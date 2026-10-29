@@ -125,7 +125,7 @@ Keep every other field (`TILE`, `exit`, `at`, functions, `platforms`). Build the
 
 Check: the suite still passes with no other change.
 
-### [ ] A3: Validator handles many levels, plus debug output
+### [~] A3: Validator handles many levels, plus debug output (gates and build pass; suite run pending)
 Edit `game/tools/validate_gates.py`:
 1. Replace `load_rows()` with:
    ```python

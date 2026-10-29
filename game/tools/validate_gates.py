@@ -24,6 +24,7 @@ Assumptions, taken from game/src/world.js and game/src/scenes.js:
 Run from any directory:  python3 game/tools/validate_gates.py
 Exit code 0 means every check passed.
 """
+import argparse
 import pathlib
 import re
 import sys
@@ -31,9 +32,6 @@ from collections import deque
 
 GAME = pathlib.Path(__file__).resolve().parent.parent
 
-
-# Pickups on the main route, as (col, row). They are not gated on purpose.
-MAIN_ROUTE_PICKUPS = {(22, 12)}
 
 ABILITY_SETS = {
     "basic": set(),
@@ -46,16 +44,19 @@ ABILITY_SETS = {
 LEVELS_JS = GAME / "src" / "levels.js"
 
 
-def load_rows():
-    """Rows of the first level in levels.js. Multi-level support comes in task A3."""
+def load_levels():
+    """All levels in levels.js, as (name, rows) pairs in play order."""
     src = LEVELS_JS.read_text(encoding="utf-8")
-    block = src[src.index("rows: ["):]
-    block = block[: block.index("]")]
-    rows = re.findall(r'"([^"]*)"', block)
-    widths = {len(r) for r in rows}
-    if len(widths) != 1:
-        raise SystemExit(f"level rows have unequal widths: {sorted(widths)}")
-    return rows
+    levels = []
+    for m in re.finditer(r'name:\s*"([^"]+)".*?rows:\s*\[(.*?)\]', src, re.S):
+        rows = re.findall(r'"([^"]*)"', m.group(2))
+        widths = {len(r) for r in rows}
+        if len(widths) != 1:
+            raise SystemExit(f"level {m.group(1)}: rows have unequal widths: {sorted(widths)}")
+        levels.append((m.group(1), rows))
+    if not levels:
+        raise SystemExit("no levels found in levels.js")
+    return levels
 
 
 class Grid:
@@ -191,55 +192,99 @@ def reachable(rows, abilities, start):
         ropes |= new
 
 
-def main():
-    rows = load_rows()
-    spawn = flag = None
-    pickups = []
-    for y, row in enumerate(rows):
-        for x, ch in enumerate(row):
-            if ch == "S":
-                spawn = (x, y)
-            elif ch == "F":
-                flag = (x, y)
-            elif ch in "cp":
-                pickups.append((ch, x, y))
-    if spawn is None or flag is None:
-        raise SystemExit("level needs an S spawn marker and an F exit marker")
-
-    results = {name: reachable(rows, abilities, spawn) for name, abilities in ABILITY_SETS.items()}
+def check_level(number, name, rows):
+    """Gate checks for one level. Returns a list of failure messages."""
+    print(f"Level {number}: {name}")
+    spawns = [(x, y) for y, row in enumerate(rows) for x, ch in enumerate(row) if ch == "S"]
+    flags = [(x, y) for y, row in enumerate(rows) for x, ch in enumerate(row) if ch == "F"]
     failures = []
+    if len(spawns) != 1 or len(flags) != 1:
+        failures.append(f"level {number} needs exactly one S and one F (found {len(spawns)} S, {len(flags)} F)")
+        print("  " + failures[-1])
+        return failures
+    spawn, flag = spawns[0], flags[0]
+    pickups = [(ch, x, y) for y, row in enumerate(rows) for x, ch in enumerate(row) if ch in "ckp"]
 
-    print("Main route (spawn to exit flag):")
-    for name in ABILITY_SETS:
-        ok = any(x == flag[0] and abs(y - flag[1]) <= 1 for x, y in results[name])
-        print(f"  {name:7s} {'OK' if ok else 'FAIL'}")
+    results = {name_: reachable(rows, abilities, spawn) for name_, abilities in ABILITY_SETS.items()}
+
+    print("  Main route (spawn to exit flag):")
+    for name_ in ABILITY_SETS:
+        ok = any(x == flag[0] and abs(y - flag[1]) <= 1 for x, y in results[name_])
+        print(f"    {name_:7s} {'OK' if ok else 'FAIL'}")
         if not ok:
-            failures.append(f"main route not reachable by {name}")
+            failures.append(f"level {number}: main route not reachable by {name_}")
 
-    print("Secret pickups:")
+    print("  Pickups:")
     for kind, px, py in pickups:
-        def can(name):
-            return any(abs(px - x) <= 1 and abs(py - y) <= 1 for x, y in results[name])
+        def can(name_):
+            return any(abs(px - x) <= 1 and abs(py - y) <= 1 for x, y in results[name_])
 
         by = [n for n in ABILITY_SETS if n != "basic" and can(n)]
-        gated = not can("basic")
-        label = f"{'card' if kind == 'c' else 'power-up'} at col {px} row {py}"
-        if (px, py) in MAIN_ROUTE_PICKUPS:
-            print(f"  {label:26s} main route pickup  reachable by: {', '.join(by) or 'none'}")
+        label = f"{ {'c': 'card', 'p': 'power-up', 'k': 'main route card'}[kind] } at col {px} row {py}"
+        if kind == "k":
+            print(f"    {label:26s} main route pickup  reachable by: {', '.join(by) or 'none'}")
             continue
+        gated = not can("basic")
         ok = bool(by) and gated
-        print(f"  {label:26s} {'OK' if ok else 'FAIL'}  reachable by: {', '.join(by) or 'none'}")
+        print(f"    {label:26s} {'OK' if ok else 'FAIL'}  reachable by: {', '.join(by) or 'none'}")
         if not by:
-            failures.append(f"{label} is not reachable by any character")
+            failures.append(f"level {number}: {label} is not reachable by any character")
         if not gated:
-            failures.append(f"{label} is reachable with basic moves, so it is not gated")
+            failures.append(f"level {number}: {label} is reachable with basic moves, so it is not gated")
+    return failures
+
+
+def show(rows):
+    """Print the level with a column ruler and row numbers."""
+    width = len(rows[0])
+    ruler = ("0123456789" * (width // 10 + 1))[:width]
+    print("   " + ruler)
+    for y, row in enumerate(rows):
+        print(f"{y:2d} {row}")
+
+
+def map_reach(rows, name):
+    """Print the level with * on every standing tile the named character can reach."""
+    spawn = next((x, y) for y, row in enumerate(rows) for x, ch in enumerate(row) if ch == "S")
+    reached = reachable(rows, ABILITY_SETS[name], spawn)
+    grid = [list(r) for r in rows]
+    for x, y in reached:
+        grid[y][x] = "*"
+    show(["".join(r) for r in grid])
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Gate validation for the Changeling levels.")
+    parser.add_argument("--level", type=int, help="check only this level (1-based)")
+    parser.add_argument("--show", type=int, metavar="N", help="print level N with a column ruler, then exit")
+    parser.add_argument("--map", nargs=2, metavar=("N", "NAME"),
+                        help="print level N with * on tiles NAME can reach, then exit. NAME is one of: " + ", ".join(ABILITY_SETS))
+    args = parser.parse_args()
+
+    levels = load_levels()
+    if args.show is not None:
+        show(levels[args.show - 1][1])
+        return
+    if args.map is not None:
+        number, name = int(args.map[0]), args.map[1]
+        if name not in ABILITY_SETS:
+            raise SystemExit(f"unknown character {name}; use one of: {', '.join(ABILITY_SETS)}")
+        map_reach(levels[number - 1][1], name)
+        return
+
+    chosen = [args.level - 1] if args.level else range(len(levels))
+    failures = []
+    for i in chosen:
+        name, rows = levels[i]
+        failures += check_level(i + 1, name, rows)
+        print()
 
     if failures:
-        print("\nFAILED:")
+        print("FAILED:")
         for f in failures:
             print("  - " + f)
         sys.exit(1)
-    print("\nAll gate checks passed.")
+    print("All gate checks passed.")
 
 
 if __name__ == "__main__":
