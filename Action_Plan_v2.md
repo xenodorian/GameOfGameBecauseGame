@@ -63,7 +63,7 @@ new_string:
 ```
 Then run `node --check game/tests/suite.js`. It must print nothing.
 
-## V2 [ ]: Weaver arrows glow bone green
+## V2 [x]: Weaver arrows glow bone green
 
 File: `game/src/abilities.js`. Two Edits.
 

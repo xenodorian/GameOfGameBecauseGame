@@ -1905,7 +1905,7 @@ const Attacks = (() => {
         if (!beam) beam = { body: p, dir: p.facing, t: 0, len: 0, hitWall: false, hit: new Set(), seed: 1, motes: [] };
         break;
       case "shoot": {
-        Effects.flare(p.facing > 0 ? p.x + p.w + 2 : p.x - 2, p.y + 13, "steel");
+        Effects.flare(p.facing > 0 ? p.x + p.w + 2 : p.x - 2, p.y + 13, scene.active === "weaver" ? "bone" : "steel");
         const live = projectiles.filter((q) => q.owner === scene.active).length;
         if (live >= MAX_PROJECTILES) break;
         projectiles.push({
@@ -2282,6 +2282,7 @@ const Attacks = (() => {
     if (beam) drawBeam(ctx, beam, cx, cy);
     for (const q of projectiles) {
       const dir = q.vx > 0 ? 1 : -1;
+      if (q.owner === "weaver") Glow.disc(ctx, q.x - cx + (dir > 0 ? 0 : 14), q.y - cy + 1, 4, "bone", 0.6);
       drawArrow(ctx, Math.round(q.x - cx), Math.round(q.y - cy), dir, "#c8a46a", "#d8d8e0", "#e8e4d8");
     }
     for (const h of hostile) {
