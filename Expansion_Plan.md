@@ -43,7 +43,7 @@ Written by Opus for executor agents. This file is the only task list. Do the tas
 
 ## Phase A: Multi-level support
 
-### [ ] A1: Move level data into `game/src/levels.js`
+### [~] A1: Move level data into `game/src/levels.js` (gates and build pass; suite run pending)
 1. Create `game/src/levels.js` with exactly this shape. Copy the 16 rows of `LEVEL_ROWS` from `world.js` into `rows`, unchanged except one edit: in row 12, change the `c` at column 22 to `k`.
    ```js
    // All levels, in play order. Each row string must be the same length.

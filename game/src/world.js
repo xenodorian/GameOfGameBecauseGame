@@ -13,29 +13,14 @@ const TILE = 32;
 //   a  archer spawn (drawn as empty)
 //   F  level exit flag (drawn as a pole and flag)
 //   c  card pickup on the ground (random character card)
+//   k  card pickup on the main route (not a secret)
 //   p  power-up on the ground (draws a random card into hand or deck)
 //   .  empty air
-const LEVEL_ROWS = [
-  "........................................................................",
-  "........................................................................",
-  "........................................................................",
-  "........................................................................",
-  "........................................................................",
-  "........................................................................",
-  "........................................................................",
-  "........................................................................",
-  "...............................................c........................",
-  "........................................................................",
-  "......................................c.......====......................",
-  "....................................====................................",
-  "......................c.................................................",
-  "..S......T..........g.......====..g.....j...T.......m...a.F...........p.",
-  "============..==================================================....====",
-  "############..##################################################....####",
-];
+// Level data lives in levels.js. Multi-level loading comes in task A2.
+const tiles0 = LEVELS[0].rows;
 
 const World = (() => {
-  const tiles = LEVEL_ROWS.map((row) => row.split(""));
+  const tiles = tiles0.map((row) => row.split(""));
   // Temporary one-way platforms made in play (arrow anchor rope). Each has a life in seconds.
   const platforms = [];
   const rows = tiles.length;
@@ -55,7 +40,7 @@ const World = (() => {
       // jump that clears the flag's tile still completes the level.
       if (ch === "F") exit = { x: tx * TILE, y: (ty - 3) * TILE, w: TILE, h: 4 * TILE };
       if (MARKERS[ch]) enemySpawns.push({ kind: MARKERS[ch], x: tx * TILE, y: ty * TILE });
-      if (ch === "c" || ch === "p") pickupSpawns.push({ power: ch === "p", x: tx * TILE, y: ty * TILE });
+      if (ch === "c" || ch === "k" || ch === "p") pickupSpawns.push({ power: ch === "p", x: tx * TILE, y: ty * TILE });
     })
   );
 

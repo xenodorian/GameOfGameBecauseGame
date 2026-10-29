@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Gate validation for the Changeling level.
 
-Reads LEVEL_ROWS from game/src/world.js and searches the standing tiles for
+Reads the level rows from game/src/levels.js and searches the standing tiles for
 each ability set. It checks two things:
 
   1. The main route (spawn to exit flag) is reachable with every character.
@@ -30,7 +30,7 @@ import sys
 from collections import deque
 
 GAME = pathlib.Path(__file__).resolve().parent.parent
-WORLD_JS = GAME / "src" / "world.js"
+
 
 # Pickups on the main route, as (col, row). They are not gated on purpose.
 MAIN_ROUTE_PICKUPS = {(22, 12)}
@@ -43,11 +43,15 @@ ABILITY_SETS = {
 }
 
 
+LEVELS_JS = GAME / "src" / "levels.js"
+
+
 def load_rows():
-    src = WORLD_JS.read_text(encoding="utf-8")
-    block = src[src.index("const LEVEL_ROWS = ["):]
-    block = block[: block.index("];")]
-    rows = re.findall(r'^\s*"([^"]+)",', block, re.M)
+    """Rows of the first level in levels.js. Multi-level support comes in task A3."""
+    src = LEVELS_JS.read_text(encoding="utf-8")
+    block = src[src.index("rows: ["):]
+    block = block[: block.index("]")]
+    rows = re.findall(r'"([^"]*)"', block)
     widths = {len(r) for r in rows}
     if len(widths) != 1:
         raise SystemExit(f"level rows have unequal widths: {sorted(widths)}")
