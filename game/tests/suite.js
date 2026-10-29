@@ -357,10 +357,14 @@ for (const character of ['knight', 'ranger', 'mage']) {
         if (performance.now() - started > 90000) { clearInterval(timer); return resolve({ ok: false, mode: s.mode }); }
         if (s.mode === 'select') { press('keydown', 'KeyZ'); setTimeout(() => press('keyup', 'KeyZ'), 30); }
         if (s.mode !== 'play') return;
-        press('keydown', 'ArrowRight');
+        // Walk toward the exit: right by default, left if a respawn put the knight past the flag.
         const p = s.player;
+        const ex = World.exit();
+        const dir = ex && p.x > ex.x + World.TILE / 2 ? -1 : 1;
+        press('keydown', dir > 0 ? 'ArrowRight' : 'ArrowLeft');
+        press('keyup', dir > 0 ? 'ArrowLeft' : 'ArrowRight');
         const row = Math.floor((p.y + p.h - 1) / World.TILE);
-        const col = Math.floor((p.x + p.w + 8) / World.TILE);
+        const col = Math.floor((p.x + (dir > 0 ? p.w + 8 : -8)) / World.TILE);
         const blocked = World.at(col, row) === '#' || World.at(col, row) === '=';
         const gap = !['#', '=', '_'].includes(World.at(col, row + 1));
         if (p.grounded && (blocked || gap) && performance.now() > jumpUntil) {

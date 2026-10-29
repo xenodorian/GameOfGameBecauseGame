@@ -431,7 +431,9 @@ const World = (() => {
   tiles.forEach((row, ty) =>
     row.forEach((ch, tx) => {
       if (ch === "S") spawn = { x: tx * TILE, y: ty * TILE };
-      if (ch === "F") exit = { x: tx * TILE, y: ty * TILE, w: TILE, h: TILE };
+      // The exit zone is 4 tiles tall, reaching 3 tiles above the flag, so a
+      // jump that clears the flag's tile still completes the level.
+      if (ch === "F") exit = { x: tx * TILE, y: (ty - 3) * TILE, w: TILE, h: 4 * TILE };
       if (MARKERS[ch]) enemySpawns.push({ kind: MARKERS[ch], x: tx * TILE, y: ty * TILE });
       if (ch === "c" || ch === "p") pickupSpawns.push({ power: ch === "p", x: tx * TILE, y: ty * TILE });
     })
