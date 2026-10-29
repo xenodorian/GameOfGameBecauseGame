@@ -410,7 +410,7 @@ Problems found (verified by reading levels.js and the validator output):
 
 ## Phase R: Review fixes (do these in order, same rules as above)
 
-### [ ] R1: One player platform at a time
+### [x] R1: One player platform at a time
 1. In `game/src/abilities.js`, in the `arrow_anchor` and `bone_bridge` cases, empty the platform list before adding the new one: `World.platforms.length = 0;` on the line before `World.addPlatform(...)`.
 2. In `game/tools/validate_gates.py`, a rope or bridge may only be anchored from a tile where the body stands on real ground, not on a rope. In `explore`, change the rope source condition to also require `grid.is_solid(x, y + 1) or rows_char(x, y + 1) == "_"` (write a small helper that reads `grid.rows`). Ropes still stay in the search once made (that is fine).
 3. Add a suite check `rope: placing a second rope removes the first` (place two, assert `World.platforms.length === 1`).

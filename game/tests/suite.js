@@ -624,6 +624,20 @@ check('ability: weaver ghost (X) survives touching a grunt', async (browser) => 
   await page.close();
 });
 
+check('rope: placing a second rope removes the first', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [], active: 'ranger' });
+  await placeAt(page, 200, 418);
+  await wait(page, 60);
+  await page.keyboard.press('KeyS'); await wait(page, 40);
+  await placeAt(page, 400, 418);
+  await wait(page, 60);
+  await page.keyboard.press('KeyS'); await wait(page, 40);
+  assert.equal(await page.evaluate(() => World.platforms.length), 1);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 check('gates: validate_gates.py exits 0', async () => {
   execFileSync('python3', [path.join(GAME, 'tools', 'validate_gates.py')], { stdio: 'pipe' });
 });

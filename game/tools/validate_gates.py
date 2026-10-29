@@ -105,6 +105,13 @@ class Grid:
         return self.land[y][x]
 
 
+def standing_on_ground(grid, x, y):
+    """True if the tile below (x, y) is solid or a one-way tile (not a rope)."""
+    if grid.is_solid(x, y + 1):
+        return True
+    return 0 <= y + 1 < grid.h and 0 <= x < grid.w and grid.rows[y + 1][x] == "_"
+
+
 def explore(rows, abilities, start, ropes):
     """Standing tiles reachable from start with ropes fixed.
 
@@ -180,7 +187,8 @@ def explore(rows, abilities, start, ropes):
                 if all(grid.air(x + step * i, y - 3) for i in range(0, abs(dxh) + 1)):
                     push((x + dxh, grid.settle(x + dxh, y - 3)))
 
-        if can_rope and all(grid.air(x + i, y - 1) for i in range(1, rope_len + 1)):
+        # A rope is anchored from real ground, not from another rope.
+        if can_rope and standing_on_ground(grid, x, y) and all(grid.air(x + i, y - 1) for i in range(1, rope_len + 1)):
             rope_sources.add((x, y))
 
     return set(seen), rope_sources
