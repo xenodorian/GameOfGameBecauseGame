@@ -836,29 +836,33 @@ class PlayScene {
     if (this.flashT > 0 && Math.floor(this.flashT / 0.1) % 2 === 0) return;
     const p = this.player;
     const sheet = IMG[LPC_KEY[this.active]];
-    // The 64 px cell is centred on the body and its bottom sits on the feet.
-    const sx = Math.round(p.x + p.w / 2 - 32 - cx);
-    const sy = Math.round(p.y + p.h - 64 - cy);
+    // The big 192 px sheet lets weapons reach out past the 64 px body. Its body sits in the centre.
+    const big = IMG[LPC_KEY[this.active] + "_big"];
+    const size = big ? 192 : 64;
+    const pad = (size - 64) / 2;
+    // The cell is centred on the body and its bottom sits on the feet.
+    const sx = Math.round(p.x + p.w / 2 - 32 - pad - cx);
+    const sy = Math.round(p.y + p.h - 64 - pad - cy);
     ctx.save();
     const frame = this.mode === "dying" ? { row: ANIM_ROWS.hurt[0], col: 0 } : this.frame;
     if (this.ghostT > 0) {
       // Ghost outline: a cyan copy of the frame, one pixel out in four directions. It blinks every 0.05 s.
       if (Math.floor(this.time * 20) % 2 === 0) {
         const g = GhostCanvas.getContext("2d");
-        g.clearRect(0, 0, 64, 64);
-        g.drawImage(sheet, frame.col * 64, frame.row * 64, 64, 64, 0, 0, 64, 64);
+        g.clearRect(0, 0, size, size);
+        g.drawImage(big || sheet, frame.col * size, frame.row * size, size, size, 0, 0, size, size);
         g.globalCompositeOperation = "source-atop";
         g.fillStyle = "#6fe3ff";
-        g.fillRect(0, 0, 64, 64);
+        g.fillRect(0, 0, size, size);
         g.globalCompositeOperation = "source-over";
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-          drawFrame(ctx, GhostCanvas, { row: 0, col: 0 }, sx + dx, sy + dy, p.facing);
+          drawFrame(ctx, GhostCanvas, { row: 0, col: 0 }, sx + dx, sy + dy, p.facing, size);
         }
       }
       // The body itself is drawn faded while the ghost ability lasts.
       ctx.globalAlpha = 0.5;
     }
-    drawFrame(ctx, sheet, frame, sx, sy, p.facing);
+    drawFrame(ctx, big || sheet, frame, sx, sy, p.facing, size);
     ctx.restore();
   }
 

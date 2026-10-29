@@ -57,22 +57,22 @@ function pickFrame(body, time) {
 // Offscreen canvas for the ghost outline's cyan copy. Made once at load.
 const GhostCanvas = (() => {
   const c = document.createElement("canvas");
-  c.width = 64;
-  c.height = 64;
+  c.width = 192;
+  c.height = 192;
   return c;
 })();
 
-// Draws one 64 by 64 cell from a sheet with its bottom centre at (x, y). Flipped when facing left.
-function drawFrame(ctx, sheet, frame, x, y, facing) {
-  const sx = frame.col * 64;
-  const sy = frame.row * 64;
+// Draws one size by size cell (64 by default, 192 for the big player sheets) from a sheet with its bottom centre at (x, y). Flipped when facing left.
+function drawFrame(ctx, sheet, frame, x, y, facing, size = 64) {
+  const sx = frame.col * size;
+  const sy = frame.row * size;
   if (facing < 0) {
     ctx.save();
-    ctx.translate(x + 64, y);
+    ctx.translate(x + size, y);
     ctx.scale(-1, 1);
-    ctx.drawImage(sheet, sx, sy, 64, 64, 0, 0, 64, 64);
+    ctx.drawImage(sheet, sx, sy, size, size, 0, 0, size, size);
     ctx.restore();
   } else {
-    ctx.drawImage(sheet, sx, sy, 64, 64, x, y, 64, 64);
+    ctx.drawImage(sheet, sx, sy, size, size, x, y, size, size);
   }
 }

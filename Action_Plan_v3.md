@@ -74,7 +74,7 @@ File: `game/tools/build_lpc.py`.
    It prints `sheets OK` when nothing failed and exits 1 on any failure.
 5. Rebuild sheets, run `python3 game/tools/check_sheets.py`. Commit. Message `X3: knight longsword on slash and thrust, bow on walk and idle`.
 
-## X4 [ ]: Draw the player from the big sheet
+## X4 [x]: Draw the player from the big sheet
 
 1. `game/tools/build_single_html.py`: next to `"lpc_knight": "lpc/knight.png",` add `"lpc_knight_big": "lpc/knight_big.png",` and the same for ranger, mage, rat, weaver.
 2. `game/src/anim.js`:
