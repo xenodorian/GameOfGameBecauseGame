@@ -102,6 +102,10 @@ torso/armour/leather
   authors: Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
   licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
   https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-clothing-updates https://opengameart.org/content/lpc-expanded-armor
+weapon/sword/dagger
+  authors: bluecarrot16, Johannes Sjölund (wulax), Matthew Krohn (makrohn)
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-extended-weapon-animations
 [weaver]
 body/bodies/skeleton
   authors: bluecarrot16, Napsio, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
@@ -111,6 +115,10 @@ head/heads/skeleton
   authors: bluecarrot16, Napsio, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
   licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
   https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-skeleton https://opengameart.org/content/lpc-character-bases
+weapon/ranged/bow/normal
+  authors: Johannes Sjölund (wulax), Pierre Vigier (pvigier)
+  licenses: OGA-BY 3.0+, GPL 3.0, CC-BY 4.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-walk-animations-for-bows
 [archer]
 body/bodies/skeleton
   authors: bluecarrot16, Napsio, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike)

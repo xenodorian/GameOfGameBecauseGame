@@ -148,6 +148,8 @@ Open work:
 - Docs cleanup 2: all notes in CLAUDE.md, because Claude Code loads that file on its own.
 - T10 and T11 committed together (sheets changed in T11; HTML needed a rebuild). T7 and T8 together; T3 to T6 together; T1 and T2 together. Deviations from one task per commit.
 - Weapon layers never use the attack fallback; a weapon with no frame for an animation is hidden there.
+- Weapons on idle and jump reuse their walk frames (`build_lpc.py` compose), so a held weapon stays in hand while standing. Rat now has a dagger (LPC dagger, 64 px frames) and the bone weaver has the normal bow (shoot and hurt only; hidden elsewhere).
+- Knight attack sword still missing on slash and thrust. The LPC arming sword has no such frames; the longsword slash is 128 px on another grid, which the 64 px builder cannot place yet.
 - Selection card is 140 px tall, not 108, to fit the idle frame and four ability names.
 - Spec deviations accepted: see section 6.
 - Action Plan v2 V3 and V4: committed together (both touch the rebuilt HTML). Deviation from one task per commit.

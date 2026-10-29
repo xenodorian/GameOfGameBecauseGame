@@ -56,8 +56,13 @@ CHARACTERS = {
     "rat": [
         ("body/bodies/male/{anim}.png", 10), ("head/heads/rat/adult/{anim}.png", 100),
         ("torso/armour/leather/male/{anim}.png", 60),
+        ("weapon/sword/dagger/behind/{anim}/dagger.png", 9), ("weapon/sword/dagger/{anim}/dagger.png", 140),
     ],
-    "weaver": [("body/bodies/skeleton/{anim}.png", 10), ("head/heads/skeleton/adult/{anim}.png", 100)],
+    "weaver": [
+        ("body/bodies/skeleton/{anim}.png", 10), ("head/heads/skeleton/adult/{anim}.png", 100),
+        ("weapon/ranged/bow/normal/universal/background/{anim}/light.png", -1),
+        ("weapon/ranged/bow/normal/universal/foreground/{anim}/light.png", 140),
+    ],
     "archer": [("body/bodies/skeleton/{anim}.png", 10), ("head/heads/skeleton/adult/{anim}.png", 100)],
     "grunt": [
         ("body/bodies/male/{anim}.png", 10), ("head/heads/goblin/adult/{anim}.png", 100),
@@ -126,9 +131,12 @@ def compose(lpc, key, layers, zmap, report):
         frames = None
         for folder, z in ordered:
             layer_frames = frames_of(layer_path(lpc, folder, anim), row)
-            if layer_frames is None and "/weapon/" not in f"/{folder}":
-                # Use a similar animation so the layer does not vanish from the frames.
-                for sub in FALLBACK.get(anim, []):
+            if layer_frames is None:
+                # Use a similar animation so the layer does not vanish from the frames. A weapon
+                # only reuses its walk pose on idle and jump, so it stays in hand there.
+                is_weapon = "/weapon/" in f"/{folder}"
+                subs = (["walk"] if anim in ("idle", "jump") else []) if is_weapon else FALLBACK.get(anim, [])
+                for sub in subs:
                     layer_frames = frames_of(layer_path(lpc, folder, sub), RIGHT_ROW if sub != "hurt" else 0)
                     if layer_frames is not None:
                         report.append(f"{key}: {folder} has no {anim}, used {sub}")
