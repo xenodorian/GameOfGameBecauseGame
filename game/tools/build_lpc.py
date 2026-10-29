@@ -146,8 +146,10 @@ def compose(lpc, key, layers, zmap, report):
 
 
 def credits_for(defs, zmap_files, folders):
+    """Credit entries for the item folders this character uses. Unused variants are skipped."""
     lines = []
     seen = set()
+    used = {item_folder(folder) for folder in folders}
     for folder in folders:
         f = zmap_files.get(item_folder(folder))
         if not f or f in seen:
@@ -155,7 +157,9 @@ def credits_for(defs, zmap_files, folders):
         seen.add(f)
         d = json.loads(f.read_text(encoding="utf-8"))
         for cr in d.get("credits", []):
-            file = cr.get("file", folder)
+            file = cr.get("file", folder).rstrip("/")
+            if not any(file == u or file.startswith(u + "/") or u.startswith(file + "/") for u in used):
+                continue
             authors = ", ".join(cr.get("authors", []))
             licenses = ", ".join(cr.get("licenses", []))
             urls = " ".join(cr.get("urls", []))

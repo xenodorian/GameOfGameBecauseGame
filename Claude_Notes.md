@@ -116,6 +116,7 @@ Single condensed record of the project. It replaces Current_Work.md, Expansion_P
 | 2026-10-29 | with T1 and T2 | exit 0 | 50 passed, 0 failed | charge check waits on game clock; archer frame check added; archer frames use ANIM_ROWS. Archer not in shot l3_mid (off screen), per-enemy shots come in Task 10 |
 | 2026-10-29 | with T3 to T6 | exit 0 | 52 passed, 0 failed | enemies face walk direction (flip when dir < 0); hurt pose during dying mode (0.15 s); warlord knockback; ability bar lifts above touch buttons. Two checks were hardened: stand-still reads position after both keys are held (press order gave one 2.17 px step); knockback steps the enemy update in open air (spawn overlaps a platform) |
 | 2026-10-29 | with T7 and T8 | exit 0 | 52 passed, 0 failed | selection cards show idle frame and four ability names (card 116 by 140, not 108 tall, so the names fit); level complete panel; hand moved to x 150 so 'Bone Weaver' fits. T8: spark, dust, ring, float sparkles, leap and landing dust, rope sag, bone bridge pattern, ghost outline. Shots z_select, z_complete, c_knight_ab3, c_mage_ab1 checked |
+| 2026-10-29 | T9 | exit 0 | not rerun (no game code changed; last run 52 passed, 0 failed at T8) | CREDITS.txt filtered to used items: 16.5 KB (was larger). Sheets checked pixel-identical before and after |
 
 ## 8. Decisions log (agents append one line per decision)
 - Tasks 7 and 8 were validated and committed together (both touch scenes.js). Deviation from one task per commit. Task 8 effects were built in one pass, not one commit each.

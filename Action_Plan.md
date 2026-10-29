@@ -214,7 +214,7 @@ After each one: run the check routine, run screenshots, and commit with the id s
 
 If an effect needs a tool you do not have, skip it, log it, and go on. Do not spend more than 3 tries on any single effect.
 
-## Task 9 [ ]: Trim the credits to used items only
+## Task 9 [x]: Trim the credits to used items only
 
 1. Open `game/tools/build_lpc.py`. Find `credits_for` and where it writes `CREDITS.txt`.
 2. Read the data: each definition file lists several credit entries, each with a `file` path. Change `credits_for` so it keeps only entries whose `file` value contains a folder name that the build actually used for any sheet. Use the same list of used folders the compose step already has (search for the layer lists such as `zPos` or the dict of layers per character).
