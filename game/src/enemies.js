@@ -412,7 +412,11 @@ const Enemies = (() => {
   let pickups = [];
 
   function spawnFromLevel() {
-    list = World.enemySpawns.map((s) => new Enemy(s.kind, s.x, s.y));
+    list = World.enemySpawns.map((s) => {
+      const h = ENEMY_DEFS[s.kind].h;
+      // A tall enemy (only the warlord) starts with its feet on the bottom of its tile.
+      return new Enemy(s.kind, s.x, h > World.TILE ? s.y + World.TILE - h : s.y);
+    });
     pickups = World.pickupSpawns.map(
       (s) => new CardPickup("random", s.x, s.y, { power: s.power, pop: false, secret: s.secret })
     );

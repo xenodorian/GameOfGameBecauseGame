@@ -103,7 +103,7 @@ File: `game/tools/build_lpc.py`.
 2. `game/src/enemies.js` walk frame (grep `animT * 6`): `col: 1 + Math.floor(this.animT * 6) % (ANIM_ROWS.walk[1] - 1)`.
 3. Check routine A to C. Commit. Message `X6: walk loops frames 1 to 8, jump has rise, apex, fall`.
 
-## X7 [ ]: Warlord stands on the floor (G1)
+## X7 [x]: Warlord stands on the floor (G1)
 
 `game/src/enemies.js`, grep `new Enemy(s.kind`. Replace the map body so that a tall enemy has its feet on the bottom of its tile:
 ```js
