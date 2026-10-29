@@ -276,6 +276,11 @@ class PlayScene {
     }
     const prevBottom = p.y + p.h;
     World.moveBody(p, dt);
+    // Spikes are deadly: the bottom of the body touching one opens the selection.
+    if (World.overlapping(p.x + 2, p.y + p.h - 8, p.w - 4, 8).some((c) => c.ch === "^")) {
+      this.beginSelection("slain");
+      return;
+    }
 
     for (const enemy of Enemies.list()) {
       if (enemy.dead) continue;

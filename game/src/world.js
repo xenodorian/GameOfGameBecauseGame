@@ -15,6 +15,7 @@ const TILE = 32;
 //   c  card pickup on the ground (random character card)
 //   k  card pickup on the main route (not a secret)
 //   p  power-up on the ground (draws a random card into hand or deck)
+//   ^  spikes (not solid; touching them is deadly)
 //   .  empty air
 const World = (() => {
   let index = 0;
@@ -185,6 +186,10 @@ const World = (() => {
           }
         }
         if (!clear) continue;
+        // A spot is not safe if spikes lie within 3 columns on the body's row.
+        let spiky = false;
+        for (let dx = -3; dx <= 3; dx++) if (at(tx + dx, ty - 1) === "^") spiky = true;
+        if (spiky) continue;
 
         const sx = tx * TILE + (TILE - w) / 2;
         const sy = ty * TILE - h;
@@ -203,6 +208,23 @@ const World = (() => {
       }
     }
     return best || { x: spawn.x, y: spawn.y };
+  }
+
+  // Three grey spikes standing on the bottom edge of the tile.
+  function drawSpikes(ctx, px, py) {
+    ctx.fillStyle = "#9aa0a8";
+    ctx.strokeStyle = "#5b6068";
+    for (let i = 0; i < 3; i++) {
+      const x0 = px + 1 + i * 10;
+      const base = py + TILE;
+      ctx.beginPath();
+      ctx.moveTo(x0, base);
+      ctx.lineTo(x0 + 5, base - 12);
+      ctx.lineTo(x0 + 10, base);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
   }
 
   function draw(ctx, images, camX, camY, viewW, viewH) {
@@ -224,6 +246,8 @@ const World = (() => {
           ctx.drawImage(images.grass, px, py, TILE, TILE);
         } else if (ch === "T") {
           ctx.drawImage(images.tree, px, py, TILE, TILE);
+        } else if (ch === "^") {
+          drawSpikes(ctx, px, py);
         }
       }
     }

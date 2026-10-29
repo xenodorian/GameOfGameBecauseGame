@@ -170,7 +170,7 @@ Check: `python3 game/tools/validate_gates.py` exits 0. `--show 1` and `--map 1 b
 
 ## Phase B: New tiles and themes
 
-### [ ] B1: Spikes `^`
+### [~] B1: Spikes `^` (build and gates pass; suite run pending)
 1. Legend: `^  spikes (not solid; touching them is deadly)`.
 2. Draw: in `World.draw`, for `^` draw three grey triangles (`#9aa0a8` fill, `#5b6068` outline) whose bases sit on the bottom edge of the tile, each 10 px wide and 12 px tall.
 3. Damage: in `PlayScene.updatePlay`, right after `World.moveBody(p, dt)`, if any cell from `World.overlapping(p.x + 2, p.y + p.h - 8, p.w - 4, 8)` has `ch === "^"`, call `this.beginSelection("slain")` and return.

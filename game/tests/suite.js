@@ -484,6 +484,28 @@ check('platform: knight jumps up through a one-way platform and lands on it', as
   await page.close();
 });
 
+check('spikes: touching spikes opens the selection', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: ['ranger'] });
+  // Put spikes on the floor one tile to the right of the knight, then walk into them.
+  await page.evaluate(() => {
+    const tx = Math.floor((__scene.player.x + __scene.player.w) / World.TILE) + 1;
+    const ty = Math.floor((__scene.player.y + __scene.player.h) / World.TILE) - 1;
+    World.setTile(tx, ty, '^');
+    __scene.player.x = (tx - 1) * World.TILE + 6; __scene.player.y = ty * World.TILE - 30 + 2; __scene.player.vy = 0;
+  });
+  await page.keyboard.down('ArrowRight');
+  let selected = false;
+  for (let i = 0; i < 40 && !selected; i++) {
+    await wait(page, 60);
+    selected = await page.evaluate(() => __scene.mode === 'select');
+  }
+  await page.keyboard.up('ArrowRight');
+  assert.equal(selected, true);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 check('gates: validate_gates.py exits 0', async () => {
   execFileSync('python3', [path.join(GAME, 'tools', 'validate_gates.py')], { stdio: 'pipe' });
 });

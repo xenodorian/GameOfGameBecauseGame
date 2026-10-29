@@ -119,7 +119,8 @@ def explore(rows, abilities, start, ropes):
     rope_sources = set()
 
     def push(state):
-        if state[1] is not None and state not in seen:
+        # Spikes are a death, so a standing tile on one is not a route.
+        if state[1] is not None and rows[state[1]][state[0]] != "^" and state not in seen:
             seen.add(state)
             queue.append(state)
 
