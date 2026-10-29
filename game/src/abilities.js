@@ -200,5 +200,5 @@ const Attacks = (() => {
     hostile.length = 0;
   }
 
-  return { use, update, draw, fireHostile, hitByHostile, reset };
+  return { use, update, draw, fireHostile, hitByHostile, hostileCount: () => hostile.length, reset };
 })();

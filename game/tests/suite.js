@@ -395,6 +395,45 @@ check('enemy: rat king hops toward a nearby player', async (browser) => {
   await page.close();
 });
 
+// Only the archer is alive in these checks, so its arrows are the only hazard.
+async function archerScene(page, { hand = [] } = {}) {
+  await startPlay(page, { hand, freeze: false });
+  await page.evaluate(() => {
+    const list = Enemies.list();
+    const archer = list.find((e) => e.kind === 'archer') || new Enemy('archer', 600, 418);
+    archer.x = 600; archer.y = 418; archer.dir = -1;
+    list.length = 0; list.push(archer);
+    window.__archer = archer;
+    __scene.player.x = 500; __scene.player.y = 418; __scene.player.vy = 0; __scene.player.vx = 0;
+  });
+}
+
+check('archer: fires an arrow when the player is lined up within 200 px', async (browser) => {
+  const page = await newPage(browser);
+  await archerScene(page);
+  let fired = false;
+  for (let i = 0; i < 40 && !fired; i++) {
+    await wait(page, 100);
+    fired = await page.evaluate(() => Attacks.hostileCount() > 0);
+  }
+  assert.equal(fired, true);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('archer: an arrow hitting the player opens the death selection', async (browser) => {
+  const page = await newPage(browser);
+  await archerScene(page, { hand: ['ranger'] });
+  let selected = false;
+  for (let i = 0; i < 60 && !selected; i++) {
+    await wait(page, 100);
+    selected = await page.evaluate(() => __scene.mode === 'select');
+  }
+  assert.equal(selected, true);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 check('gates: validate_gates.py exits 0', async () => {
   execFileSync('python3', [path.join(GAME, 'tools', 'validate_gates.py')], { stdio: 'pipe' });
 });
