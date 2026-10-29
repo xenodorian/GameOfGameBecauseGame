@@ -74,7 +74,7 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
 
 - Playable build: `game/changeling.html` (one file). Rebuild with `python3 game/tools/build_single_html.py`. Source is in `game/src/`.
 - Full test suite: `NODE_PATH=$(npm root -g) node game/tests/suite.js` (Playwright with Chromium). It runs 28 checks, including all keyboard playthroughs and the gate validator, and exits non-zero on failure. Last run: 28 of 28 pass.
-- Done or partly done: Phases 0 to 9, except real-device checks, LPC attack animations, mage art, and sound. Phase 4 has all 12 abilities coded; thrust and spell bolt are not separately tested.
+- Done or partly done: Phases 0 to 9, except real-device checks, LPC attack animations, mage art, and sound. Phase 4 has all 12 abilities coded, each with a suite check.
 - Open items for the next session: a real-device pass (gamepad, phone, iOS full screen), and LPC attack sheets and mage art.
 - Decisions (all made by the build agent; no open questions remain):
   - Stomp defeats enemies, alongside the abilities. Decided: keep it.
@@ -163,7 +163,7 @@ Verified by running the checks on commit 7774d33: rebuild produces no diff, `val
 - Task 3 (archer checks): done well. Both checks isolate the archer and assert no page errors. `Attacks.hostileCount()` was added as a small test hook.
 - Task 4 (docs): mostly done. Two stale lines were left (the "Phases 7 to 9 are mostly open" line and "Not tested, per instruction" on the archer). Fixed in this review.
 - Task 5 (pycache): done.
-- Task 6 (untested paths): partly done. Only the platform check was added. Thrust, spell bolt, and Q discard were skipped, and the skip was not recorded.
+- Task 6 (untested paths): done. The executor added the platform check. Thrust, spell bolt, and Q discard already had checks (the ability table in `suite.js`, and the discard check), so my Task 6 was partly wrong. The executor should have recorded why it skipped them.
 - Correction to my own notes: Task 6 called `=` a one-way platform. That was wrong. In `world.js`, `isSolid` treats `=` as a solid tile. The executor tested the rope platform (`World.addPlatform`), which is the real one-way surface, so the check is valid. The tile one-way path (`isOneWay`, used by `_`) has no check, and the level has no `_` tiles.
 
 ### Needs the user (do not do these without asking)
@@ -173,21 +173,11 @@ Verified by running the checks on commit 7774d33: rebuild produces no diff, `val
 ### Next tasks for executor agents
 Same rules as the Opus review notes section: one task per commit, run the checks after each, write the real pass count here, push to `main`.
 
-Task A: Thrust check (small)
-- In `game/tests/suite.js`, find the existing slash check (search for `slash`). Copy it. Change the character to knight and press the ability 4 key (`KeyX`) instead of the slash key. Place the enemy far enough away that slash would miss but thrust hits (read the thrust hitbox width in `game/src/abilities.js`, search for `thrust`).
-- Assert the enemy is defeated (removed from `Enemies.list()` or marked dead, copy whatever the slash check asserts).
-
-Task B: Spell bolt check (small)
-- Copy the existing shoot check (search for `shoot`). Change the character to mage and press ability 1 (`KeyA`). Assert the enemy is defeated.
-
-Task C: Q discard check (small)
-- Copy the existing Down-hold discard check (search for `discard`). Replace holding Down with one press of `KeyQ`. Assert the same result the Down-hold check asserts.
-
-Task D: Tile one-way platform check (small)
+Task A: Tile one-way platform check (small)
 - The only tile one-way path is `_` (`isOneWay` in `game/src/world.js`). The level has none. In a new check, set one tile to `_` above the floor at runtime (look at how `World.at` reads `tiles`; if there is no setter, add `setTile(tx, ty, ch)` to the returned object in `world.js` and rebuild). Then copy the shape of the platform check: jump up through it, assert the knight stands on it.
 
-Task E: Record results (small, text only)
-- Update the suite count in Build status (28 plus the new checks). Mark Tasks A to D done here with the real pass count.
+Task B: Record results (small, text only)
+- Update the suite count in Build status (28 plus the new checks). Mark Task A done here with the real pass count.
 
 Out of scope: anything in "Needs the user" above, real-device checks, art, sound.
 
@@ -229,7 +219,7 @@ Status key: [ ] not started, [~] in progress, [x] done.
 
 ### Phase 4: Characters and abilities
 - [x] Character data format: `CHARACTERS` in `game/src/abilities.js` (sprite key, four ability ids).
-- [~] Knight, Ranger, and Mage implemented with all four abilities each. All 12 abilities are coded. Verified in headless Chromium: slash, shield bash, charge, shoot, arrow anchor (stand on the rope), hop, blink, float. Thrust and spell bolt share the code paths of slash and shoot but are not separately tested. Mage uses the Knight sprite as placeholder art.
+- [~] Knight, Ranger, and Mage implemented with all four abilities each. All 12 abilities are coded. Verified in headless Chromium: slash, shield bash, charge, shoot, arrow anchor (stand on the rope), hop, blink, float. Thrust and spell bolt also have suite checks. Mage uses the Knight sprite as placeholder art.
 - [ ] Ability effects use the LPC attack sheets for animation timing. Not done: abilities currently draw simple hitboxes and bolts.
 - [ ] Verify each LPC layer for each character renders correctly. Not done: no mage art yet. The Ranger uses the Sprite Foundry 48px sprite, not LPC layers.
 - [x] Character switch. Decided: characters change only through the selection after a death or discard. There is no voluntary swap key, so the design needs no extra input. The swapped-out character is lost, as in the death rule.
@@ -237,7 +227,7 @@ Status key: [ ] not started, [~] in progress, [x] done.
 ### Phase 5: Death, respawn, and discard
 - [x] Death screen with 3 hand cards, left and right selection, confirm with Z or A. Verified in headless Chromium.
 - [x] Respawn uses the closest safe space rule. Verified: 300 random death points, zero failures (standable, 2x3 clear, no enemy within 3 tiles).
-- [x] Discard current character (Q, or hold Down 0.5 s). Verified in headless Chromium for Down. Q is wired but not separately tested. The discarded character goes to the selection screen.
+- [x] Discard current character (Q, or hold Down 0.5 s). Verified in headless Chromium for both Down and Q. The discarded character goes to the selection screen.
 - [x] Discard hand card (C or quick Down tap to open, Left and Right to highlight, C or Down to confirm, X or B to cancel). Verified in headless Chromium.
 
 ### Phase 6: Level content
