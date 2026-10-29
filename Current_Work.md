@@ -76,14 +76,21 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
 - Browser tests (Playwright, headless Chromium) are in `game/tests/`. Run each with `node game/tests/<name>.js` from a folder where Playwright is installed (`NODE_PATH` set to the global npm root).
 - Done or partly done: Phases 0 to 5. Phase 4 has all 12 abilities coded but not every effect is tested. Phase 6 has the exit and level-complete screen only. Phases 7 to 9 are mostly open.
 - Open items for the next session: secret areas and their gates, the gate validation tool, the title and pause screens, the credits screen, a real-device pass (gamepad, phone, iOS full screen), and LPC attack sheets and mage art.
-- Judgment calls made without the user (record for review):
-  - A stomp defeats enemies until the abilities arrived. It is still active alongside them.
-  - Death and discard both open the card selection. The chosen card leaves the hand. The dead or discarded character is lost. An empty hand returns the Knight.
+- Decisions (all made by the build agent; no open questions remain):
+  - Stomp defeats enemies, alongside the abilities. Decided: keep it.
+  - Death and discard open the card selection. The chosen card leaves the hand and becomes the active character. The dead or discarded character is lost. An empty hand returns the Knight at the closest safe space.
   - Enemies and pickups persist across deaths. Only the player respawns.
   - Discard-card mode pauses the game. X or B cancels.
-  - Hold Down 0.5 s, or press Q, discards the current character. A quick Down tap or C opens discard-card mode.
-  - Deck refills a freed hand slot from the top of the deck.
-  - The mage uses the Knight sprite as placeholder art.
+  - Q, or holding Down for 0.5 s, discards the current character. A quick Down tap or C opens discard-card mode.
+  - A freed hand slot refills from the top of the deck.
+  - Float is a hover. Hold Up to climb at 120 px/s for 1.2 s. Without Up, the fall slows. Decided because a float that cannot climb cannot open a ledge.
+  - There is no game-over state. Deaths are unlimited, and the selection replaces a lives system.
+  - Power-up (gold pickup): draws two random cards, one into the hand or deck, then one more.
+  - The mage keeps the Knight sprite as placeholder art until the robe layers are made.
+  - Gate validation is a tile-level model (game/tools/validate_gates.py). Gate reach, by character:
+    - Float alcove card (col 38, row 10): knight (charged jump), ranger (hop), mage (float). Basic moves cannot reach it.
+    - Chasm pocket power-up (col 70, row 13): knight (charge), ranger (rope and drop), mage (blink). Basic moves cannot reach it.
+    - Main route: every character reaches the exit.
 
 ## Build workflow (task list)
 

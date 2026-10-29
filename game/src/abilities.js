@@ -93,7 +93,7 @@ const Attacks = (() => {
         break;
       }
       case "float":
-        scene.floatT = 0.8;
+        scene.floatT = 1.2;
         break;
       case "blink":
         blink(p);

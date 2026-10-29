@@ -93,15 +93,18 @@ class Enemy {
 }
 
 // A card on the ground. Falls with gravity until the player touches it.
+// cardId is a character id, or "random" to pick one when it is collected.
+// A power-up is a gold pickup. It draws one card and then one more.
 class CardPickup {
-  constructor(cardId, x, y) {
+  constructor(cardId, x, y, { power = false, pop = true } = {}) {
     this.cardId = cardId;
+    this.power = power;
     this.x = x;
     this.y = y;
     this.w = 14;
     this.h = 18;
     this.vx = 0;
-    this.vy = -120;
+    this.vy = pop ? -120 : 0;
     this.grounded = false;
     this.state = "ground"; // ground, flying, done
     this.t = 0;
@@ -124,7 +127,8 @@ class CardPickup {
       sx = this.x - camX;
       sy = this.y - camY;
     }
-    const def = CARD_DEFS[this.cardId];
+    // Unrolled cards (cardId "random") are drawn grey until they are collected.
+    const def = this.power ? { color: "#e0b84a" } : CARD_DEFS[this.cardId] || { color: "#b8b8b8" };
     ctx.fillStyle = def.color;
     ctx.fillRect(Math.round(sx), Math.round(sy), this.w, this.h);
     ctx.strokeStyle = "#111418";
@@ -139,7 +143,9 @@ const Enemies = (() => {
 
   function spawnFromLevel() {
     list = World.enemySpawns.map((s) => new Enemy(s.kind, s.x, s.y));
-    pickups = [];
+    pickups = World.pickupSpawns.map(
+      (s) => new CardPickup("random", s.x, s.y, { power: s.power, pop: false })
+    );
   }
 
   function dropCard(enemy) {

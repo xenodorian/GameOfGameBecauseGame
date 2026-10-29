@@ -1,4 +1,4 @@
-// Entry point. Loads every image, then starts the input test scene.
+// Entry point. Loads every image, then opens the title screen.
 const IMG = {};
 
 function loadImages(urls) {
@@ -18,7 +18,7 @@ function loadImages(urls) {
 }
 
 loadImages(ASSET_URLS)
-  .then(() => Engine.start(new InputTestScene()))
+  .then(() => Engine.start(new TitleScene()))
   .catch((err) => {
     document.body.textContent = err.message;
     console.error(err);

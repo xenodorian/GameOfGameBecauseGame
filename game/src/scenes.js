@@ -24,7 +24,7 @@ class InputTestScene {
       if (Input.pressed(action)) this.flash[action] = 0.3;
       else if (this.flash[action] > 0) this.flash[action] -= dt;
     }
-    if (Input.pressed("start")) Engine.setScene(new PlayScene());
+    if (menuBack()) Engine.setScene(new TitleScene());
   }
 
   draw(ctx) {
@@ -36,7 +36,7 @@ class InputTestScene {
     ctx.fillText("Input check", 16, 28);
     ctx.font = "11px system-ui, sans-serif";
     ctx.fillStyle = "#9fb0c0";
-    ctx.fillText("Press each key or button. Enter or Start opens the play slice.", 16, 46);
+    ctx.fillText("Press each key or button. X or B returns to the title.", 16, 46);
 
     this.labels.forEach(([action, label], i) => {
       const col = i % 4;
@@ -54,6 +54,89 @@ class InputTestScene {
   }
 }
 
+// Shared menu helpers. Up and Down move the choice, Z or A or Enter confirms,
+// X or B or Q backs out.
+function menuStep(sel, count) {
+  let next = sel;
+  if (Input.pressed("up")) next = (sel + count - 1) % count;
+  if (Input.pressed("down")) next = (sel + 1) % count;
+  return next;
+}
+
+function menuConfirm() {
+  return Input.pressed("ab3") || Input.pressed("start");
+}
+
+function menuBack() {
+  return Input.pressed("ab4") || Input.pressed("discardSelf");
+}
+
+function drawMenu(ctx, title, items, sel, footer) {
+  ctx.fillStyle = "#1b2430";
+  ctx.fillRect(0, 0, Engine.W, Engine.H);
+  ctx.fillStyle = "#e8e4d8";
+  ctx.textAlign = "center";
+  ctx.font = "22px system-ui, sans-serif";
+  ctx.fillText(title, Engine.W / 2, 74);
+  ctx.font = "14px system-ui, sans-serif";
+  items.forEach((label, i) => {
+    const y = 120 + i * 30;
+    ctx.fillStyle = i === sel ? "#d9a441" : "#e8e4d8";
+    ctx.fillText((i === sel ? "> " : "  ") + label, Engine.W / 2, y);
+  });
+  ctx.font = "11px system-ui, sans-serif";
+  ctx.fillStyle = "#9fb0c0";
+  ctx.fillText(footer, Engine.W / 2, Engine.H - 16);
+  ctx.textAlign = "left";
+}
+
+// Title screen: start, input check, credits.
+class TitleScene {
+  constructor() {
+    this.items = ["Play", "Input check", "Credits"];
+    this.sel = 0;
+  }
+
+  update() {
+    this.sel = menuStep(this.sel, this.items.length);
+    if (menuConfirm()) {
+      if (this.sel === 0) Engine.setScene(new PlayScene());
+      if (this.sel === 1) Engine.setScene(new InputTestScene());
+      if (this.sel === 2) Engine.setScene(new CreditsScene());
+    }
+  }
+
+  draw(ctx) {
+    drawMenu(ctx, "Changeling", this.items, this.sel, "Knight of a thousand faces");
+  }
+}
+
+// Credits: sources and licenses for the art and code.
+class CreditsScene {
+  update() {
+    if (menuBack() || menuConfirm()) Engine.setScene(new TitleScene());
+  }
+
+  draw(ctx) {
+    ctx.fillStyle = "#1b2430";
+    ctx.fillRect(0, 0, Engine.W, Engine.H);
+    ctx.fillStyle = "#e8e4d8";
+    ctx.font = "16px system-ui, sans-serif";
+    ctx.fillText("Credits", 16, 28);
+    ctx.font = "10px system-ui, sans-serif";
+    const lines = [
+      "Liberated Pixel Cup (LPC) base sprites and animations: many authors (see method_5 CREDITS.csv).",
+      "  Licensed OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0.",
+      "Dungeon Crawl Stone Soup tiles: DCSS team. Mostly CC0; see assets/tiles/LICENSE_DCSS.txt.",
+      "Sprite Foundry Fantasy Heroes (48px and HD), Monster Pack, Goblin Warband: MIT.",
+      "Game code and build: this repository.",
+    ];
+    lines.forEach((line, i) => ctx.fillText(line, 16, 56 + i * 18));
+    ctx.fillStyle = "#9fb0c0";
+    ctx.fillText("Press Z, A, X, or B to return.", 16, Engine.H - 16);
+  }
+}
+
 // Play slice: walk, jump, stomp, collect cards, die, pick a card, respawn.
 //
 // Modes:
@@ -61,6 +144,7 @@ class InputTestScene {
 //   select       after a death or a discard: pick a hand card to become
 //   discardCard  pick a hand card to throw away (game paused)
 //   complete     the exit flag was reached
+//   pause        the pause menu: resume or back to title
 class PlayScene {
   constructor() {
     this.images = {
@@ -84,6 +168,7 @@ class PlayScene {
     this.downFired = false;
     this.dashT = 0;
     this.floatT = 0;
+    this.pauseSel = 0;
     this.player = this.newBody(World.spawn.x, World.spawn.y);
     Enemies.spawnFromLevel();
   }
@@ -97,10 +182,16 @@ class PlayScene {
     else if (this.mode === "discardCard") this.updateDiscardCard();
     else if (this.mode === "complete") {
       if (Input.pressed("start")) Engine.setScene(new PlayScene());
-    } else this.updatePlay(dt);
+    } else if (this.mode === "pause") this.updatePause();
+    else this.updatePlay(dt);
   }
 
   updatePlay(dt) {
+    if (Input.pressed("start")) {
+      this.mode = "pause";
+      this.pauseSel = 0;
+      return;
+    }
     this.handleDiscardKeys(dt);
     if (this.mode !== "play") return;
 
@@ -131,10 +222,10 @@ class PlayScene {
       if (Input.pressed("ab" + (i + 1))) Attacks.use(abilities[i], this);
     }
 
-    // Float: gravity is light and falling speed is capped while it lasts.
+    // Float: hold Up to climb at 120 px/s. Without Up, the fall is slowed.
     if (this.floatT > 0) {
       this.floatT -= dt;
-      p.vy = Math.min(p.vy + 200 * dt, 40);
+      p.vy = Input.down("up") ? -120 : Math.min(p.vy + 200 * dt, 40);
     } else {
       p.vy = Math.min(p.vy + 900 * dt, 600);
     }
@@ -159,6 +250,8 @@ class PlayScene {
         pickup.t += dt;
         if (pickup.t >= 0.3) {
           Hand.collect(pickup.cardId);
+          // A power-up also draws one more random card.
+          if (pickup.power) Hand.collect(Object.keys(CARD_DEFS)[Math.floor(Math.random() * 3)]);
           pickup.state = "done";
         }
       }
@@ -177,6 +270,15 @@ class PlayScene {
 
     const exit = World.exit();
     if (exit && this.mode === "play" && this.overlaps(p, exit)) this.mode = "complete";
+  }
+
+  updatePause() {
+    this.pauseSel = menuStep(this.pauseSel, 2);
+    if (menuBack()) this.mode = "play";
+    if (menuConfirm()) {
+      if (this.pauseSel === 0) this.mode = "play";
+      else Engine.setScene(new TitleScene());
+    }
   }
 
   // Hold Down for 0.5 s to discard the current character.
@@ -294,6 +396,10 @@ class PlayScene {
   }
 
   startCollect(pickup) {
+    if (pickup.cardId === "random") {
+      const ids = Object.keys(CARD_DEFS);
+      pickup.cardId = ids[Math.floor(Math.random() * ids.length)];
+    }
     pickup.state = "flying";
     pickup.t = 0;
     pickup.screenFrom = { x: pickup.x - this.cam.x, y: pickup.y - this.cam.y };
@@ -326,7 +432,21 @@ class PlayScene {
 
     if (this.mode === "play" || this.mode === "discardCard") this.drawBody(ctx, cx, cy);
 
-    if (this.mode === "complete") {
+    if (this.mode === "pause") {
+      HUD.draw(ctx, -1);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+      ctx.fillRect(0, 0, Engine.W, Engine.H);
+      ctx.fillStyle = "#e8e4d8";
+      ctx.textAlign = "center";
+      ctx.font = "16px system-ui, sans-serif";
+      ctx.fillText("Paused", Engine.W / 2, 110);
+      ctx.font = "14px system-ui, sans-serif";
+      ["Resume", "Title screen"].forEach((label, i) => {
+        ctx.fillStyle = i === this.pauseSel ? "#d9a441" : "#e8e4d8";
+        ctx.fillText((i === this.pauseSel ? "> " : "  ") + label, Engine.W / 2, 144 + i * 26);
+      });
+      ctx.textAlign = "left";
+    } else if (this.mode === "complete") {
       HUD.draw(ctx, -1);
       ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
       ctx.fillRect(0, 0, Engine.W, Engine.H);
