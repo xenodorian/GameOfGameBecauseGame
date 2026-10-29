@@ -335,3 +335,12 @@ cd method_2_svg_code && npm install && node build_scenes.js
 # Method 3
 cd method_3_pillow && python3 build_scenes.py
 ```
+
+## Expansion build status (G1, final pass)
+
+- Suite: `NODE_PATH=$(npm root -g) node game/tests/suite.js`: 38 passed, 0 failed.
+- Gates: `python3 game/tools/validate_gates.py` exits 0. Every level passes the main-route check for every character, and every secret is gated (reachable by at least one character, not by basic moves).
+- Build: `game/changeling.html` is 139001 bytes (about 136 KB), well under 5 MB.
+- 8 levels, 5 characters, 3 enemy types plus the warlord boss, signs, sound effects, save and continue, intro and ending.
+- Not done: E9 items 2 and 3 (a level 2 bot check, and a terrain review of long stretches). See Expansion_Plan.md.
+- Real-device, other-browser, LPC attack animation, and sound checks are still out of scope.

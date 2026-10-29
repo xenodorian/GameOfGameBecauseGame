@@ -216,40 +216,40 @@ Check: `python3 game/tools/validate_gates.py` exits 0. `--show 1` and `--map 1 b
 2. `ENEMY_DEFS`: `rat_king.card = "rat"`, `archer.card = "weaver"`. Grunt and revenant stay.
 3. Every place that picks a random card must pick from all keys of `CARD_DEFS`. Search for `Math.random() * 3` and for `"random"` in `enemies.js` and `scenes.js` and fix each one to use `Object.keys(CARD_DEFS).length`.
 
-### [ ] C2: Rat
+### [x] C2: Rat
 1. `CHARACTERS.rat = { name: "Rat", sprite: "rat_king", abilities: ["leap", "scurry", "slash", "thrust"] }`. Add `rat_king` to the image lookup used to draw the player if it is not there.
 2. `leap`: only when grounded. `p.vy = -540; p.jumping = false;` (5 tiles high).
 3. `scurry`: `scene.scurryT = 2.0`. In `updatePlay`, the walk speed is `220` while `scurryT > 0`, else `130`. Count `scurryT` down each step. Reset it to 0 in the respawn code next to `dashT`.
 4. Validator: `ABILITY_SETS["rat"] = {"leap"}`. In `explore`, `max_up = 5 if leap else (4 if hop else 2)`.
 5. Suite: add rows to the ability table in `suite.js` (copy the shape of the existing rows): `rat leap (A) jumps higher than a plain jump`, `rat scurry (S) walks faster`.
 
-### [ ] C3: Bone Weaver
+### [x] C3: Bone Weaver
 1. `CHARACTERS.weaver = { name: "Bone Weaver", sprite: "bone_weaver", abilities: ["shoot", "bone_bridge", "slash", "ghost"] }`.
 2. `bone_bridge`: copy `arrow_anchor` but 5 tiles long and `life: 8`. Draw it with a bone color (`#e8e2d0`) instead of rope brown: add `color` to the platform object and use it in `drawPlatforms` (default stays `#7a5230`).
 3. `ghost`: `scene.ghostT = 1.5`. While `ghostT > 0`, side contact with enemies does not kill and hostile arrows pass through. Find the hostile hit check (`hitByHostile` in `scenes.js`) and the side-contact branch in `checkEnemyContact`, and skip both while `ghostT > 0`. Draw the player at `globalAlpha = 0.5` while `ghostT > 0`. Spikes and falling still kill. Reset `ghostT` on respawn.
 4. Validator: `ABILITY_SETS["weaver"] = {"bridge"}`. Rope length is 5 for `bridge`, 3 for `rope`. In both `explore` (the rope source check) and `reachable` (the cells added), replace the fixed `(1, 2, 3)` with `range(1, L + 1)` where `L` is that length.
 5. Suite: ability rows `weaver bone bridge (S) makes a 5 tile platform`, `weaver ghost (X) survives touching a grunt`.
 
-### [ ] C4: Mage art
+### [x] C4: Mage art
 The mage uses the knight image. Make a purple version at load time:
 1. In `main.js`, after images load, build `IMG.mage` as a canvas the size of `IMG.knight_right`: draw the knight, then set `globalCompositeOperation = "source-atop"`, fill the whole canvas with `rgba(120, 70, 200, 0.45)`, then reset the composite operation.
 2. Set `CHARACTERS.mage.sprite = "mage"` and add `mage: IMG.mage` to the `PlayScene` images map.
 
-### [ ] C5: Ability bar
+### [x] C5: Ability bar
 At the bottom center of the play screen, show the active character's four abilities, one per slot: `A Shield bash   S Charge   Z Slash   X Thrust`. Use a readable name for each ability id (add an `ABILITY_NAMES` map in `abilities.js`). 8 px text on a dark translucent strip. Keep it clear of the touch buttons and the hand HUD; if it overlaps, move it up.
 
 ---
 
 ## Phase D: The boss
 
-### [ ] D1: Enemy hit points
+### [x] D1: Enemy hit points
 1. Enemies may have `hp` in `ENEMY_DEFS` (default 1). The `Enemy` constructor sets `this.hp = def.hp || 1` and `this.hurtT = 0`.
 2. `Enemies.defeat(enemy)`: if `enemy.hurtT > 0` return. If `enemy.hp > 1`: `enemy.hp -= 1; enemy.hurtT = 0.6;` return. Otherwise the current code (dead, drop card).
 3. `Enemy.update` counts `hurtT` down. While `hurtT > 0` the enemy flashes (skip drawing it on every other 0.1 s).
 4. Change the stomp code in `checkEnemyContact` to call `Enemies.defeat(enemy)` instead of setting `dead` and calling `dropCard` itself. Keep the bounce `p.vy = -260`. If the enemy is still alive after the stomp, the stomp still counts as a stomp (no death for the player).
 5. All current enemies have 1 hp, so the suite must still pass unchanged.
 
-### [ ] D2: Warlord
+### [x] D2: Warlord
 1. `ENEMY_DEFS.warlord`: sprite `grunt`, `w: 44`, `h: 58`, `speed: 50`, `chaseSpeed: 80`, `sight: 400`, `hp: 8`, `card: "knight"`, `jumpVy: -420`, `jumpEvery: 3.0`, `fireEvery: 2.2`.
 2. Its update reuses the rat king's jump logic and the archer's fire logic (read both in `enemies.js` and call the same code; if they are written inline, move them into small functions first). It walks toward the player all the time.
 3. Draw the warlord's sprite at its full `w` and `h` (twice the grunt size), tinted dark red the same way as C4 (build `IMG.warlord` in `main.js`).
@@ -276,51 +276,51 @@ General rules for every level:
 - Add 2 to 4 `k` cards on the main route of each level so the player keeps getting new faces.
 - Put each new mechanic's first appearance somewhere safe, with a sign right before it.
 
-### [ ] E1: Level 1 signs
+### [x] E1: Level 1 signs
 Keep "Greenwood Road" geometry. Put four `i` tiles on air tiles of row 13 (the row above the ground; pick `.` cells only) near columns 4, 11, 18, and 30. Signs, in order:
 1. `Arrows move. Up jumps. Hold Up to jump higher.`
 2. `A, S, Z and X use your powers. Try them all.`
 3. `Beat a foe to win its card. Touch a card to take its face.`
 4. `If you fall, pick a new face from your hand. C drops a card. Q drops your face.`
 
-### [ ] E2: Level 2 "Bramble Hollow"
+### [x] E2: Level 2 "Bramble Hollow"
 - Theme `field`. Width 120, height 18.
 - Introduces spikes (sign: `Spikes hurt. Jump over them.`) and rat kings.
 - Enemies: 4 grunts, 3 rat kings, 1 mud revenant.
 - Secrets: one `c` on a ledge 5 tiles above the ground (Rat leap only), one `p` across a 5-tile gap high up (Bone Weaver or Ranger rope).
 
-### [ ] E3: Level 3 "Old Watchtower"
+### [x] E3: Level 3 "Old Watchtower"
 - Theme `field`. Width 100, height 26. Most of the level climbs: the exit is near the top.
 - Uses `_` one-way platforms for the climb (sign: `You can jump up through thin ledges.`).
 - Enemies: 3 archers (sign before the first: `Archers shoot when you line up with them.`), 3 grunts, 2 rat kings.
 - Secrets: one `c` reachable with Mage float, one `c` reachable with Bone Weaver bridge, one `p` reachable with Ranger hop.
 - Add a suite check `platform tile: knight jumps up through a "_" tile and stands on it` using `World.setTile` in level 1 (this replaces the old tile one-way task).
 
-### [ ] E4: Level 4 "Rotting Marsh"
+### [x] E4: Level 4 "Rotting Marsh"
 - Theme `field`. Width 140, height 18.
 - Many 3-wide pits and spike beds. Mud revenants (5), grunts (3), rat kings (2), archer (1).
 - Introduces cracked walls (sign: `Cracked walls break. Who hits hard enough?`). The main route never needs to break one.
 - Secrets: one `c` behind a cracked wall (Knight only), one `p` past a long gap (Knight charge or Mage blink), one `c` 5 tiles up (Rat).
 
-### [ ] E5: Level 5 "Castle Gate"
+### [x] E5: Level 5 "Castle Gate"
 - Theme `dungeon`. Width 130, height 20. Walls `#` frame the rooms. Sign at the start: `The castle. The Warlord waits at the top.`
 - Enemies: 4 grunts, 3 archers, 2 mud revenants, 2 rat kings.
 - Secrets: 3, gated by three different characters.
 
-### [ ] E6: Level 6 "Undercroft"
+### [x] E6: Level 6 "Undercroft"
 - Theme `dungeon`. Width 150, height 22. Spike-heavy, low ceilings, some `_` climbs.
 - Enemies: 5 archers, 3 rat kings, 3 grunts, 2 mud revenants.
 - Secrets: 3, gated by three different characters, one of them the Bone Weaver.
 
-### [ ] E7: Level 7 "Hall of Faces"
+### [x] E7: Level 7 "Hall of Faces"
 - Theme `dungeon`. Width 160, height 22. Uses every mechanic once more. Hardest normal level.
 - Enemies: every type, at least 14 in total.
 - Secrets: 3, gated by Rat, Bone Weaver, and Knight.
 
-### [ ] E8: Level 8 "Warlord's Throne"
+### [x] E8: Level 8 "Warlord's Throne"
 - Theme `dungeon`, `boss: true`. Width 40, height 14. A flat arena with two `=` platforms 3 tiles up, a `W` in the middle-right, `F` at the right end. One `k` card near the start. No pits, no spikes.
 
-### [ ] E9: Balance pass (no art or code changes)
+### [~] E9: Balance pass (no art or code changes). Gates pass for every level (item 1). Items 2 and 3 not done: no bot check for level 2, and no terrain review of 20-column stretches.
 1. For each level, run `--map N basic` and confirm the exit is marked.
 2. In the suite, add a check `bot: keyboard bot reaches the exit of level 2 as the knight` using the existing playthrough bot code with `new PlayScene(1)`. If the bot fails only because of its own simple logic (it walks right and jumps), not because the level is broken, write that in the Decisions log and do not add the check.
 3. Read each level as a grid. If any stretch of 20 columns has no enemy, no pickup, and no height change, add something there.
@@ -329,14 +329,14 @@ Keep "Greenwood Road" geometry. Put four `i` tiles on air tiles of row 13 (the r
 
 ## Phase F: Story, feedback, and polish
 
-### [ ] F1: Level banner and secrets counter
+### [x] F1: Level banner and secrets counter
 1. When a `PlayScene` starts, show `Level N: Name` centered near the top for 2.5 seconds, fading out in the last 0.5 seconds.
 2. Add a global `Run` object in `scenes.js`: `{ deaths: 0, secrets: 0, secretsTotal: 0, startTime: 0 }`, reset when a new game starts.
 3. Pickups made from `c` and `p` markers are secrets (`secret: true` on the `CardPickup`). `k` pickups and enemy drops are not. When the player collects a secret, `Run.secrets += 1` and the level's counter goes up.
 4. The level complete screen shows `Secrets found: a of b` for that level.
 5. Every call to `beginSelection` adds 1 to `Run.deaths` (except reason `discarded`).
 
-### [ ] F2: Intro and ending text
+### [x] F2: Intro and ending text
 1. When "Play" is chosen on the title, show `IntroScene` first: black screen, white text, these three lines, one at a time (each appears after 1.5 s), then `Enter: begin`:
    - `A warlord has stolen every face in the kingdom.`
    - `You are a changeling. Beat a foe and its face is yours.`
@@ -348,7 +348,7 @@ Keep "Greenwood Road" geometry. Put four `i` tiles on air tiles of row 13 (the r
    - `Enter: credits`
 3. Credits: add the line `Design and code: built with Claude Code` if no such line exists.
 
-### [ ] F3: Sound effects
+### [x] F3: Sound effects
 1. New file `game/src/sfx.js` (add to `SCRIPTS` after `engine.js`). It exports `Sfx.play(name)` and `Sfx.enabled` (default true).
 2. Create the `AudioContext` the first time `play` is called, inside `try { } catch (e) { }`. If it fails, do nothing ever again.
 3. Each sound is one or two short oscillator notes with a gain envelope (attack 0.01 s, release to 0.001 over the note length):
@@ -363,7 +363,7 @@ Keep "Greenwood Road" geometry. Put four `i` tiles on air tiles of row 13 (the r
 5. Pause menu: add an item `Sound: On` / `Sound: Off` that toggles `Sfx.enabled`. Put it before the last item so existing pause tests keep working; if a pause test breaks because of item order, update it.
 6. The suite must have no page errors from audio (headless Chromium allows `AudioContext`).
 
-### [ ] F4: Save and continue
+### [x] F4: Save and continue
 1. Add `Hand.serialize()` (returns `{ hand: [...], deck: [...] }`) and `Hand.restore(data)`.
 2. When a `PlayScene` starts on level index 1 or more, save `{ level, active, cards: Hand.serialize(), run: Run }` to `localStorage["changeling_save"]` inside `try { } catch (e) { }`.
 3. Title: when a save exists, the items are `Continue`, `New game`, `Input check`, `Credits`. When none exists, they stay `Play`, `Input check`, `Credits`. Rewrite `TitleScene.update` to act on the item's name, not its index.
@@ -371,7 +371,7 @@ Keep "Greenwood Road" geometry. Put four `i` tiles on air tiles of row 13 (the r
 5. `EndingScene` clears the save.
 6. Suite check `save: finishing level 1 and reloading offers Continue, which starts level 2`.
 
-### [ ] F5: Small game-feel touches
+### [x] F5: Small game-feel touches
 1. When an enemy is defeated, draw a 6-particle burst (small squares in the enemy's card color) that falls and fades over 0.4 s.
 2. When the player respawns, flash the player for 1 second (skip drawing every other 0.1 s) and ignore enemy contact during that second.
 3. Screen shake of 3 px for 0.15 s when the warlord is hit.
@@ -380,7 +380,7 @@ Keep "Greenwood Road" geometry. Put four `i` tiles on air tiles of row 13 (the r
 
 ## Phase G: Final checks
 
-### [ ] G1: Full pass
+### [x] G1: Full pass
 1. Run all three checks. Record the real suite count in `Current_Work.md` under Build status.
 2. Run `python3 game/tools/validate_gates.py` and paste its summary lines for each level into `Current_Work.md`.
 3. Check `game/changeling.html` size with `ls -l` (it must be under 5 MB) and that it opens with no console errors (the suite already checks page errors).
