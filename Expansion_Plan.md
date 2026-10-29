@@ -178,7 +178,7 @@ Check: `python3 game/tools/validate_gates.py` exits 0. `--show 1` and `--map 1 b
 5. Validator: in `explore`, `push()` must reject a state `(x, y)` when `rows[y][x] == "^"`. Pass `rows` in or keep a reference on `Grid`.
 6. Suite check `spikes: touching spikes opens the selection`: set a tile next to the player to `^` with `World.setTile`, walk into it, assert `mode === "select"`.
 
-### [~] B2: Cracked walls `x` (build and gates pass; suite run pending)
+### [x] B2: Cracked walls `x`
 1. Legend: `x  cracked wall (solid; broken by the knight's shield bash or charge)`.
 2. `isSolid` returns true for `x`. In `abilities.js`, the two checks `ch === "#" || ch === "="` (projectile and blink) must also treat `x` as solid.
 3. Draw: the wall image, then three dark lines (`#2a1d14`, 2 px) in a zigzag across the tile.
