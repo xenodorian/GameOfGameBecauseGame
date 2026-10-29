@@ -39,11 +39,99 @@ Similar to Kirby, one character can take on the powers of many different charact
 - Landscape only.
 - Includes a full screen toggle.
 
-## Open questions for the next session
-- Define "closest safe space" (for example, nearest standable tile not overlapping an enemy or hazard).
-- Define how many cards are visible in the deck, or whether the deck is hidden.
-- Choose the character roster and each character's ability.
-- Decide the art source. The sprite methods in the notes below are candidates.
+## Decisions (all questions closed)
+
+### Art (decided)
+- Character animation: Universal LPC spritesheets (walk, slash, thrust, shoot, spellcast, 64px cells, 4 directions). Source copies live in `method_5_lpc_walk/assets/lpc/`. Credits are in `assets/lpc/CREDITS.csv` (OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0 per asset).
+- Level tiles and terrain: Dungeon Crawl Stone Soup tiles (`method_4_sourced_assets/assets/dcss/`). Walls, floors, grass, trees.
+- Card portraits and HD art: Sprite Foundry HD packs (MIT). Copies in `method_4_sourced_assets/assets/heroes_hd/`.
+- Enemies: Sprite Foundry 48px monster and goblin packs (MIT), or LPC if a matching layer exists.
+- Weapons: none. Attack animations are unarmed, per the design decision.
+- Art pipeline rule: all sprites are prepared as sheets and bundled into the single HTML file.
+
+### Game rules (defaults set)
+- **Jump:** Up arrow on keyboard, Up on the d-pad. Movement is Left and Right.
+- **Ability keys:** keyboard A, S, Z, X map to gamepad X, Y, A, B. Ability 1 is A/X, ability 2 is S/Y, ability 3 is Z/A, ability 4 is X/B. The character's four abilities are bound to these slots in order.
+- **Discard current character:** Q on keyboard. Down on the d-pad, held for 0.5 seconds.
+- **Discard a hand card:** C on keyboard toggles discard mode. Left and Right move the highlight across the 3 hand slots. C confirms. On a gamepad, Down toggles discard mode, Left and Right move the highlight, and Down confirms.
+- **Death and respawn:** the death screen shows the 3 hand cards. Left and Right select, Z or A confirms. The player respawns as the selected character.
+- **Closest safe space:** the nearest grounded tile with a clear 2 by 3 tile area, with no enemy or hazard within 3 tiles of the spawn point. Search expands outward from the death point up to 20 tiles. If nothing is found, respawn at the last checkpoint.
+- **Deck display:** the deck count is shown as a number. Deck contents are hidden.
+- **Hand fill:** hand slots fill left to right. Extra cards go to the deck in random order.
+
+### Starting roster (defaults, to be confirmed in playtest)
+| Character | Sprite source | Ability 1 | Ability 2 | Ability 3 | Ability 4 |
+|---|---|---|---|---|---|
+| Knight | LPC plate body, greathelm, heater shield | Shield bash (stuns enemies in front) | Charge (fast horizontal dash) | Slash (melee) | Thrust (reach melee) |
+| Ranger | LPC leather, hood, quiver | Shoot (arrow, up to 2 shots) | Arrow anchor (pins a rope across a gap) | Slash | Hop (extra mid-air jump) |
+| Mage | LPC robe layers (verify) | Spellcast bolt | Float (short hover) | Slash | Blink (short teleport) |
+
+Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mage's float crosses gaps. Knight's shield bash breaks cracked walls.
+
+---
+
+## Build workflow (task list)
+
+Status key: [ ] not started, [~] in progress, [x] done.
+
+### Phase 0: Project setup
+- [ ] Create folder layout: `game/src/` (engine, scenes, cards, abilities), `game/assets/` (sheets copied from the method folders), `game/tools/build_single_html.py`.
+- [ ] Write the build script. It inlines all sprites and tiles as base64 into one `changeling.html`.
+- [ ] Confirm the single HTML file loads offline in Chrome, Firefox, Safari, and Chrome on Android.
+
+### Phase 1: Engine and display
+- [ ] Canvas game loop with fixed-timestep updates.
+- [ ] Landscape-only scaling. Portrait shows a "rotate your device" overlay and pauses.
+- [ ] Full screen toggle (Fullscreen API), with a fallback message on iOS Safari.
+- [ ] Input layer: keyboard (arrows and A, S, Z, X, Q, C), gamepad (d-pad and A, B, X, Y) via the Gamepad API, and on-screen touch buttons for mobile.
+- [ ] Input mapping test scene that shows which key or button is pressed.
+
+### Phase 2: Movement and world
+- [ ] Tile map loader and collision (grounded, wall, one-way platform).
+- [ ] Player physics: walk, jump (Up), variable jump height.
+- [ ] Camera follow with level bounds.
+- [ ] Tile render using DCSS tiles, with a layer for background parallax (reuse the method_5 door and parallax logic).
+
+### Phase 3: Enemies and cards
+- [ ] Basic enemy AI (patrol, chase in range, attack).
+- [ ] Enemy defeat drops a card. Card is a pickup that flies to the nearest free hand slot or the deck.
+- [ ] Hand (3 slots) and deck (random order, count only) with the fill rules.
+- [ ] Hand HUD and deck count HUD.
+
+### Phase 4: Characters and abilities
+- [ ] Character data format: sprite sheet paths, stats, the four abilities, and their input bindings.
+- [ ] Knight, Ranger, and Mage implemented with all four abilities each.
+- [ ] Ability effects use the LPC attack sheets for animation timing (slash, thrust, shoot, spellcast).
+- [ ] Verify each LPC layer for each character renders correctly. Mage robe layers must be checked first.
+- [ ] Character switch: the active character changes to a card from the hand when the player chooses to swap, or after death.
+
+### Phase 5: Death, respawn, and discard
+- [ ] Death screen with 3 hand cards, left and right selection, confirm with Z or A.
+- [ ] Respawn uses the closest safe space rule (see Decisions).
+- [ ] Discard current character (Q or Down held).
+- [ ] Discard hand card (C toggle, Left and Right highlight, C confirm; Down on a gamepad).
+
+### Phase 6: Level content
+- [ ] Main level: completable with any character, with no ability required.
+- [ ] Secret areas gated by ability. Each gate must be reachable by at least one character.
+- [ ] Power-ups and card pickups placed in secret areas and in the main level.
+- [ ] Gate validation tool: a script that checks every secret area is reachable with each gating ability.
+
+### Phase 7: Screens and polish
+- [ ] Title screen, pause menu, game over, level complete.
+- [ ] Credits screen listing the LPC, DCSS, and Sprite Foundry licenses and authors.
+- [ ] Sound is out of scope unless added later.
+
+### Phase 8: Testing
+- [ ] Keyboard-only playthrough of the main level with each character.
+- [ ] Gamepad-only playthrough with the d-pad and A, B, X, Y.
+- [ ] Mobile test in landscape: touch controls, full screen toggle, portrait overlay.
+- [ ] Respawn test: 100 random deaths, each lands in a safe space.
+- [ ] Gate validation passes.
+
+### Phase 9: Release
+- [ ] Final single HTML file under a size target (aim for under 20 MB).
+- [ ] Upload to the repo under `game/`, and a link in `README.md`.
 
 ---
 
