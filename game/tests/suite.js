@@ -443,7 +443,8 @@ check('platform: knight jumps up through a one-way platform and lands on it', as
     __scene.player.x = 470; __scene.player.y = 418; __scene.player.vy = 0; __scene.player.vx = 0;
   });
   await wait(page, 60);
-  await page.keyboard.press('ArrowUp');
+  // Hold Up for the whole jump; releasing it early cuts the jump short.
+  await page.keyboard.down('ArrowUp');
   let top = 1e9;
   let grounded = false;
   for (let i = 0; i < 40; i++) {
@@ -451,6 +452,7 @@ check('platform: knight jumps up through a one-way platform and lands on it', as
     const r = await page.evaluate(() => ({ y: __scene.player.y, g: __scene.player.grounded }));
     top = Math.min(top, r.y);
     grounded = r.g;
+    if (i === 8) await page.keyboard.up('ArrowUp');
   }
   assert.ok(top < 390 - 30, 'knight passed above the platform: top y ' + top);
   const feet = await page.evaluate(() => __scene.player.y + __scene.player.h);
