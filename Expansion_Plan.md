@@ -194,7 +194,7 @@ Check: `python3 game/tools/validate_gates.py` exits 0. `--show 1` and `--map 1 b
 4. Validator: `i` is air (already true).
 5. Suite check `signs: standing at a sign shows its text` (check a scene field such as `this.signText` that the draw code sets, rather than pixels).
 
-### [~] B4: Level themes (build and gates pass; suite run pending)
+### [x] B4: Level themes
 1. The sky fill and the two ridges are drawn in `PlayScene.draw` in `scenes.js` (the two `drawHills(...)` calls and the `fillRect` just above them).
 2. Add a `THEMES` table in `world.js`:
    ```js
