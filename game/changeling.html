@@ -425,6 +425,7 @@ const TILE = 32;
 //   k  card pickup on the main route (not a secret)
 //   p  power-up on the ground (draws a random card into hand or deck)
 //   ^  spikes (not solid; touching them is deadly)
+//   i  sign post (decor; shows its text while the player stands at it)
 //   x  cracked wall (solid; broken by the knight's shield bash or charge)
 //   .  empty air
 const World = (() => {
@@ -646,6 +647,18 @@ const World = (() => {
     ctx.lineWidth = 1;
   }
 
+  // Sign posts from World.signs: a brown stick with a board on top.
+  function drawSigns(ctx, camX, camY) {
+    for (const sg of signs) {
+      const px = Math.round(sg.x - camX);
+      const py = Math.round(sg.y - camY);
+      ctx.fillStyle = "#7a5230";
+      ctx.fillRect(px + 14, py + 16, 4, 16);
+      ctx.fillStyle = "#a87a4a";
+      ctx.fillRect(px + 6, py + 4, 20, 12);
+    }
+  }
+
   // Three grey spikes standing on the bottom edge of the tile.
   function drawSpikes(ctx, px, py) {
     ctx.fillStyle = "#9aa0a8";
@@ -716,6 +729,7 @@ const World = (() => {
     drawPlatforms,
     platforms,
     draw,
+    drawSigns,
     overlapping,
     load,
   };
@@ -1368,6 +1382,24 @@ class CreditsScene {
   }
 }
 
+// Splits text into lines no wider than maxW pixels, at word boundaries.
+function wrapText(ctx, text, maxW) {
+  const words = text.split(" ");
+  const lines = [];
+  let line = "";
+  for (const w of words) {
+    const trial = line ? line + " " + w : w;
+    if (ctx.measureText(trial).width > maxW && line) {
+      lines.push(line);
+      line = w;
+    } else {
+      line = trial;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
 // Far background ridge. Drawn at a fraction of the camera's x so it scrolls
 // slower than the level (parallax). Procedural, so it needs no asset.
 function drawHills(ctx, scrollX, color, baseY, freq, amp) {
@@ -1533,6 +1565,12 @@ class PlayScene {
 
     if (p.y > World.height) this.beginSelection("fell");
 
+    // Standing at a sign shows its text.
+    this.signText = "";
+    for (const sg of World.signs) {
+      if (this.overlaps(p, sg)) this.signText = sg.text;
+    }
+
     const exit = World.exit();
     if (exit && this.mode === "play" && this.overlaps(p, exit)) this.mode = "complete";
   }
@@ -1687,6 +1725,7 @@ class PlayScene {
     drawHills(ctx, cx * 0.25, "#a8cde8", 150, 0.012, 14);
     drawHills(ctx, cx * 0.5, "#6f9fbf", 190, 0.02, 20);
     World.draw(ctx, this.images, cx, cy, Engine.W, Engine.H);
+    World.drawSigns(ctx, cx, cy);
     World.drawPlatforms(ctx, cx, cy);
     Attacks.draw(ctx, cx, cy);
 
@@ -1734,6 +1773,7 @@ class PlayScene {
     } else {
       HUD.draw(ctx, -1);
       this.drawBanner(ctx, CHARACTERS[this.active].name + ". Left/Right walk, Up jump, A S Z X abilities.");
+      this.drawSignBox(ctx);
     }
   }
 
@@ -1751,6 +1791,19 @@ class PlayScene {
       ctx.drawImage(img, sx, sy, 48, 48);
     }
     ctx.restore();
+  }
+
+  // Box across the top of the screen with the text of the sign under the player.
+  drawSignBox(ctx) {
+    if (!this.signText) return;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+    ctx.fillRect(40, 8, 400, 40);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "10px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    const lines = wrapText(ctx, this.signText, 380);
+    lines.forEach((line, i) => ctx.fillText(line, Engine.W / 2, 24 + i * 14));
+    ctx.textAlign = "left";
   }
 
   drawBanner(ctx, text) {

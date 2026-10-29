@@ -159,6 +159,24 @@ class CreditsScene {
   }
 }
 
+// Splits text into lines no wider than maxW pixels, at word boundaries.
+function wrapText(ctx, text, maxW) {
+  const words = text.split(" ");
+  const lines = [];
+  let line = "";
+  for (const w of words) {
+    const trial = line ? line + " " + w : w;
+    if (ctx.measureText(trial).width > maxW && line) {
+      lines.push(line);
+      line = w;
+    } else {
+      line = trial;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
 // Far background ridge. Drawn at a fraction of the camera's x so it scrolls
 // slower than the level (parallax). Procedural, so it needs no asset.
 function drawHills(ctx, scrollX, color, baseY, freq, amp) {
@@ -324,6 +342,12 @@ class PlayScene {
 
     if (p.y > World.height) this.beginSelection("fell");
 
+    // Standing at a sign shows its text.
+    this.signText = "";
+    for (const sg of World.signs) {
+      if (this.overlaps(p, sg)) this.signText = sg.text;
+    }
+
     const exit = World.exit();
     if (exit && this.mode === "play" && this.overlaps(p, exit)) this.mode = "complete";
   }
@@ -478,6 +502,7 @@ class PlayScene {
     drawHills(ctx, cx * 0.25, "#a8cde8", 150, 0.012, 14);
     drawHills(ctx, cx * 0.5, "#6f9fbf", 190, 0.02, 20);
     World.draw(ctx, this.images, cx, cy, Engine.W, Engine.H);
+    World.drawSigns(ctx, cx, cy);
     World.drawPlatforms(ctx, cx, cy);
     Attacks.draw(ctx, cx, cy);
 
@@ -525,6 +550,7 @@ class PlayScene {
     } else {
       HUD.draw(ctx, -1);
       this.drawBanner(ctx, CHARACTERS[this.active].name + ". Left/Right walk, Up jump, A S Z X abilities.");
+      this.drawSignBox(ctx);
     }
   }
 
@@ -542,6 +568,19 @@ class PlayScene {
       ctx.drawImage(img, sx, sy, 48, 48);
     }
     ctx.restore();
+  }
+
+  // Box across the top of the screen with the text of the sign under the player.
+  drawSignBox(ctx) {
+    if (!this.signText) return;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+    ctx.fillRect(40, 8, 400, 40);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "10px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    const lines = wrapText(ctx, this.signText, 380);
+    lines.forEach((line, i) => ctx.fillText(line, Engine.W / 2, 24 + i * 14));
+    ctx.textAlign = "left";
   }
 
   drawBanner(ctx, text) {

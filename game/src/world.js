@@ -16,6 +16,7 @@ const TILE = 32;
 //   k  card pickup on the main route (not a secret)
 //   p  power-up on the ground (draws a random card into hand or deck)
 //   ^  spikes (not solid; touching them is deadly)
+//   i  sign post (decor; shows its text while the player stands at it)
 //   x  cracked wall (solid; broken by the knight's shield bash or charge)
 //   .  empty air
 const World = (() => {
@@ -237,6 +238,18 @@ const World = (() => {
     ctx.lineWidth = 1;
   }
 
+  // Sign posts from World.signs: a brown stick with a board on top.
+  function drawSigns(ctx, camX, camY) {
+    for (const sg of signs) {
+      const px = Math.round(sg.x - camX);
+      const py = Math.round(sg.y - camY);
+      ctx.fillStyle = "#7a5230";
+      ctx.fillRect(px + 14, py + 16, 4, 16);
+      ctx.fillStyle = "#a87a4a";
+      ctx.fillRect(px + 6, py + 4, 20, 12);
+    }
+  }
+
   // Three grey spikes standing on the bottom edge of the tile.
   function drawSpikes(ctx, px, py) {
     ctx.fillStyle = "#9aa0a8";
@@ -307,6 +320,7 @@ const World = (() => {
     drawPlatforms,
     platforms,
     draw,
+    drawSigns,
     overlapping,
     load,
   };

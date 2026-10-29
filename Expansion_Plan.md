@@ -187,7 +187,7 @@ Check: `python3 game/tools/validate_gates.py` exits 0. `--show 1` and `--map 1 b
 6. Validator: add `"bash"` to the knight's set. In `Grid`, when the ability set has `bash`, `x` counts as air; otherwise it counts as solid. Pass the ability set into `Grid`.
 7. Suite check `cracked wall: knight shield bash breaks it`.
 
-### [ ] B3: Signs `i`
+### [~] B3: Signs `i` (build and gates pass; suite run pending)
 1. Legend: `i  sign post (decor; shows its text while the player stands at it)`.
 2. Draw each sign from `World.signs` as a post: a 4 by 16 px brown (`#7a5230`) stick from the tile's bottom and a 20 by 12 px board (`#a87a4a`) on top.
 3. In `PlayScene.draw`, if the player overlaps a sign, draw a box at the top of the screen (x 40 to 440, y 8, height 40, fill `rgba(0,0,0,0.75)`, white 10 px text, centered, wrap to two lines if needed) with the sign's text.

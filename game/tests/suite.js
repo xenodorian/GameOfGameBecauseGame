@@ -525,6 +525,20 @@ check('cracked wall: knight shield bash breaks it', async (browser) => {
   await page.close();
 });
 
+check('signs: standing at a sign shows its text', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [] });
+  await page.evaluate(() => {
+    const sg = { x: __scene.player.x, y: __scene.player.y, w: World.TILE, h: World.TILE, text: 'Test sign text.' };
+    World.signs.push(sg);
+    window.__sign = sg;
+  });
+  await wait(page, 100);
+  assert.equal(await page.evaluate(() => __scene.signText), 'Test sign text.');
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 check('gates: validate_gates.py exits 0', async () => {
   execFileSync('python3', [path.join(GAME, 'tools', 'validate_gates.py')], { stdio: 'pipe' });
 });
