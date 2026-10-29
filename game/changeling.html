@@ -1258,6 +1258,8 @@ class Enemy {
     this.dir = -1;
     this.dead = false;
     this.stunT = 0;
+    this.knockT = 0;
+    this.knockVx = 0;
     this.jumpT = def.jumpEvery || 0;
     this.fireT = def.fireEvery || 0;
     this.hp = def.hp || 1;
@@ -1303,6 +1305,13 @@ class Enemy {
       World.moveBody(this, dt);
       return;
     }
+    if (this.knockT > 0) {
+      // Knocked back by a hit: slide away, no walking or chasing.
+      this.knockT -= dt;
+      this.vx = this.knockVx;
+      World.moveBody(this, dt);
+      return;
+    }
 
     if (d.jumpVy) this.tryJump(dt, chasing);
     if (d.fireEvery) this.tryFire(dt, chasing, dx);
@@ -1340,7 +1349,7 @@ class Enemy {
     else frame = { row: ANIM_ROWS.walk[0], col: Math.floor(this.animT * 6) % ANIM_ROWS.walk[1] };
     const sheet = IMG["lpc_" + this.kind];
     ctx.save();
-    if (this.dir > 0) {
+    if (this.dir < 0) {
       ctx.translate(sx + dw, sy);
       ctx.scale(-1, 1);
       ctx.drawImage(sheet, frame.col * 64, frame.row * 64, 64, 64, 0, 0, dw, dh);
@@ -1465,11 +1474,16 @@ const Enemies = (() => {
 
   // Removes an enemy and drops its card. Used by stomps, melee, and arrows.
   // A hit. Enemies with more than 1 hp survive and flash for 0.6 s.
-  function defeat(enemy) {
+  // fromX is the attacker's x. A surviving enemy is pushed away from it.
+  function defeat(enemy, fromX) {
     if (enemy.dead || enemy.hurtT > 0) return;
     if (enemy.hp > 1) {
       enemy.hp -= 1;
       enemy.hurtT = 0.6;
+      if (fromX !== undefined) {
+        enemy.knockT = 0.12;
+        enemy.knockVx = enemy.x + enemy.w / 2 >= fromX ? 160 : -160;
+      }
       Sfx.play(enemy.kind === "warlord" ? "boss" : "hit");
       if (enemy.kind === "warlord") Effects.shakeT = 0.15;
       return;
@@ -1681,7 +1695,7 @@ const Attacks = (() => {
         if (e.dead || !overlaps(hb, e)) return;
         hitThisStep = true;
         if (hb.stun) e.stunT = hb.stun;
-        else Enemies.defeat(e);
+        else Enemies.defeat(e, hb.x + hb.w / 2);
       });
     }
     for (let i = hitboxes.length - 1; i >= 0; i--) {
@@ -1695,7 +1709,7 @@ const Attacks = (() => {
       for (const e of Enemies.list()) {
         if (!e.dead && overlaps(q, e)) {
           hitThisStep = true;
-          Enemies.defeat(e);
+          Enemies.defeat(e, q.x);
           q.life = 0;
         }
       }
@@ -2294,6 +2308,7 @@ class PlayScene {
     this.floatT = 0;
     this.scurryT = 0;
     this.ghostT = 0;
+    this.hurtShowT = 0;
     this.pauseSel = 0;
     this.flashT = 0;
     this.secretsFound = 0;
@@ -2321,7 +2336,8 @@ class PlayScene {
         const more = World.index + 1 < World.count;
         Engine.setScene(more ? new PlayScene(World.index + 1, this.active) : new EndingScene());
       }
-    } else if (this.mode === "pause") this.updatePause();
+    } else if (this.mode === "dying") this.updateDying(dt);
+    else if (this.mode === "pause") this.updatePause();
     else this.updatePlay(dt);
   }
 
@@ -2533,7 +2549,7 @@ class PlayScene {
       if (enemy.dead || !this.overlaps(p, enemy)) continue;
       const stomp = p.vy > 0 && prevBottom <= enemy.y + 6;
       if (stomp) {
-        Enemies.defeat(enemy);
+        Enemies.defeat(enemy, p.x + p.w / 2);
         p.vy = -260;
       } else if (this.ghostT <= 0) {
         this.beginSelection("slain");
@@ -2553,8 +2569,25 @@ class PlayScene {
       this.respawn("knight");
       return;
     }
+    if (reason === "discarded" || reason === "fell") {
+      this.openSelection();
+      return;
+    }
+    // A hit shows the hurt pose for 0.15 s before the choice opens.
+    this.mode = "dying";
+    this.hurtShowT = 0.15;
+  }
+
+  // Discards and falls open the choice at once. A hit shows the hurt pose first (see beginSelection).
+  openSelection() {
     this.mode = "select";
     this.sel = this.firstOccupied();
+  }
+
+  // Counts down the hurt pose, then opens the choice.
+  updateDying(dt) {
+    this.hurtShowT -= dt;
+    if (this.hurtShowT <= 0) this.openSelection();
   }
 
   updateSelect() {
@@ -2588,6 +2621,7 @@ class PlayScene {
     this.floatT = 0;
     this.scurryT = 0;
     this.ghostT = 0;
+    this.hurtShowT = 0;
     this.hitstopT = 0;
     this.cooldowns = [0, 0, 0, 0];
     this.abBuf = [0, 0, 0, 0];
@@ -2719,7 +2753,8 @@ class PlayScene {
     ctx.save();
     // Ghost: the body is drawn faded while the ghost ability lasts.
     if (this.ghostT > 0) ctx.globalAlpha = 0.5;
-    drawFrame(ctx, sheet, this.frame, sx, sy, p.facing);
+    const frame = this.mode === "dying" ? { row: ANIM_ROWS.hurt[0], col: 0 } : this.frame;
+    drawFrame(ctx, sheet, frame, sx, sy, p.facing);
     ctx.restore();
   }
 
@@ -2935,6 +2970,23 @@ const HUD = (() => {
     ctx.textAlign = "left";
   }
 
+  // Logical pixels the ability bar must rise to clear the on-screen touch buttons. Zero without touch.
+  // Reads the DOM only; it changes no state.
+  function abilityLift() {
+    try {
+      if (!document.body.classList.contains("touch")) return 0;
+      const face = document.querySelector("#touch .face");
+      const cv = document.getElementById("screen");
+      if (!face || !cv) return 0;
+      const fr = face.getBoundingClientRect();
+      const cr = cv.getBoundingClientRect();
+      if (cr.height <= 0) return 0;
+      return Math.max(0, ((cr.bottom - fr.top) * Engine.H) / cr.height);
+    } catch (e) {
+      return 0;
+    }
+  }
+
   // Ability bar: four key caps with names, centred, 6 px above the bottom edge.
   // A cap darkens from the bottom while its ability is on cooldown.
   function drawAbilities(ctx, scene) {
@@ -2946,7 +2998,7 @@ const HUD = (() => {
       return { id, i, label, w: 16 + 4 + Math.ceil(ctx.measureText(label).width) + 10 };
     });
     const total = cells.reduce((n, c) => n + c.w, 0) + 12;
-    const bottom = Engine.H - 6;
+    const bottom = Engine.H - 6 - abilityLift();
     const top = bottom - 20;
     ctx.fillStyle = "rgba(10, 12, 18, 0.6)";
     roundRect(ctx, Engine.W / 2 - total / 2, top, total, 20, 4);
@@ -2991,7 +3043,7 @@ const HUD = (() => {
     drawSecrets(ctx, scene);
   }
 
-  return { slotRect, deckRect, draw, drawAbilities };
+  return { slotRect, deckRect, draw, drawAbilities, abilityLift };
 })();
 
 // ---- main.js ----

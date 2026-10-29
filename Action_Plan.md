@@ -118,7 +118,7 @@ Why: the idle row has 2 frames and the walk row has 9, but the code uses 4 and 6
 5. Run the check routine. Take screenshots and look for the archer in a level that has one (level 3 has 3 archers, look at `l3_start.png` or `l3_mid.png`). Say what you saw in the commit message.
 6. Commit as `T2: archer idle and walk use real frame counts`.
 
-## Task 3 [ ]: Fix enemy facing
+## Task 3 [x]: Fix enemy facing
 
 Why: LPC sheets face right. The enemy draw code flips the sprite when the enemy moves right, which makes it face backwards. UNVERIFIED until you look.
 
@@ -129,7 +129,7 @@ Why: LPC sheets face right. The enemy draw code flips the sprite when the enemy 
 5. Run the check routine. Look at the new screenshot after the change.
 6. Commit as `T3: enemies face their walking direction`.
 
-## Task 4 [ ]: Hurt frame before the death selection
+## Task 4 [x]: Hurt frame before the death selection
 
 Why: when the player dies the selection screen opens at once. A short hurt pose makes the death readable.
 
@@ -144,7 +144,7 @@ Why: when the player dies the selection screen opens at once. A short hurt pose 
 4. Run the check routine. Fix failures by adding waits only where a death is caused by a hit, never by removing assertions.
 5. Commit as `T4: show hurt pose for 0.15 s before the death selection`.
 
-## Task 5 [ ]: Warlord knockback
+## Task 5 [x]: Warlord knockback
 
 1. Open `game/src/enemies.js`. Find `Enemies.defeat` (search `defeat`). Read it. It currently takes `(enemy)`.
 2. Change the signature to `defeat(enemy, fromX)`. In the branch where `enemy.hp > 1` (the enemy survives): after setting `hp` and `hurtT`, add:
@@ -162,7 +162,7 @@ Why: when the player dies the selection screen opens at once. A short hurt pose 
 6. Add a suite check `boss: a hit knocks the warlord back`: spawn a warlord with `Enemies` (copy how the existing check `boss: warlord takes 8 hits` creates one), set `hurtT = 0`, record its x, call `Enemies.defeat(warlord, warlord.x - 50)`, wait 150 ms, assert its x is greater than before.
 7. Run the check routine. Commit as `T5: warlord is knocked back when hit`.
 
-## Task 6 [ ]: Lift the ability bar above touch buttons
+## Task 6 [x]: Lift the ability bar above touch buttons
 
 1. Open `game/src/scenes.js`. Search `drawAbilities`. Note where the bar's y position is set (about `Engine.H - 6`).
 2. Search `game/src/input.js` and `game/src/index.html` for `touch` to find the DOM node `#touch` and its `.face` buttons, and the CSS class `touch` on `body` (see also `game/src/style.css`).

@@ -114,8 +114,12 @@ Single condensed record of the project. It replaces Current_Work.md, Expansion_P
 | 2026-10-29 | da962dc | exit 0 | 48 passed, 1 failed (charge flake) | review run |
 | 2026-10-29 | b76b0cd (Task 0) | exit 0 | 49 passed, 0 failed | baseline, before Tasks 1 and 2 |
 | 2026-10-29 | with T1 and T2 | exit 0 | 50 passed, 0 failed | charge check waits on game clock; archer frame check added; archer frames use ANIM_ROWS. Archer not in shot l3_mid (off screen), per-enemy shots come in Task 10 |
+| 2026-10-29 | with T3 to T6 | exit 0 | 52 passed, 0 failed | enemies face walk direction (flip when dir < 0); hurt pose during dying mode (0.15 s); warlord knockback; ability bar lifts above touch buttons. Two checks were hardened: stand-still reads position after both keys are held (press order gave one 2.17 px step); knockback steps the enemy update in open air (spawn overlaps a platform) |
 
 ## 8. Decisions log (agents append one line per decision)
+- Tasks 3 to 6 were validated in one suite run and committed together (they share scenes.js). Deviation from one task per commit.
+- The enemy spawn for the warlord overlaps the arena platform, so horizontal movement snaps it out to the tile edge. Not fixed here (existing behavior); tests place it in open air.
+- The knight charge flake (6.1) was fixed in T1.
 - Tasks 1 and 2 were validated in one suite run (they touch different files) and committed together. Deviation from one task per commit.
 
 - Spec deviations accepted: see section 5.

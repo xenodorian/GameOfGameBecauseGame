@@ -78,6 +78,8 @@ class Enemy {
     this.dir = -1;
     this.dead = false;
     this.stunT = 0;
+    this.knockT = 0;
+    this.knockVx = 0;
     this.jumpT = def.jumpEvery || 0;
     this.fireT = def.fireEvery || 0;
     this.hp = def.hp || 1;
@@ -123,6 +125,13 @@ class Enemy {
       World.moveBody(this, dt);
       return;
     }
+    if (this.knockT > 0) {
+      // Knocked back by a hit: slide away, no walking or chasing.
+      this.knockT -= dt;
+      this.vx = this.knockVx;
+      World.moveBody(this, dt);
+      return;
+    }
 
     if (d.jumpVy) this.tryJump(dt, chasing);
     if (d.fireEvery) this.tryFire(dt, chasing, dx);
@@ -160,7 +169,7 @@ class Enemy {
     else frame = { row: ANIM_ROWS.walk[0], col: Math.floor(this.animT * 6) % ANIM_ROWS.walk[1] };
     const sheet = IMG["lpc_" + this.kind];
     ctx.save();
-    if (this.dir > 0) {
+    if (this.dir < 0) {
       ctx.translate(sx + dw, sy);
       ctx.scale(-1, 1);
       ctx.drawImage(sheet, frame.col * 64, frame.row * 64, 64, 64, 0, 0, dw, dh);
@@ -285,11 +294,16 @@ const Enemies = (() => {
 
   // Removes an enemy and drops its card. Used by stomps, melee, and arrows.
   // A hit. Enemies with more than 1 hp survive and flash for 0.6 s.
-  function defeat(enemy) {
+  // fromX is the attacker's x. A surviving enemy is pushed away from it.
+  function defeat(enemy, fromX) {
     if (enemy.dead || enemy.hurtT > 0) return;
     if (enemy.hp > 1) {
       enemy.hp -= 1;
       enemy.hurtT = 0.6;
+      if (fromX !== undefined) {
+        enemy.knockT = 0.12;
+        enemy.knockVx = enemy.x + enemy.w / 2 >= fromX ? 160 : -160;
+      }
       Sfx.play(enemy.kind === "warlord" ? "boss" : "hit");
       if (enemy.kind === "warlord") Effects.shakeT = 0.15;
       return;

@@ -100,6 +100,7 @@ check('stomp defeats a grunt and drops a card; side contact respawns safely', as
   assert.equal(await page.evaluate(() => __g.dead), true);
   // The grunt drops a card, so the hand is not empty and a death opens the choice.
   await page.evaluate(() => { __scene.beginSelection('slain'); });
+  await wait(page, 250);
   await page.keyboard.press('KeyZ'); await wait(page, 80);
   // The respawn flash ignores contact for one second, so wait it out first.
   await wait(page, 1100);
@@ -109,6 +110,8 @@ check('stomp defeats a grunt and drops a card; side contact respawns safely', as
     __scene.player.x = __r.x - 10; __scene.player.y = __r.y;
   });
   await wait(page, 80);
+  // The side contact is a hit, so the hurt pose shows before the choice opens.
+  await wait(page, 250);
   // The stomped grunt left a card in hand, so the side contact opens the choice first.
   assert.equal(await page.evaluate(() => __scene.mode), 'select');
   await page.keyboard.press('KeyZ'); await wait(page, 80);
@@ -122,6 +125,7 @@ check('selection: death opens the card choice; Right then Z respawns as the chos
   const page = await newPage(browser);
   await startPlay(page, { hand: ['ranger', 'mage'] });
   await page.evaluate(() => { __scene.beginSelection('slain'); });
+  await wait(page, 250);
   assert.equal(await page.evaluate(() => __scene.mode), 'select');
   await page.keyboard.press('ArrowRight'); await wait(page, 60);
   assert.equal(await page.evaluate(() => __scene.sel), 1);
@@ -378,6 +382,20 @@ check('portrait: rotate overlay shows; landscape touch buttons move and jump', a
   await ctxB.close();
 });
 
+check('hud: ability bar clears the touch buttons', async (browser) => {
+  const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });
+  const page = await ctx.newPage();
+  page.errors = [];
+  page.on('pageerror', (e) => page.errors.push(e.message));
+  await page.goto(url); await wait(page, 300);
+  await startPlay(page, { hand: [] });
+  await wait(page, 100);
+  const lift = await page.evaluate(() => HUD.abilityLift());
+  assert.ok(lift > 0, 'ability bar lift ' + lift);
+  assert.deepEqual(page.errors, []);
+  await ctx.close();
+});
+
 check('gamepad: stubbed pad moves right on the d-pad and holds ability 3 on A', async (browser) => {
   const ctx = await browser.newContext({ viewport: { width: 960, height: 540 } });
   await ctx.addInitScript(() => {
@@ -589,8 +607,10 @@ check('input: Left and Right together stand still', async (browser) => {
   const page = await newPage(browser);
   await startPlay(page, { hand: [] });
   await wait(page, 60);
-  const x0 = await page.evaluate(() => __scene.player.x);
+  // Press both keys, then let one step pass so the first step with Left alone is not counted.
   await page.keyboard.down('ArrowLeft'); await page.keyboard.down('ArrowRight');
+  await wait(page, 60);
+  const x0 = await page.evaluate(() => __scene.player.x);
   await wait(page, 300);
   const r = await page.evaluate(() => ({ vx: __scene.player.vx, x: __scene.player.x }));
   await page.keyboard.up('ArrowLeft'); await page.keyboard.up('ArrowRight');
@@ -620,6 +640,7 @@ check('input: spamming Z on the selection screen confirms once', async (browser)
   const page = await newPage(browser);
   await startPlay(page, { hand: ['ranger', 'mage'] });
   await page.evaluate(() => { __scene.beginSelection('slain'); });
+  await wait(page, 250);
   assert.equal(await page.evaluate(() => __scene.mode), 'select');
   const before = await page.evaluate(() => Hand.slots().filter((c) => c !== null).length);
   for (let i = 0; i < 5; i++) { await page.keyboard.press('KeyZ'); await wait(page, 20); }
@@ -799,6 +820,30 @@ check('boss: warlord takes 8 hits, then the exit opens', async (browser) => {
   await page.evaluate(() => { const f = World.exit(); __scene.player.x = f.x; __scene.player.y = f.y; });
   await wait(page, 100);
   assert.equal(await page.evaluate(() => __scene.mode), 'complete');
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('boss: a hit knocks the warlord back', async (browser) => {
+  const page = await newPage(browser);
+  await page.keyboard.press('Enter'); await wait(page, 120);
+  await page.evaluate(() => { window.__scene = new PlayScene(World.count - 1); Engine.setScene(window.__scene); });
+  // Step the warlord's own update so the check does not depend on wall-clock timing.
+  const r = await page.evaluate(() => {
+    const w = Enemies.list().find((e) => e.kind === 'warlord');
+    w.hurtT = 0;
+    // Open air: the spawn point overlaps the arena's platform, which would push the body back.
+    w.x = 400; w.y = 150;
+    const x0 = w.x;
+    Enemies.defeat(w, w.x - 50);
+    const set = { knockT: w.knockT, knockVx: w.knockVx };
+    for (let i = 0; i < 6; i++) w.update(1 / 60, __scene.player);
+    return { x0, x: w.x, set, knockT: w.knockT };
+  });
+  assert.equal(r.set.knockT, 0.12);
+  assert.equal(r.set.knockVx, 160);
+  assert.ok(r.x > r.x0, 'knocked from ' + r.x0 + ' to ' + r.x);
+  assert.ok(r.knockT < 0.12, 'knock timer counts down');
   assert.deepEqual(page.errors, []);
   await page.close();
 });

@@ -185,7 +185,7 @@ const Attacks = (() => {
         if (e.dead || !overlaps(hb, e)) return;
         hitThisStep = true;
         if (hb.stun) e.stunT = hb.stun;
-        else Enemies.defeat(e);
+        else Enemies.defeat(e, hb.x + hb.w / 2);
       });
     }
     for (let i = hitboxes.length - 1; i >= 0; i--) {
@@ -199,7 +199,7 @@ const Attacks = (() => {
       for (const e of Enemies.list()) {
         if (!e.dead && overlaps(q, e)) {
           hitThisStep = true;
-          Enemies.defeat(e);
+          Enemies.defeat(e, q.x);
           q.life = 0;
         }
       }

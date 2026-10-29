@@ -376,6 +376,7 @@ class PlayScene {
     this.floatT = 0;
     this.scurryT = 0;
     this.ghostT = 0;
+    this.hurtShowT = 0;
     this.pauseSel = 0;
     this.flashT = 0;
     this.secretsFound = 0;
@@ -403,7 +404,8 @@ class PlayScene {
         const more = World.index + 1 < World.count;
         Engine.setScene(more ? new PlayScene(World.index + 1, this.active) : new EndingScene());
       }
-    } else if (this.mode === "pause") this.updatePause();
+    } else if (this.mode === "dying") this.updateDying(dt);
+    else if (this.mode === "pause") this.updatePause();
     else this.updatePlay(dt);
   }
 
@@ -615,7 +617,7 @@ class PlayScene {
       if (enemy.dead || !this.overlaps(p, enemy)) continue;
       const stomp = p.vy > 0 && prevBottom <= enemy.y + 6;
       if (stomp) {
-        Enemies.defeat(enemy);
+        Enemies.defeat(enemy, p.x + p.w / 2);
         p.vy = -260;
       } else if (this.ghostT <= 0) {
         this.beginSelection("slain");
@@ -635,8 +637,25 @@ class PlayScene {
       this.respawn("knight");
       return;
     }
+    if (reason === "discarded" || reason === "fell") {
+      this.openSelection();
+      return;
+    }
+    // A hit shows the hurt pose for 0.15 s before the choice opens.
+    this.mode = "dying";
+    this.hurtShowT = 0.15;
+  }
+
+  // Discards and falls open the choice at once. A hit shows the hurt pose first (see beginSelection).
+  openSelection() {
     this.mode = "select";
     this.sel = this.firstOccupied();
+  }
+
+  // Counts down the hurt pose, then opens the choice.
+  updateDying(dt) {
+    this.hurtShowT -= dt;
+    if (this.hurtShowT <= 0) this.openSelection();
   }
 
   updateSelect() {
@@ -670,6 +689,7 @@ class PlayScene {
     this.floatT = 0;
     this.scurryT = 0;
     this.ghostT = 0;
+    this.hurtShowT = 0;
     this.hitstopT = 0;
     this.cooldowns = [0, 0, 0, 0];
     this.abBuf = [0, 0, 0, 0];
@@ -801,7 +821,8 @@ class PlayScene {
     ctx.save();
     // Ghost: the body is drawn faded while the ghost ability lasts.
     if (this.ghostT > 0) ctx.globalAlpha = 0.5;
-    drawFrame(ctx, sheet, this.frame, sx, sy, p.facing);
+    const frame = this.mode === "dying" ? { row: ANIM_ROWS.hurt[0], col: 0 } : this.frame;
+    drawFrame(ctx, sheet, frame, sx, sy, p.facing);
     ctx.restore();
   }
 
@@ -1017,6 +1038,23 @@ const HUD = (() => {
     ctx.textAlign = "left";
   }
 
+  // Logical pixels the ability bar must rise to clear the on-screen touch buttons. Zero without touch.
+  // Reads the DOM only; it changes no state.
+  function abilityLift() {
+    try {
+      if (!document.body.classList.contains("touch")) return 0;
+      const face = document.querySelector("#touch .face");
+      const cv = document.getElementById("screen");
+      if (!face || !cv) return 0;
+      const fr = face.getBoundingClientRect();
+      const cr = cv.getBoundingClientRect();
+      if (cr.height <= 0) return 0;
+      return Math.max(0, ((cr.bottom - fr.top) * Engine.H) / cr.height);
+    } catch (e) {
+      return 0;
+    }
+  }
+
   // Ability bar: four key caps with names, centred, 6 px above the bottom edge.
   // A cap darkens from the bottom while its ability is on cooldown.
   function drawAbilities(ctx, scene) {
@@ -1028,7 +1066,7 @@ const HUD = (() => {
       return { id, i, label, w: 16 + 4 + Math.ceil(ctx.measureText(label).width) + 10 };
     });
     const total = cells.reduce((n, c) => n + c.w, 0) + 12;
-    const bottom = Engine.H - 6;
+    const bottom = Engine.H - 6 - abilityLift();
     const top = bottom - 20;
     ctx.fillStyle = "rgba(10, 12, 18, 0.6)";
     roundRect(ctx, Engine.W / 2 - total / 2, top, total, 20, 4);
@@ -1073,5 +1111,5 @@ const HUD = (() => {
     drawSecrets(ctx, scene);
   }
 
-  return { slotRect, deckRect, draw, drawAbilities };
+  return { slotRect, deckRect, draw, drawAbilities, abilityLift };
 })();
