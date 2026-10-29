@@ -180,6 +180,7 @@ const Attacks = (() => {
       if (clear) {
         p.x = Math.max(0, Math.min(nx, World.width - p.w));
         Effects.ring(p.x + p.w / 2, p.y + p.h / 2, "#b9a2f0");
+        Effects.spray(p.x + p.w / 2, p.y + p.h / 2, -p.facing, "arcane", 6);
         return;
       }
     }

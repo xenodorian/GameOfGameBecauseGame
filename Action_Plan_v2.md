@@ -116,7 +116,7 @@ new_string:
 ```
 Then check routine steps A to C (`node --check game/src/enemies.js`).
 
-## V5 [ ]: Blink throws arcane sparks
+## V5 [x]: Blink throws arcane sparks
 
 File: `game/src/abilities.js`. Edit (the `return;` line makes this match unique):
 
