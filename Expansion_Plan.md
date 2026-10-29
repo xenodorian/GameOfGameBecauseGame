@@ -426,7 +426,7 @@ Add these checks to `check_level` in `validate_gates.py`, each a failure with a 
 6. Game-wide check, printed after all levels: for each of `knight`, `ranger`, `rat`, `weaver`, at least one secret (`c` or `p`) in the whole game can be reached by that character and by no other character. For `mage`, at least one secret reachable by `mage` and at most one other character. Print a table of which secrets are exclusive to whom.
 Put the numbers in dicts at the top of the file so they are easy to find. Gates will now fail until R3 to R5 are done; commit with `gates fail until R5` in the message.
 
-### [ ] R3: Re-gate secrets in levels 2 to 7
+### [~] R3: Re-gate secrets in levels 2 to 7 (partial: levels 2 and 3 done except weaver-only; see Decisions log)
 Work one level per commit (R3a level 2, R3b level 3, and so on). Goal for each level: its secrets need different characters, and by the end the R2 game-wide check passes. Suggested owners:
 - Level 2: one Rat-only, one Weaver-only.
 - Level 3: one Ranger-only, one Weaver-only, one Mage (Mage plus at most one other).
@@ -636,4 +636,8 @@ Layout at 480 by 270 (logical):
 - R3 (not started): levels 3 to 7.
 - E9: a main-route card (k) was added at the quiet start of levels 1 to 4 (columns 5 to 7), so no 20-column stretch is empty.
 - Opus: exit zone stays 4 tiles tall (jumping over the flag completes the level).
+- R3 (level 2): weaver-only secret NOT built. A weaver-only secret needs a dead-end side pocket: a rope over a spike trench to a sealed landing. Level 2's main route runs along the floor to F, leaving no dead end. Moved to a later level (owner list: level 6). Rat-only secret kept.
+- R3 (level 3): ranger-only secret at col 66 row 17 (rope from col 60, hop onto a one-tile pillar at col 66 row 19). Mage-only secret at col 76 row 8 (blink across a 5-wide spike trench from a shelf at col 70 row 9, sealed by walls). Weaver-only deferred with level 2.
+- R3 (validator facts learned): a rope may be placed over spike tiles, so a spike trench must sit at least 3 rows above any platform that anchors a rope. Standing tiles over a solid roof become standable, which lets low jumps reach them.
+- R3 (game-wide): knight-only is planned as a cracked-wall vault in level 4 (R4 needs cracked walls there anyway). Weaver-only is planned for level 6.
 - C1: a rat or weaver card could be selected before C2/C3 existed, which left the active character undefined and froze play. Added their CHARACTERS entries (C2/C3 step 1) with unimplemented ability ids that do nothing.

@@ -345,3 +345,28 @@ cd method_3_pillow && python3 build_scenes.py
 - E9 balance pass done: quiet level starts now have a main-route card; the level 2 bot check was dropped (bot limit, logged).
 - Expansion plan complete (EXPANSION COMPLETE in Expansion_Plan.md).
 - Real-device, other-browser, LPC attack animation, and sound checks are still out of scope.
+
+## Combined task list (2026-10-29, executed autonomously)
+
+Source: Expansion_Plan.md (Phases R, S, V, in order) plus open items from "Opus review 2" above (Task A is R7; Task B is the results record in R8 and the build status below). Decisions go in the Decisions log of Expansion_Plan.md. Gates may fail until R5 is done, as the plan allows.
+
+- [ ] R3: re-gate secrets in levels 2 to 7 (one level per commit)
+- [ ] R4: spikes, cracked walls, and enemy minimums (one level per commit)
+- [ ] R5: dungeon ground and platform visibility (screenshot of level 8)
+- [ ] R6: top banner shows only the character name
+- [ ] R7: `_` tile suite check (Opus review 2, Task A)
+- [ ] R8: final pass; record suite count and gates summary here
+- [ ] S1: one reset for a new game
+- [ ] S2: logic out of draw
+- [ ] S3: input edge-case checks and physics substeps
+- [ ] S4: browser API fallbacks
+- [ ] V1: sharp rendering at any screen size
+- [ ] V2: readable text (pixel font, drawText helper)
+- [ ] V3: Mage image from `@sprite-foundry/fantasy-heroes-48`
+- [ ] V4: animation atlases (offline Pillow tool)
+- [ ] V5: animation playback
+- [ ] V6: attack effects and projectiles drawn in code
+- [ ] V7: hit stop, knockback, coyote time, jump buffer, cooldowns
+- [ ] V8: HUD redesign
+- [ ] V9: title screen
+- [ ] V10: final visual pass; add EXPANSION COMPLETE line
