@@ -624,6 +624,40 @@ check('ability: weaver ghost (X) survives touching a grunt', async (browser) => 
   await page.close();
 });
 
+check('bot: keyboard bot reaches the exit of level 2 as the knight', async (browser) => {
+  const page = await newPage(browser);
+  await page.keyboard.press('Enter'); await wait(page, 120);
+  const result = await page.evaluate(() => new Promise((resolve) => {
+    window.__scene = new PlayScene(1); Engine.setScene(window.__scene); __scene.active = 'knight';
+    const press = (t, c) => window.dispatchEvent(new KeyboardEvent(t, { code: c }));
+    const started = performance.now();
+    let jumpUntil = 0;
+    const timer = setInterval(() => {
+      const s = Engine.current();
+      if (s.mode === 'complete') { clearInterval(timer); return resolve({ ok: true }); }
+      if (performance.now() - started > 120000) { clearInterval(timer); return resolve({ ok: false, mode: s.mode, x: Math.round(s.player.x / 32) }); }
+      if (s.mode === 'select') { press('keydown', 'KeyZ'); setTimeout(() => press('keyup', 'KeyZ'), 30); }
+      if (s.mode !== 'play') return;
+      const p = s.player;
+      const ex = World.exit();
+      const dir = ex && p.x > ex.x + World.TILE / 2 ? -1 : 1;
+      press('keydown', dir > 0 ? 'ArrowRight' : 'ArrowLeft');
+      press('keyup', dir > 0 ? 'ArrowLeft' : 'ArrowRight');
+      const row = Math.floor((p.y + p.h - 1) / World.TILE);
+      const col = Math.floor((p.x + (dir > 0 ? p.w + 8 : -8)) / World.TILE);
+      const blocked = World.at(col, row) === '#' || World.at(col, row) === '=' || World.at(col, row) === 'x';
+      const gap = !['#', '=', '_', 'x'].includes(World.at(col, row + 1));
+      const spikeAhead = World.at(col, row) === '^';
+      if (p.grounded && (blocked || gap || spikeAhead) && performance.now() > jumpUntil) {
+        press('keydown', 'ArrowUp'); setTimeout(() => press('keyup', 'ArrowUp'), 140);
+        jumpUntil = performance.now() + 400;
+      }
+    }, 16);
+  }));
+  assert.equal(result.ok, true, JSON.stringify(result));
+  await page.close();
+});
+
 check('gates: validate_gates.py exits 0', async () => {
   execFileSync('python3', [path.join(GAME, 'tools', 'validate_gates.py')], { stdio: 'pipe' });
 });
