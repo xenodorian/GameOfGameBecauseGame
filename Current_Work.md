@@ -94,6 +94,14 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
     - Chasm pocket power-up (col 70, row 13): knight (charge), ranger (rope and drop), mage (blink). Basic moves cannot reach it.
     - Main route: every character reaches the exit.
 
+## Open work checklist (next round)
+
+Status key: [ ] not started, [~] in progress, [x] done. Hardware, other browsers, art, and sound are out of scope for this round.
+
+- [ ] Main level content: add enemies and cards along the main route, without changing its route geometry.
+- [ ] Gated secret: a second secret card above the main route. Reachable by ranger (hop) and mage (float plus jump), not by basic moves or the knight.
+- [ ] Enemy type: a fourth enemy, a ranged archer that fires at the player when lined up. Hostile arrows that hit the player trigger the death selection.
+
 ## Build workflow (task list)
 
 Status key: [ ] not started, [~] in progress, [x] done.
