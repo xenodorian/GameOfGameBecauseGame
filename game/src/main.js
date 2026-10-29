@@ -31,10 +31,23 @@ function tint(img, rgba) {
   return c;
 }
 
+// Canvas text must not draw in a fallback font first, so wait for the game font.
+function waitForFonts() {
+  try {
+    return Promise.all([
+      document.fonts.load("10px GameFont"),
+      document.fonts.load("bold 10px GameFont"),
+    ]).catch(() => {});
+  } catch (e) {
+    return Promise.resolve();
+  }
+}
+
 loadImages(ASSET_URLS)
+  .then(() => waitForFonts())
   .then(() => {
-    IMG.mage = tint(IMG.knight_right, "rgba(120, 70, 200, 0.45)");
     IMG.warlord = tint(IMG.grunt, "rgba(150, 30, 30, 0.45)");
+    IMG.atlas_warlord = tint(IMG.atlas_grunt, "rgba(150, 30, 30, 0.45)");
     Engine.start(new TitleScene());
   })
   .catch((err) => {

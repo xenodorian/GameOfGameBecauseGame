@@ -51,6 +51,7 @@ const ENEMY_DEFS = {
     fireEvery: 2.2,
   },
   archer: {
+    idle: true,
     sprite: "bone_weaver",
     w: 22,
     h: 30,
@@ -81,6 +82,7 @@ class Enemy {
     this.fireT = def.fireEvery || 0;
     this.hp = def.hp || 1;
     this.hurtT = 0;
+    this.animT = 0;
   }
 
   // Jump on a timer while the enemy is on the ground and the player is near.
@@ -105,6 +107,8 @@ class Enemy {
   }
 
   update(dt, player) {
+    // Animation clock for the walk, idle, and hurt frames. Draw only reads it.
+    this.animT += dt;
     const d = this.def;
     const dx = player.x + player.w / 2 - (this.x + this.w / 2);
     const dy = player.y + player.h / 2 - (this.y + this.h / 2);
@@ -145,20 +149,23 @@ class Enemy {
   }
 
   draw(ctx, images, camX, camY) {
-    // Hurt enemies blink: skip every other 0.1 s.
-    if (this.hurtT > 0 && Math.floor(this.hurtT / 0.1) % 2 === 0) return;
-    const img = images[this.def.sprite];
     const dw = this.def.drawW || 48;
     const dh = this.def.drawH || 48;
     const sx = Math.round(this.x + this.w / 2 - dw / 2 - camX);
     const sy = Math.round(this.y + this.h - dh - camY);
+    // Hurt: the hurt row, a white silhouette. Archers stand and idle. Others walk.
+    let frame;
+    if (this.hurtT > 0) frame = { row: 6, col: 0 };
+    else if (this.def.idle) frame = { row: 0, col: Math.floor(this.animT * 3) % 4 };
+    else frame = { row: 1, col: Math.floor(this.animT * 6) % 6 };
+    const atlas = IMG[this.kind === "warlord" ? "atlas_warlord" : "atlas_" + this.def.sprite];
     ctx.save();
     if (this.dir > 0) {
       ctx.translate(sx + dw, sy);
       ctx.scale(-1, 1);
-      ctx.drawImage(img, 0, 0, dw, dh);
+      ctx.drawImage(atlas, frame.col * 48, frame.row * 48, 48, 48, 0, 0, dw, dh);
     } else {
-      ctx.drawImage(img, sx, sy, dw, dh);
+      ctx.drawImage(atlas, frame.col * 48, frame.row * 48, 48, 48, sx, sy, dw, dh);
     }
     ctx.restore();
   }
@@ -212,7 +219,16 @@ class CardPickup {
 // Visual effects: defeat bursts and a short screen shake. Drawn in code.
 const Effects = {
   shakeT: 0,
+  // Shake offset for this step, set in update so draw only reads it.
+  shakeX: 0,
+  shakeY: 0,
   bursts: [],
+  reset() {
+    this.shakeT = 0;
+    this.shakeX = 0;
+    this.shakeY = 0;
+    this.bursts.length = 0;
+  },
   burst(x, y, color) {
     const parts = [];
     for (let i = 0; i < 6; i++) {
@@ -222,7 +238,14 @@ const Effects = {
     this.bursts.push({ parts, color, t: 0 });
   },
   update(dt) {
-    if (this.shakeT > 0) this.shakeT -= dt;
+    if (this.shakeT > 0) {
+      this.shakeT -= dt;
+      this.shakeX = Math.round((Math.random() * 2 - 1) * 3);
+      this.shakeY = Math.round((Math.random() * 2 - 1) * 3);
+    } else {
+      this.shakeX = 0;
+      this.shakeY = 0;
+    }
     for (const b of this.bursts) {
       b.t += dt;
       for (const q of b.parts) {

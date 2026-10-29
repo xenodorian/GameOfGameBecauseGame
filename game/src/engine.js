@@ -9,9 +9,14 @@ const Engine = (() => {
   let scene = null;
   let last = 0;
   let acc = 0;
+  // Backing-store scale: whole device pixels per logical pixel, so text and sprites stay sharp.
+  let S = 1;
 
   function resize() {
     const scale = Math.min(window.innerWidth / W, window.innerHeight / H);
+    S = Math.max(1, Math.min(4, Math.round(scale * (window.devicePixelRatio || 1))));
+    canvas.width = W * S;
+    canvas.height = H * S;
     canvas.style.width = Math.floor(W * scale) + "px";
     canvas.style.height = Math.floor(H * scale) + "px";
     document.body.classList.toggle("portrait", window.innerHeight > window.innerWidth);
@@ -30,7 +35,7 @@ const Engine = (() => {
         acc -= STEP;
       }
     }
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.setTransform(S, 0, 0, S, 0, 0);
     ctx.imageSmoothingEnabled = false;
     scene.draw(ctx);
     requestAnimationFrame(frame);
@@ -44,8 +49,6 @@ const Engine = (() => {
   function start(firstScene) {
     canvas = document.getElementById("screen");
     ctx = canvas.getContext("2d");
-    canvas.width = W;
-    canvas.height = H;
     window.addEventListener("resize", resize);
     resize();
     setScene(firstScene);
@@ -53,5 +56,5 @@ const Engine = (() => {
     requestAnimationFrame(frame);
   }
 
-  return { W, H, STEP, start, setScene, resize, current: () => scene };
+  return { W, H, STEP, start, setScene, resize, current: () => scene, scale: () => S };
 })();

@@ -640,4 +640,28 @@ Layout at 480 by 270 (logical):
 - R3 (level 3): ranger-only secret at col 66 row 17 (rope from col 60, hop onto a one-tile pillar at col 66 row 19). Mage-only secret at col 76 row 8 (blink across a 5-wide spike trench from a shelf at col 70 row 9, sealed by walls). Weaver-only deferred with level 2.
 - R3 (validator facts learned): a rope may be placed over spike tiles, so a spike trench must sit at least 3 rows above any platform that anchors a rope. Standing tiles over a solid roof become standable, which lets low jumps reach them.
 - R3 (game-wide): knight-only is planned as a cracked-wall vault in level 4 (R4 needs cracked walls there anyway). Weaver-only is planned for level 6.
+- R3 (done, with changes): weaver-only secret built in level 7 at col 29 row 7 (one-tile pillar at col 29 row 9; only the weaver's rope reaches the tile above it). Found by a scripted scan of single-pillar spots; level 6 has no weaver-only secret. Level 2 weaver-only stays deferred.
+- R3 (validator fix): rope cells now stop at the first solid tile, as the plan's R3 recipe says. Before, a rope could skip over a wall cell and reach the far side.
+- R4 (level 1): archer moved from col 56 to col 41 (flag at col 58). Level 2: pit-bottom spikes at cols 27, 28, 91, 92 on row 17.
+- R4 (level 4): knight-only cracked vault at col 62 (entry cells at col 62 rows 14-15), card at col 64 row 15; spikes at pit bottoms, 8 spikes total. Rat-only secret not added here (rat-only exists in level 2 and 5).
+- R4 (level 5): old card at col 94 row 8 sat on an unreachable ledge; moved to a rat-only shaft at col 103 (walls at cols 102 and 104, card at col 104 row 8, cap at row 7). Archer moved from col 122 to col 118, grunt added at col 40, spikes at cols 23-24, knight-only room at cols 4-7 rows 16-18 with a k card (cracked walls: 5).
+- R4 (level 6): two cracked vaults (cols 53-56 and 89-92), five 2-tile spike beds (cols 26, 30, 52, 57, 86), two grunts. Unreachable card at col 121 row 9 removed. Level 6 has no weaver-only secret (see Decisions for level 7).
+- R4 (level 7): cracked vault at cols 47-50, three 2-tile spike beds (cols 24, 49, 54), three grunts (cols 28, 58, 81), the weaver-only pillar secret.
+- R4 (placement rule): every spike bed and vault was checked for the main route for basic, knight, and rat. A spike bed on a climbing platform blocked the route in level 6 and was moved.
+- R5: dungeon ground tiles get a 3 px light top edge when the tile above is not solid (World.draw).
+- R6: the top-left label now shows only the character name.
+- R7: suite check added for a one-way `_` tile on row 12 of level 1 (uses World.setTile).
+- S1: resetGame() in scenes.js (Hand, Run, Attacks, Effects, World, Input). Respawn also resets hitstop, cooldowns, and the ability buffer. A suite check covers it.
+- S2: the only draw-side random call was the screen shake. It now lives in Effects.update (shakeX, shakeY). PlayScene.time is advanced in update, except in pause.
+- S3: four suite checks added (Left plus Right, Enter spam, Z spam, fast fall). The fast-fall check passes with 3000 px/s and 50 px steps, so no substep clamp was added.
+- S4: AudioContext resume on creation, on each play, and on the first key or pointer press. Webkit fullscreen fallbacks added. Search found none of the newer canvas or JS features, so nothing was replaced.
+- V1: canvas backing store is scaled to device pixels (scale 1 to 4), drawing uses setTransform(S).
+- V2: Pixelify Sans (SIL OFL 1.1, from @fontsource/pixelify-sans) embedded at weights 400 and 700 as GameFont. drawText(ctx, text, x, y) strokes an outline and fills. It uses the font and fill style the caller set, so it has no options argument. All 30 fillText calls use it. Font wait happens before the title scene.
+- V3: Mage image is the Sprite Foundry Mage (npm @sprite-foundry/fantasy-heroes-48, MIT). The purple tint for the Mage is removed. The warlord still uses a tint.
+- V4: game/tools/build_atlases.py writes 7 atlases (8 by 7 cells of 48 px). The preview was checked by eye: feet stay on one line in the idle, walk, melee, cast, jump, land, and hurt rows.
+- V5: player and enemies draw atlas frames. The clock and the frame choice are in update. Not done: the hurt row before the death selection (step 7), so the existing selection checks do not need a wait.
+- V6: slash crescent, thrust streak, shield bash ring, arrows (player and enemy), spell orb, and a debug outline are drawn in code. Attacks.debug is an object with an on flag. Not done: hit sparks, wall particles, blink rings, float sparkles, leap dust, rope sag, bone bridge pattern, ghost outline.
+- V7: hit stop (0.05 s), coyote time (0.08 s), jump buffer (0.1 s), per-slot cooldowns with a 0.1 s press buffer. Hit sound already plays on contact. Not done: knockback for the warlord (Enemies.defeat has no player direction).
+- V8: HUD rebuilt: character panel, hand at the top left (cards 30 by 40, icon 28 px so it fits), deck offset backs, gold star secrets count, ability bar with cooldown shading. Not done: moving the ability bar above touch buttons. The selection and complete screens are unchanged.
+- V9: title shows level 1 sky and hills, the five characters walking on their own walk frames, a larger title, and the controls line.
 - C1: a rat or weaver card could be selected before C2/C3 existed, which left the active character undefined and froze play. Added their CHARACTERS entries (C2/C3 step 1) with unimplemented ability ids that do nothing.

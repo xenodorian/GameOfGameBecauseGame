@@ -348,25 +348,25 @@ cd method_3_pillow && python3 build_scenes.py
 
 ## Combined task list (2026-10-29, executed autonomously)
 
-Source: Expansion_Plan.md (Phases R, S, V, in order) plus open items from "Opus review 2" above (Task A is R7; Task B is the results record in R8 and the build status below). Decisions go in the Decisions log of Expansion_Plan.md. Gates may fail until R5 is done, as the plan allows.
+Source: Expansion_Plan.md (Phases R, S, V, in order) plus the open items from "Opus review 2" above (Task A is R7; Task B is the results record in R8). Decisions and deviations are in the Decisions log of Expansion_Plan.md.
 
-- [ ] R3: re-gate secrets in levels 2 to 7 (one level per commit)
-- [ ] R4: spikes, cracked walls, and enemy minimums (one level per commit)
-- [ ] R5: dungeon ground and platform visibility (screenshot of level 8)
-- [ ] R6: top banner shows only the character name
-- [ ] R7: `_` tile suite check (Opus review 2, Task A)
-- [ ] R8: final pass; record suite count and gates summary here
-- [ ] S1: one reset for a new game
-- [ ] S2: logic out of draw
-- [ ] S3: input edge-case checks and physics substeps
-- [ ] S4: browser API fallbacks
-- [ ] V1: sharp rendering at any screen size
-- [ ] V2: readable text (pixel font, drawText helper)
-- [ ] V3: Mage image from `@sprite-foundry/fantasy-heroes-48`
-- [ ] V4: animation atlases (offline Pillow tool)
-- [ ] V5: animation playback
-- [ ] V6: attack effects and projectiles drawn in code
-- [ ] V7: hit stop, knockback, coyote time, jump buffer, cooldowns
-- [ ] V8: HUD redesign
-- [ ] V9: title screen
-- [ ] V10: final visual pass; add EXPANSION COMPLETE line
+- [x] R3: re-gate secrets (level 7 holds the weaver-only secret; level 2 weaver-only was moved, see the log)
+- [x] R4: spikes, cracked walls, and enemy minimums for every level
+- [x] R5: dungeon ground and platform top edge
+- [x] R6: top-left label shows only the character name
+- [x] R7: `_` tile suite check (Opus review 2, Task A)
+- [~] R8: final pass (suite and gates results recorded below; visual pass is in V10)
+- [x] S1: one reset for a new game
+- [x] S2: logic out of draw (shake offsets moved to Effects.update; PlayScene.time)
+- [x] S3: input edge-case checks and physics check (no substep clamp needed)
+- [x] S4: browser API fallbacks (audio resume, webkit fullscreen; no newer features found)
+- [x] V1: sharp rendering at device pixel scale
+- [x] V2: readable text (Pixelify Sans, drawText outline helper)
+- [x] V3: Mage image from `@sprite-foundry/fantasy-heroes-48`
+- [x] V4: animation atlases (game/tools/build_atlases.py)
+- [~] V5: animation playback (player and enemies; hurt delay not done)
+- [~] V6: attack effects drawn in code (slash, thrust, bash, arrows, orb; others not done, see log)
+- [~] V7: hit stop, coyote, jump buffer, cooldowns (warlord knockback not done, see log)
+- [~] V8: HUD redesign (touch-button clearance not done, see log)
+- [x] V9: title screen
+- [ ] V10: final visual pass (screenshots and a "Visual check" heading)

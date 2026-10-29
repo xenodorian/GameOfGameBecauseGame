@@ -213,9 +213,12 @@ def reachable(rows, abilities, start):
         new = set()
         rope_len = 5 if "bridge" in abilities else 3
         for x, y in sources:
+            # A rope is blocked by the first solid tile in its path (Expansion_Plan.md, R3).
             for i in range(1, rope_len + 1):
                 cell = (x + i, y - 1)
-                if cell not in ropes and grid.air(*cell):
+                if not grid.air(*cell):
+                    break
+                if cell not in ropes:
                     new.add(cell)
         if not new:
             return reached

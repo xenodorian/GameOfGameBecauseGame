@@ -123,26 +123,38 @@ const Input = (() => {
     }
   }
 
+  // Older Safari and Chrome use the webkit-prefixed names, so check both.
   function bindFullscreen() {
     const btn = document.getElementById("fullscreen");
     const note = document.getElementById("fsNote");
+    const root = document.documentElement;
     btn.addEventListener("click", () => {
-      if (!document.fullscreenEnabled) {
+      const enabled = document.fullscreenEnabled || document.webkitFullscreenEnabled;
+      if (!enabled) {
         note.textContent =
           "Full screen is not available in this browser. On iPhone, use Share, then Add to Home Screen.";
         note.hidden = false;
         return;
       }
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
+      const current = document.fullscreenElement || document.webkitFullscreenElement;
+      const fn = current
+        ? document.exitFullscreen || document.webkitExitFullscreen
+        : root.requestFullscreen || root.webkitRequestFullscreen;
+      if (!fn) return;
+      const r = current ? fn.call(document) : fn.call(root);
+      if (r && r.catch) r.catch(() => {});
     });
   }
 
   bindTouchButtons();
   bindFullscreen();
 
-  return { update, down, pressed, setTouch };
+  // Drops every held key, touch, and latched press. Used when a new game starts.
+  function clearAll() {
+    keyHeld.clear();
+    touchHeld.clear();
+    latched.clear();
+  }
+
+  return { update, down, pressed, setTouch, clearAll };
 })();

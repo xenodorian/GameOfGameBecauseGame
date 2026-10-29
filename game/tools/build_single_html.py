@@ -17,13 +17,14 @@ ASSETS = GAME / "assets"
 OUT = GAME / "changeling.html"
 
 # Load order matters. Each file may use the globals from the files above it.
-SCRIPTS = ["engine.js", "sfx.js", "input.js", "levels.js", "world.js", "cards.js", "enemies.js", "abilities.js", "scenes.js", "main.js"]
+SCRIPTS = ["engine.js", "ui.js", "sfx.js", "input.js", "levels.js", "world.js", "cards.js", "enemies.js", "abilities.js", "anim.js", "scenes.js", "main.js"]
 
 # Asset key -> file under game/assets. Keys are what the JS asks for.
 IMAGES = {
     "knight_right": "sprites/knight_right.png",
     "knight_front": "sprites/knight_front.png",
     "ranger_right": "sprites/ranger_right.png",
+    "mage_right": "sprites/mage_right.png",
     "wall": "tiles/brick_brown0.png",
     "grass": "tiles/grass0.png",
     "dirt": "tiles/grey_dirt0.png",
@@ -32,6 +33,13 @@ IMAGES = {
     "mud_revenant": "enemies/mud_revenant_right.png",
     "rat_king": "enemies/rat_king_right.png",
     "bone_weaver": "enemies/bone_weaver_right.png",
+    "atlas_knight_right": "atlas/knight_right.png",
+    "atlas_ranger_right": "atlas/ranger_right.png",
+    "atlas_mage_right": "atlas/mage_right.png",
+    "atlas_rat_king": "atlas/rat_king.png",
+    "atlas_bone_weaver": "atlas/bone_weaver.png",
+    "atlas_grunt": "atlas/grunt.png",
+    "atlas_mud_revenant": "atlas/mud_revenant.png",
 }
 
 MIME = {".png": "image/png", ".jpg": "image/jpeg", ".gif": "image/gif"}
@@ -42,10 +50,28 @@ def data_uri(path):
     return f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode("ascii")
 
 
+# Fonts embedded as base64 @font-face rules under one family name, GameFont.
+FONTS = [
+    ("fonts/pixelify-sans-latin-400-normal.woff2", 400),
+    ("fonts/pixelify-sans-latin-700-normal.woff2", 700),
+]
+
+
+def font_faces():
+    rules = []
+    for rel, weight in FONTS:
+        data = base64.b64encode((ASSETS / rel).read_bytes()).decode("ascii")
+        rules.append(
+            "@font-face { font-family: \"GameFont\"; font-weight: %d; font-style: normal; "
+            "font-display: block; src: url(data:font/woff2;base64,%s) format(\"woff2\"); }" % (weight, data)
+        )
+    return "\n".join(rules) + "\n"
+
+
 def build():
     template = (SRC / "index.html").read_text(encoding="utf-8")
 
-    style = (SRC / "style.css").read_text(encoding="utf-8")
+    style = font_faces() + (SRC / "style.css").read_text(encoding="utf-8")
 
     urls = {key: data_uri(ASSETS / rel) for key, rel in IMAGES.items()}
     assets_js = "const ASSET_URLS = " + json.dumps(urls, indent=2) + ";\n"

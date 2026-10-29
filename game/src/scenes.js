@@ -32,11 +32,11 @@ class InputTestScene {
     ctx.fillRect(0, 0, Engine.W, Engine.H);
 
     ctx.fillStyle = "#e8e4d8";
-    ctx.font = "16px system-ui, sans-serif";
-    ctx.fillText("Input check", 16, 28);
-    ctx.font = "11px system-ui, sans-serif";
+    ctx.font = "16px GameFont, system-ui, sans-serif";
+    drawText(ctx, "Input check", 16, 28);
+    ctx.font = "11px GameFont, system-ui, sans-serif";
     ctx.fillStyle = "#9fb0c0";
-    ctx.fillText("Press each key or button. X or B returns to the title.", 16, 46);
+    drawText(ctx, "Press each key or button. X or B returns to the title.", 16, 46);
 
     this.labels.forEach(([action, label], i) => {
       const col = i % 4;
@@ -48,8 +48,8 @@ class InputTestScene {
       ctx.fillStyle = held ? "#d9a441" : flashing ? "#6d8ea8" : "#2a3644";
       ctx.fillRect(x, y, 100, 32);
       ctx.fillStyle = held ? "#111418" : "#e8e4d8";
-      ctx.font = "11px system-ui, sans-serif";
-      ctx.fillText(label, x + 8, y + 20);
+      ctx.font = "11px GameFont, system-ui, sans-serif";
+      drawText(ctx, label, x + 8, y + 20);
     });
   }
 }
@@ -76,17 +76,54 @@ function drawMenu(ctx, title, items, sel, footer) {
   ctx.fillRect(0, 0, Engine.W, Engine.H);
   ctx.fillStyle = "#e8e4d8";
   ctx.textAlign = "center";
-  ctx.font = "22px system-ui, sans-serif";
-  ctx.fillText(title, Engine.W / 2, 74);
-  ctx.font = "14px system-ui, sans-serif";
+  ctx.font = "22px GameFont, system-ui, sans-serif";
+  drawText(ctx, title, Engine.W / 2, 74);
+  ctx.font = "14px GameFont, system-ui, sans-serif";
   items.forEach((label, i) => {
     const y = 120 + i * 30;
     ctx.fillStyle = i === sel ? "#d9a441" : "#e8e4d8";
-    ctx.fillText((i === sel ? "> " : "  ") + label, Engine.W / 2, y);
+    drawText(ctx, (i === sel ? "> " : "  ") + label, Engine.W / 2, y);
   });
-  ctx.font = "11px system-ui, sans-serif";
+  ctx.font = "11px GameFont, system-ui, sans-serif";
   ctx.fillStyle = "#9fb0c0";
-  ctx.fillText(footer, Engine.W / 2, Engine.H - 16);
+  drawText(ctx, footer, Engine.W / 2, Engine.H - 16);
+  ctx.textAlign = "left";
+}
+
+// Title screen: level 1 sky and hills, the five characters walking along the bottom, and the menu.
+function drawTitle(ctx, scene) {
+  const theme = World.THEMES.field;
+  ctx.fillStyle = theme.sky;
+  ctx.fillRect(0, 0, Engine.W, Engine.H);
+  const drift = scene.t * 12;
+  drawHills(ctx, drift * 0.25, theme.far, 150, 0.012, 14);
+  drawHills(ctx, drift * 0.5, theme.near, 190, 0.02, 20);
+
+  // Walkers, left to right, looping. Each uses its own walk frames.
+  const cast = ["knight", "ranger", "mage", "rat", "weaver"];
+  cast.forEach((id, i) => {
+    const span = Engine.W + 120;
+    const x = ((scene.t * 40 + i * 96) % span) - 60;
+    const col = Math.floor(scene.t * 8 + i) % 6;
+    drawFrame(ctx, IMG[ATLAS_KEY[id]], { row: 1, col }, Math.round(x), Engine.H - 52, 1);
+  });
+
+  ctx.textAlign = "center";
+  ctx.font = "bold 28px GameFont, system-ui, sans-serif";
+  ctx.fillStyle = "#f4efe2";
+  drawText(ctx, "Changeling", Engine.W / 2, 56);
+  ctx.font = "12px GameFont, system-ui, sans-serif";
+  ctx.fillStyle = "#e8e4d8";
+  drawText(ctx, "Knight of a thousand faces", Engine.W / 2, 74);
+  ctx.font = "14px GameFont, system-ui, sans-serif";
+  scene.items.forEach((label, i) => {
+    const y = 104 + i * 22;
+    ctx.fillStyle = i === scene.sel ? "#d9a441" : "#f4efe2";
+    drawText(ctx, (i === scene.sel ? "> " : "") + label, Engine.W / 2, y);
+  });
+  ctx.font = "10px GameFont, system-ui, sans-serif";
+  ctx.fillStyle = "#e8e4d8";
+  drawText(ctx, "Arrows move   Up jump   A S Z X powers   Enter pause", Engine.W / 2, Engine.H - 8);
   ctx.textAlign = "left";
 }
 
@@ -128,15 +165,28 @@ function newRun() {
   Run.startTime = performance.now();
 }
 
+// Clears every system a new game touches. Continue does not call it.
+function resetGame() {
+  Hand.reset();
+  newRun();
+  Attacks.reset();
+  Effects.reset();
+  World.load(0);
+  Input.clearAll();
+}
+
 class TitleScene {
   constructor() {
     const saved = SaveGame.load();
     this.items = saved ? ["Continue", "New game", "Input check", "Credits"] : ["Play", "Input check", "Credits"];
     this.sel = 0;
     this.saved = saved;
+    // Clock for the walking characters and the sky drift.
+    this.t = 0;
   }
 
-  update() {
+  update(dt) {
+    this.t += dt;
     this.sel = menuStep(this.sel, this.items.length);
     if (!menuConfirm()) return;
     const choice = this.items[this.sel];
@@ -146,8 +196,7 @@ class TitleScene {
       Engine.setScene(new PlayScene(this.saved.level, this.saved.active));
     } else if (choice === "Play" || choice === "New game") {
       SaveGame.clear();
-      Hand.reset();
-      newRun();
+      resetGame();
       Engine.setScene(new IntroScene());
     } else if (choice === "Input check") {
       Engine.setScene(new InputTestScene());
@@ -157,7 +206,7 @@ class TitleScene {
   }
 
   draw(ctx) {
-    drawMenu(ctx, "Changeling", this.items, this.sel, "Knight of a thousand faces");
+    drawTitle(ctx, this);
   }
 }
 
@@ -183,14 +232,14 @@ class EndingScene {
     ctx.fillRect(0, 0, Engine.W, Engine.H);
     ctx.fillStyle = "#e8e4d8";
     ctx.textAlign = "center";
-    ctx.font = "14px system-ui, sans-serif";
-    ctx.fillText("The Warlord falls. The faces return to their owners.", Engine.W / 2, 80);
-    ctx.font = "12px system-ui, sans-serif";
-    ctx.fillText(this.stats, Engine.W / 2, 116);
-    ctx.font = "12px system-ui, sans-serif";
-    ctx.fillText("Thanks for playing.", Engine.W / 2, 146);
-    ctx.font = "11px system-ui, sans-serif";
-    ctx.fillText("Enter: credits", Engine.W / 2, 180);
+    ctx.font = "14px GameFont, system-ui, sans-serif";
+    drawText(ctx, "The Warlord falls. The faces return to their owners.", Engine.W / 2, 80);
+    ctx.font = "12px GameFont, system-ui, sans-serif";
+    drawText(ctx, this.stats, Engine.W / 2, 116);
+    ctx.font = "12px GameFont, system-ui, sans-serif";
+    drawText(ctx, "Thanks for playing.", Engine.W / 2, 146);
+    ctx.font = "11px GameFont, system-ui, sans-serif";
+    drawText(ctx, "Enter: credits", Engine.W / 2, 180);
     ctx.textAlign = "left";
   }
 }
@@ -219,13 +268,13 @@ class IntroScene {
     ctx.fillRect(0, 0, Engine.W, Engine.H);
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
-    ctx.font = "13px system-ui, sans-serif";
+    ctx.font = "13px GameFont, system-ui, sans-serif";
     this.lines.forEach((line, i) => {
-      if (this.t >= i * 1.5 + 0.5) ctx.fillText(line, Engine.W / 2, 90 + i * 34);
+      if (this.t >= i * 1.5 + 0.5) drawText(ctx, line, Engine.W / 2, 90 + i * 34);
     });
     if (this.t >= this.lines.length * 1.5) {
-      ctx.font = "11px system-ui, sans-serif";
-      ctx.fillText("Enter: begin", Engine.W / 2, 220);
+      ctx.font = "11px GameFont, system-ui, sans-serif";
+      drawText(ctx, "Enter: begin", Engine.W / 2, 220);
     }
     ctx.textAlign = "left";
   }
@@ -240,20 +289,21 @@ class CreditsScene {
     ctx.fillStyle = "#1b2430";
     ctx.fillRect(0, 0, Engine.W, Engine.H);
     ctx.fillStyle = "#e8e4d8";
-    ctx.font = "16px system-ui, sans-serif";
-    ctx.fillText("Credits", 16, 28);
-    ctx.font = "10px system-ui, sans-serif";
+    ctx.font = "16px GameFont, system-ui, sans-serif";
+    drawText(ctx, "Credits", 16, 28);
+    ctx.font = "10px GameFont, system-ui, sans-serif";
     const lines = [
       "Liberated Pixel Cup (LPC) base sprites and animations: many authors (see method_5 CREDITS.csv).",
       "  Licensed OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0.",
       "Dungeon Crawl Stone Soup tiles: DCSS team. Mostly CC0; see assets/tiles/LICENSE_DCSS.txt.",
       "Sprite Foundry Fantasy Heroes (48px and HD), Monster Pack, Goblin Warband: MIT.",
+      "Font: Pixelify Sans, SIL Open Font License 1.1 (assets/fonts).",
       "Game code and build: this repository.",
       "Design and code: built with Claude Code",
     ];
-    lines.forEach((line, i) => ctx.fillText(line, 16, 56 + i * 18));
+    lines.forEach((line, i) => drawText(ctx, line, 16, 56 + i * 18));
     ctx.fillStyle = "#9fb0c0";
-    ctx.fillText("Press Z, A, X, or B to return.", 16, Engine.H - 16);
+    drawText(ctx, "Press Z, A, X, or B to return.", 16, Engine.H - 16);
   }
 }
 
@@ -303,6 +353,12 @@ class PlayScene {
   constructor(levelIndex = 0, active = "knight") {
     World.load(levelIndex);
     Attacks.reset();
+    // Seconds of play. Idle animation and blinks read it; draw never advances it.
+    this.time = 0;
+    this.frame = { row: 0, col: 0 };
+    this.hitstopT = 0;
+    this.cooldowns = [0, 0, 0, 0];
+    this.abBuf = [0, 0, 0, 0];
     this.images = {
       knight: IMG.knight_right,
       ranger_right: IMG.ranger_right,
@@ -314,7 +370,7 @@ class PlayScene {
       grass: IMG.grass,
       dirt: IMG.dirt,
       tree: IMG.tree,
-      mage: IMG.mage,
+      mage_right: IMG.mage_right,
       warlord: IMG.warlord,
     };
     this.cam = { x: 0, y: 0 };
@@ -341,10 +397,15 @@ class PlayScene {
   }
 
   newBody(x, y) {
-    return { x, y, w: 18, h: 30, vx: 0, vy: 0, grounded: false, facing: 1, jumping: false, hopUsed: false };
+    return {
+      x, y, w: 18, h: 30, vx: 0, vy: 0, grounded: false, facing: 1, jumping: false, hopUsed: false,
+      // Animation: time in the current action, the action name, distance walked, and landing time left.
+      animT: 0, action: "", walkDist: 0, landT: 0, prevGrounded: false,
+    };
   }
 
   update(dt) {
+    if (this.mode !== "pause") this.time += dt;
     if (this.mode === "select") this.updateSelect();
     else if (this.mode === "discardCard") this.updateDiscardCard();
     else if (this.mode === "complete") {
@@ -362,6 +423,11 @@ class PlayScene {
       this.pauseSel = 0;
       return;
     }
+    // Hit stop: the world freezes for a moment when an attack lands. Draw still runs.
+    if (this.hitstopT > 0) {
+      this.hitstopT -= dt;
+      return;
+    }
     this.handleDiscardKeys(dt);
     if (this.mode !== "play") return;
 
@@ -377,11 +443,21 @@ class PlayScene {
       p.vx = p.facing * 320;
     }
 
-    if (p.grounded) p.hopUsed = false;
-    if (Input.pressed("up") && p.grounded) {
+    if (p.grounded) {
+      p.hopUsed = false;
+      p.coyoteT = 0.08;
+    } else if (p.coyoteT > 0) {
+      p.coyoteT -= dt;
+    }
+    // Coyote time and the jump buffer: a jump pressed just before landing, or just after leaving a ledge, still counts.
+    if (Input.pressed("up")) p.jumpBufT = 0.1;
+    if (p.jumpBufT > 0) p.jumpBufT -= dt;
+    if (p.jumpBufT > 0 && (p.grounded || p.coyoteT > 0)) {
       p.vy = -340;
       Sfx.play("jump");
       p.jumping = true;
+      p.jumpBufT = 0;
+      p.coyoteT = 0;
     }
     // Releasing jump early cuts the arc short.
     if (p.jumping && !Input.down("up") && p.vy < 0) {
@@ -390,9 +466,18 @@ class PlayScene {
     }
 
     // Abilities 1 to 4 fire the active character's ability in that slot.
+    // A press during a cooldown is kept for 0.1 s and fires when the cooldown ends.
     const abilities = CHARACTERS[this.active].abilities;
     for (let i = 0; i < abilities.length; i++) {
-      if (Input.pressed("ab" + (i + 1))) Attacks.use(abilities[i], this);
+      this.cooldowns[i] = Math.max(0, this.cooldowns[i] - dt);
+      if (this.abBuf[i] > 0) this.abBuf[i] -= dt;
+      if (Input.pressed("ab" + (i + 1))) this.abBuf[i] = 0.1;
+      if (this.abBuf[i] > 0 && this.cooldowns[i] <= 0) {
+        this.abBuf[i] = 0;
+        Attacks.use(abilities[i], this);
+        startAction(p, abilities[i]);
+        this.cooldowns[i] = Attacks.COOLDOWN[abilities[i]] || 0;
+      }
     }
 
     // Float: hold Up to climb at 120 px/s. Without Up, the fall is slowed.
@@ -405,7 +490,11 @@ class PlayScene {
     const prevBottom = p.y + p.h;
     // A charge breaks cracked walls it runs into.
     if (this.dashT > 0) World.breakCracked(p.facing > 0 ? p.x + p.w : p.x - 6, p.y, 6, p.h);
+    const fallSpeed = p.vy;
     World.moveBody(p, dt);
+    // A hard landing shows the land frame for a moment.
+    if (p.grounded && !p.prevGrounded && fallSpeed > 250) p.landT = 0.08;
+    p.prevGrounded = p.grounded;
     // Spikes are deadly: the bottom of the body touching one opens the selection.
     if (World.overlapping(p.x + 2, p.y + p.h - 8, p.w - 4, 8).some((c) => c.ch === "^")) {
       this.beginSelection("slain");
@@ -417,11 +506,13 @@ class PlayScene {
       enemy.update(dt, p);
     }
     Attacks.update(dt);
+    if (Attacks.consumeHit()) this.hitstopT = 0.05;
     World.updatePlatforms(dt);
     if (this.ghostT > 0) this.ghostT -= dt;
     if (this.bannerT > 0) this.bannerT -= dt;
     if (this.flashT > 0) this.flashT -= dt;
     Effects.update(dt);
+    this.updateAnimation(dt);
     this.checkEnemyContact(p, prevBottom);
     if (this.mode !== "play") return;
     if (this.ghostT <= 0 && Attacks.hitByHostile(p)) {
@@ -589,6 +680,9 @@ class PlayScene {
     this.floatT = 0;
     this.scurryT = 0;
     this.ghostT = 0;
+    this.hitstopT = 0;
+    this.cooldowns = [0, 0, 0, 0];
+    this.abBuf = [0, 0, 0, 0];
     this.flashT = 1.0;
     Attacks.reset();
   }
@@ -636,7 +730,7 @@ class PlayScene {
     drawHills(ctx, cx * 0.5, theme.near, 190, 0.02, 20);
     World.draw(ctx, this.images, cx, cy, Engine.W, Engine.H);
     // Screen shake after a warlord hit (the engine resets the transform each frame).
-    if (Effects.shakeT > 0) ctx.translate(Math.round((Math.random() * 2 - 1) * 3), Math.round((Math.random() * 2 - 1) * 3));
+    if (Effects.shakeT > 0) ctx.translate(Effects.shakeX, Effects.shakeY);
     World.drawSigns(ctx, cx, cy);
     World.drawPlatforms(ctx, cx, cy);
     Attacks.draw(ctx, cx, cy);
@@ -657,12 +751,12 @@ class PlayScene {
       ctx.fillRect(0, 0, Engine.W, Engine.H);
       ctx.fillStyle = "#e8e4d8";
       ctx.textAlign = "center";
-      ctx.font = "16px system-ui, sans-serif";
-      ctx.fillText("Paused", Engine.W / 2, 110);
-      ctx.font = "14px system-ui, sans-serif";
+      ctx.font = "16px GameFont, system-ui, sans-serif";
+      drawText(ctx, "Paused", Engine.W / 2, 110);
+      ctx.font = "14px GameFont, system-ui, sans-serif";
       ["Resume", "Sound: " + (Sfx.enabled ? "On" : "Off"), "Title screen"].forEach((label, i) => {
         ctx.fillStyle = i === this.pauseSel ? "#d9a441" : "#e8e4d8";
-        ctx.fillText((i === this.pauseSel ? "> " : "  ") + label, Engine.W / 2, 144 + i * 26);
+        drawText(ctx, (i === this.pauseSel ? "> " : "  ") + label, Engine.W / 2, 144 + i * 26);
       });
       ctx.textAlign = "left";
     } else if (this.mode === "complete") {
@@ -671,13 +765,13 @@ class PlayScene {
       ctx.fillRect(0, 0, Engine.W, Engine.H);
       ctx.fillStyle = "#e8e4d8";
       ctx.textAlign = "center";
-      ctx.font = "16px system-ui, sans-serif";
-      ctx.fillText("Level complete", Engine.W / 2, 110);
-      ctx.font = "11px system-ui, sans-serif";
-      ctx.fillText("Secrets found: " + this.secretsFound + " of " + this.secretsTotal, Engine.W / 2, 128);
-      ctx.font = "11px system-ui, sans-serif";
+      ctx.font = "16px GameFont, system-ui, sans-serif";
+      drawText(ctx, "Level complete", Engine.W / 2, 110);
+      ctx.font = "11px GameFont, system-ui, sans-serif";
+      drawText(ctx, "Secrets found: " + this.secretsFound + " of " + this.secretsTotal, Engine.W / 2, 128);
+      ctx.font = "11px GameFont, system-ui, sans-serif";
       const more = World.index + 1 < World.count;
-      ctx.fillText(more ? "Enter: next level" : "Enter: continue", Engine.W / 2, 146);
+      drawText(ctx, more ? "Enter: next level" : "Enter: continue", Engine.W / 2, 146);
       ctx.textAlign = "left";
     } else if (this.mode === "discardCard") {
       HUD.draw(ctx, this.sel);
@@ -687,7 +781,7 @@ class PlayScene {
       this.drawSelect(ctx);
     } else {
       HUD.draw(ctx, -1);
-      this.drawBanner(ctx, CHARACTERS[this.active].name + ". Left/Right walk, Up jump, A S Z X abilities.");
+      this.drawBanner(ctx, CHARACTERS[this.active].name);
       this.drawSignBox(ctx);
       this.drawBanner2(ctx);
       this.drawAbilityBar(ctx);
@@ -695,23 +789,29 @@ class PlayScene {
     }
   }
 
+  // Advances the body's animation clock and picks this step's frame. Draw only reads it.
+  updateAnimation(dt) {
+    const p = this.player;
+    if (p.action) {
+      p.animT += dt;
+      if (p.animT > ACTION_LENGTH[p.action]) p.action = "";
+    }
+    if (p.landT > 0) p.landT -= dt;
+    if (p.grounded) p.walkDist += Math.abs(p.vx) * dt;
+    this.frame = pickFrame(p, this.time);
+  }
+
   drawBody(ctx, cx, cy) {
     // Flash after a respawn: skip every other 0.1 s.
     if (this.flashT > 0 && Math.floor(this.flashT / 0.1) % 2 === 0) return;
     const p = this.player;
-    const img = this.images[CHARACTERS[this.active].sprite];
+    const atlas = IMG[ATLAS_KEY[this.active]];
     const sx = Math.round(p.x + p.w / 2 - 24 - cx);
     const sy = Math.round(p.y + p.h - 48 - cy);
     ctx.save();
     // Ghost: the body is drawn faded while the ghost ability lasts.
     if (this.ghostT > 0) ctx.globalAlpha = 0.5;
-    if (p.facing < 0) {
-      ctx.translate(sx + 48, sy);
-      ctx.scale(-1, 1);
-      ctx.drawImage(img, 0, 0, 48, 48);
-    } else {
-      ctx.drawImage(img, sx, sy, 48, 48);
-    }
+    drawFrame(ctx, atlas, this.frame, sx, sy, p.facing);
     ctx.restore();
   }
 
@@ -722,9 +822,9 @@ class PlayScene {
     ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
     ctx.fillRect(120, 80, 240, 30);
     ctx.fillStyle = "#e8e4d8";
-    ctx.font = "14px system-ui, sans-serif";
+    ctx.font = "14px GameFont, system-ui, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("Level " + (World.index + 1) + ": " + World.level.name, Engine.W / 2, 100);
+    drawText(ctx, "Level " + (World.index + 1) + ": " + World.level.name, Engine.W / 2, 100);
     ctx.textAlign = "left";
     ctx.globalAlpha = 1;
   }
@@ -734,9 +834,9 @@ class PlayScene {
     const boss = Enemies.list().find((e) => e.kind === "warlord" && !e.dead);
     if (!boss) return;
     const max = ENEMY_DEFS.warlord.hp;
-    ctx.font = "10px system-ui, sans-serif";
+    ctx.font = "10px GameFont, system-ui, sans-serif";
     ctx.fillStyle = "#e8e4d8";
-    ctx.fillText("Warlord", 150, 58);
+    drawText(ctx, "Warlord", 150, 58);
     for (let i = 0; i < max; i++) {
       ctx.fillStyle = i < boss.hp ? "#c2452d" : "#3a2020";
       ctx.fillRect(210 + i * 14, 50, 12, 10);
@@ -745,17 +845,7 @@ class PlayScene {
 
   // Strip above the hand HUD: the active character's four abilities on A, S, Z, X.
   drawAbilityBar(ctx) {
-    const ids = CHARACTERS[this.active].abilities;
-    const keys = ["A", "S", "Z", "X"];
-    const text = ids.map((id, i) => keys[i] + " " + ABILITY_NAMES[id]).join("   ");
-    ctx.font = "8px system-ui, sans-serif";
-    const w = Math.ceil(ctx.measureText(text).width) + 16;
-    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-    ctx.fillRect(Engine.W / 2 - w / 2, 204, w, 14);
-    ctx.fillStyle = "#e8e4d8";
-    ctx.textAlign = "center";
-    ctx.fillText(text, Engine.W / 2, 214);
-    ctx.textAlign = "left";
+    HUD.drawAbilities(ctx, this);
   }
 
   // Box across the top of the screen with the text of the sign under the player.
@@ -764,20 +854,20 @@ class PlayScene {
     ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
     ctx.fillRect(40, 8, 400, 40);
     ctx.fillStyle = "#ffffff";
-    ctx.font = "10px system-ui, sans-serif";
+    ctx.font = "10px GameFont, system-ui, sans-serif";
     ctx.textAlign = "center";
     const lines = wrapText(ctx, this.signText, 380);
-    lines.forEach((line, i) => ctx.fillText(line, Engine.W / 2, 24 + i * 14));
+    lines.forEach((line, i) => drawText(ctx, line, Engine.W / 2, 24 + i * 14));
     ctx.textAlign = "left";
   }
 
   drawBanner(ctx, text) {
-    ctx.font = "11px system-ui, sans-serif";
+    ctx.font = "11px GameFont, system-ui, sans-serif";
     const w = Math.ceil(ctx.measureText(text).width) + 12;
     ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
     ctx.fillRect(8, 8, w, 22);
     ctx.fillStyle = "#e8e4d8";
-    ctx.fillText(text, 14, 22);
+    drawText(ctx, text, 14, 22);
   }
 
   drawSelect(ctx) {
@@ -786,11 +876,11 @@ class PlayScene {
 
     const title = this.reason === "fell" ? "You fell." : this.reason === "discarded" ? "Discarded." : "You were slain.";
     ctx.fillStyle = "#e8e4d8";
-    ctx.font = "16px system-ui, sans-serif";
+    ctx.font = "16px GameFont, system-ui, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(title, Engine.W / 2, 70);
-    ctx.font = "11px system-ui, sans-serif";
-    ctx.fillText("Choose a card to become. Left/Right to choose, Z or A to confirm.", Engine.W / 2, 90);
+    drawText(ctx, title, Engine.W / 2, 70);
+    ctx.font = "11px GameFont, system-ui, sans-serif";
+    drawText(ctx, "Choose a card to become. Left/Right to choose, Z or A to confirm.", Engine.W / 2, 90);
     ctx.textAlign = "left";
 
     Hand.slots().forEach((cardId, i) => {
@@ -804,9 +894,9 @@ class PlayScene {
       ctx.lineWidth = 1;
       if (cardId) {
         ctx.fillStyle = "#111418";
-        ctx.font = "13px system-ui, sans-serif";
+        ctx.font = "13px GameFont, system-ui, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText(CARD_DEFS[cardId].name, x + 58, y + 50);
+        drawText(ctx, CARD_DEFS[cardId].name, x + 58, y + 50);
         ctx.textAlign = "left";
       }
     });
@@ -814,49 +904,183 @@ class PlayScene {
 }
 
 // Bottom HUD: three hand slots and the deck count. Deck contents stay hidden.
+// Rounded rectangle path. Uses arcTo so older browsers can draw it.
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// Head-up display: character panel and hand at the top left, deck, secrets at the top right,
+// and the ability bar at the bottom centre. Every element reads the scene; none changes it.
 const HUD = (() => {
-  const SLOT_W = 84;
-  const SLOT_H = 34;
-  const Y = Engine.H - SLOT_H - 8;
+  const SLOT_W = 30;
+  const SLOT_H = 40;
+  const SLOT_GAP = 4;
+  const X0 = 120;
+  const Y = 6;
 
   function slotRect(i) {
-    return { x: 8 + i * (SLOT_W + 6), y: Y, w: SLOT_W, h: SLOT_H };
+    return { x: X0 + i * (SLOT_W + SLOT_GAP), y: Y, w: SLOT_W, h: SLOT_H };
   }
 
   function deckRect() {
-    return { x: 8 + Hand.SLOTS * (SLOT_W + 6) + 10, y: Y, w: 70, h: SLOT_H };
+    return { x: X0 + Hand.SLOTS * (SLOT_W + SLOT_GAP) + 6, y: Y + 8, w: 18, h: 24 };
   }
 
-  // highlight is a slot index to outline, or -1 for none.
-  function draw(ctx, highlight) {
-    ctx.font = "11px system-ui, sans-serif";
+  // Idle frame of a character, from its atlas.
+  function idleIcon(ctx, cardId, x, y, size) {
+    ctx.drawImage(IMG[ATLAS_KEY[cardId]], 0, 0, 48, 48, x, y, size, size);
+  }
+
+  // Top-left panel: the active character, its name, and a small secrets count at the top right.
+  function drawPanel(ctx, scene) {
+    const color = CARD_DEFS[scene.active].color;
+    roundRect(ctx, 6, 6, 40, 40, 4);
+    ctx.fillStyle = "rgba(10, 12, 18, 0.7)";
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    idleIcon(ctx, scene.active, 10, 10, 32);
+    ctx.font = "bold 11px GameFont, system-ui, sans-serif";
+    ctx.fillStyle = "#f4efe2";
+    drawText(ctx, CHARACTERS[scene.active].name, 52, 24);
+  }
+
+  // Hand: three slots. Each shows the character icon, or a dashed outline when empty.
+  function drawHand(ctx, highlight) {
     Hand.slots().forEach((cardId, i) => {
       const r = slotRect(i);
-      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-      ctx.fillRect(r.x, r.y, r.w, r.h);
+      const lift = i === highlight ? 3 : 0;
+      const y = r.y - lift;
+      roundRect(ctx, r.x, y, r.w, r.h, 4);
       if (cardId) {
         ctx.fillStyle = CARD_DEFS[cardId].color;
-        ctx.fillRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4);
-        ctx.fillStyle = "#111418";
-        ctx.fillText(CARD_DEFS[cardId].name, r.x + 8, r.y + 21);
+        ctx.fill();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(230, 235, 240, 0.6)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        idleIcon(ctx, cardId, r.x + 1, y + 6, 28);
       } else {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+        ctx.fill();
+        ctx.setLineDash([2, 2]);
         ctx.strokeStyle = "#9fb0c0";
-        ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.setLineDash([]);
       }
       if (i === highlight) {
+        roundRect(ctx, r.x - 1, y - 1, r.w + 2, r.h + 2, 5);
         ctx.strokeStyle = "#d9a441";
         ctx.lineWidth = 2;
-        ctx.strokeRect(r.x - 1, r.y - 1, r.w + 2, r.h + 2);
+        ctx.stroke();
         ctx.lineWidth = 1;
       }
     });
-
-    const d = deckRect();
-    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-    ctx.fillRect(d.x, d.y, d.w, d.h);
-    ctx.fillStyle = "#e8e4d8";
-    ctx.fillText("Deck: " + Hand.deckCount(), d.x + 8, d.y + 21);
   }
 
-  return { slotRect, deckRect, draw };
+  // Deck: three offset card backs and the count on top.
+  function drawDeck(ctx) {
+    const d = deckRect();
+    for (let k = 2; k >= 0; k--) {
+      roundRect(ctx, d.x + k * 2, d.y + (2 - k) * 2, d.w, d.h, 3);
+      ctx.fillStyle = k === 0 ? "#4a4262" : "#332d46";
+      ctx.fill();
+      ctx.strokeStyle = "#9fb0c0";
+      ctx.stroke();
+    }
+    ctx.font = "bold 11px GameFont, system-ui, sans-serif";
+    ctx.fillStyle = "#f4efe2";
+    drawText(ctx, String(Hand.deckCount()), d.x + 3, d.y + 16);
+  }
+
+  // Secrets: a gold star and the count, top right.
+  function drawSecrets(ctx, scene) {
+    const right = Engine.W - 10;
+    const cx = right - 62;
+    const cy = 16;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const rad = i % 2 === 0 ? 6 : 2.6;
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      const px = cx + Math.cos(a) * rad;
+      const py = cy + Math.sin(a) * rad;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fillStyle = "#d9a441";
+    ctx.fill();
+    ctx.font = "bold 11px GameFont, system-ui, sans-serif";
+    ctx.fillStyle = "#f4efe2";
+    ctx.textAlign = "right";
+    drawText(ctx, "Secrets " + scene.secretsFound + " / " + scene.secretsTotal, right, 20);
+    ctx.textAlign = "left";
+  }
+
+  // Ability bar: four key caps with names, centred, 6 px above the bottom edge.
+  // A cap darkens from the bottom while its ability is on cooldown.
+  function drawAbilities(ctx, scene) {
+    const ids = CHARACTERS[scene.active].abilities;
+    const keys = ["A", "S", "Z", "X"];
+    ctx.font = "10px GameFont, system-ui, sans-serif";
+    const cells = ids.map((id, i) => {
+      const label = ABILITY_NAMES[id];
+      return { id, i, label, w: 16 + 4 + Math.ceil(ctx.measureText(label).width) + 10 };
+    });
+    const total = cells.reduce((n, c) => n + c.w, 0) + 12;
+    const bottom = Engine.H - 6;
+    const top = bottom - 20;
+    ctx.fillStyle = "rgba(10, 12, 18, 0.6)";
+    roundRect(ctx, Engine.W / 2 - total / 2, top, total, 20, 4);
+    ctx.fill();
+    let x = Engine.W / 2 - total / 2 + 6;
+    for (const c of cells) {
+      const capY = top + 2;
+      roundRect(ctx, x, capY, 16, 16, 3);
+      ctx.fillStyle = "#3c4452";
+      ctx.fill();
+      const total_cd = Attacks.COOLDOWN[c.id] || 0;
+      const left = total_cd > 0 ? Math.max(0, scene.cooldowns[c.i]) / total_cd : 0;
+      if (left > 0) {
+        ctx.save();
+        roundRect(ctx, x, capY, 16, 16, 3);
+        ctx.clip();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+        ctx.fillRect(x, capY + 16 * (1 - left), 16, 16 * left);
+        ctx.restore();
+      }
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.lineWidth = 1;
+      roundRect(ctx, x + 0.5, capY + 0.5, 15, 15, 3);
+      ctx.stroke();
+      ctx.font = "bold 10px GameFont, system-ui, sans-serif";
+      ctx.fillStyle = "#f4efe2";
+      ctx.textAlign = "center";
+      drawText(ctx, keys[c.i], x + 8, capY + 12);
+      ctx.textAlign = "left";
+      ctx.font = "10px GameFont, system-ui, sans-serif";
+      drawText(ctx, c.label, x + 20, top + 14);
+      x += c.w;
+    }
+  }
+
+  // highlight is a slot index to outline (and lift), or -1 for none.
+  function draw(ctx, highlight) {
+    const scene = Engine.current();
+    drawPanel(ctx, scene);
+    drawHand(ctx, highlight);
+    drawDeck(ctx);
+    drawSecrets(ctx, scene);
+  }
+
+  return { slotRect, deckRect, draw, drawAbilities };
 })();

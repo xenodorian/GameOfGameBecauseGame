@@ -21,13 +21,28 @@ const Sfx = {
     osc.stop(start + dur + 0.02);
   },
 
+  // Browsers may leave a new AudioContext suspended until the player acts.
+  resume() {
+    try {
+      if (this.ctx && this.ctx.state === "suspended") {
+        const r = this.ctx.resume();
+        if (r && r.catch) r.catch(() => {});
+      }
+    } catch (e) {
+      // Nothing to do: sound stays quiet until the next gesture.
+    }
+  },
+
   play(name) {
     if (!this.enabled || this.broken) return;
     try {
       if (!this.ctx) {
         const AC = window.AudioContext || window.webkitAudioContext;
         this.ctx = new AC();
+        window.addEventListener("keydown", () => this.resume(), { once: true });
+        window.addEventListener("pointerdown", () => this.resume(), { once: true });
       }
+      this.resume();
       const t = this.ctx.currentTime;
       switch (name) {
         case "jump":

@@ -510,6 +510,204 @@ check('platform: knight jumps up through a one-way platform and lands on it', as
   await page.close();
 });
 
+check('platform tile: knight jumps up through a "_" tile and stands on it', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [] });
+  // A solid step on row 13 (feet at 416). Three one-way tiles on row 12 (top 384) are 32 px above the
+  // step, well within a jump. The knight starts on the step, under the tiles' left edge.
+  await page.evaluate(() => {
+    for (let x = 2; x <= 4; x++) World.setTile(x, 13, '#');
+    for (let x = 5; x <= 7; x++) World.setTile(x, 12, '_');
+    __scene.player.x = 150;
+    __scene.player.y = 13 * World.TILE - __scene.player.h;
+    __scene.player.vy = 0; __scene.player.vx = 0;
+  });
+  await wait(page, 60);
+  await page.keyboard.down('ArrowUp');
+  let top = 1e9;
+  let grounded = false;
+  for (let i = 0; i < 40; i++) {
+    await wait(page, 40);
+    const r = await page.evaluate(() => ({ y: __scene.player.y, g: __scene.player.grounded }));
+    top = Math.min(top, r.y);
+    grounded = r.g;
+    if (i === 8) await page.keyboard.up('ArrowUp');
+  }
+  assert.ok(top < 12 * 32, 'knight passed above the one-way tile: top y ' + top);
+  const feet = await page.evaluate(() => __scene.player.y + __scene.player.h);
+  assert.equal(grounded && Math.abs(feet - 12 * 32) < 1, true, 'standing on the "_" tile, feet ' + feet);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('reset: new game after playing is clean', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [] });
+  await page.evaluate(() => {
+    Hand.collect('mage'); Hand.collect('mage');
+    Run.deaths = 5;
+    __scene.player.x = 300; __scene.player.y = 300;
+    Attacks.use('shoot', __scene);
+    Attacks.fireHostile(100, 100, 1);
+  });
+  await page.evaluate(() => { Engine.setScene(new TitleScene()); });
+  await wait(page, 60);
+  await page.keyboard.press('Enter'); await wait(page, 120);
+  const s = await page.evaluate(() => ({
+    hand: Hand.slots(), deck: Hand.deckCount(), deaths: Run.deaths,
+    index: World.index, platforms: World.platforms.length, hostile: Attacks.hostileCount(),
+  }));
+  assert.deepEqual(s.hand, [null, null, null]);
+  assert.equal(s.deck, 0);
+  assert.equal(s.deaths, 0);
+  assert.equal(s.index, 0);
+  assert.equal(s.platforms, 0);
+  assert.equal(s.hostile, 0);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('input: Left and Right together stand still', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [] });
+  await wait(page, 60);
+  const x0 = await page.evaluate(() => __scene.player.x);
+  await page.keyboard.down('ArrowLeft'); await page.keyboard.down('ArrowRight');
+  await wait(page, 300);
+  const r = await page.evaluate(() => ({ vx: __scene.player.vx, x: __scene.player.x }));
+  await page.keyboard.up('ArrowLeft'); await page.keyboard.up('ArrowRight');
+  assert.equal(r.vx, 0);
+  assert.ok(Math.abs(r.x - x0) < 1, 'moved ' + (r.x - x0) + ' px');
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('input: spamming Enter on level complete advances exactly one level', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [] });
+  await page.evaluate(() => { const f = World.exit(); __scene.player.x = f.x; __scene.player.y = f.y; });
+  await wait(page, 100);
+  assert.equal(await page.evaluate(() => __scene.mode), 'complete');
+  for (let i = 0; i < 5; i++) { await page.keyboard.press('Enter'); await wait(page, 20); }
+  await wait(page, 300);
+  // The level changed, so the scene is the new one: read it through Engine.current().
+  const s = await page.evaluate(() => ({ index: World.index, mode: Engine.current().mode }));
+  assert.equal(s.index, 1);
+  assert.ok(s.mode === 'play' || s.mode === 'pause', 'mode ' + s.mode);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('input: spamming Z on the selection screen confirms once', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: ['ranger', 'mage'] });
+  await page.evaluate(() => { __scene.beginSelection('slain'); });
+  assert.equal(await page.evaluate(() => __scene.mode), 'select');
+  const before = await page.evaluate(() => Hand.slots().filter((c) => c !== null).length);
+  for (let i = 0; i < 5; i++) { await page.keyboard.press('KeyZ'); await wait(page, 20); }
+  await wait(page, 200);
+  const after = await page.evaluate(() => Hand.slots().filter((c) => c !== null).length);
+  assert.equal(before - after, 1, 'cards that left the hand: ' + (before - after));
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('physics: a very fast fall does not pass through the floor', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [] });
+  await page.evaluate(() => {
+    const T = World.TILE;
+    // Level 1 floor top is row 14. Start one tile above the floor, falling very fast.
+    __scene.player.x = 4 * T; __scene.player.y = 13 * T - __scene.player.h - 40;
+    __scene.player.vy = 3000; __scene.player.vx = 0;
+  });
+  await wait(page, 200);
+  const r = await page.evaluate(() => ({ feet: __scene.player.y + __scene.player.h, g: __scene.player.grounded }));
+  assert.equal(r.g, true);
+  assert.equal(Math.abs(r.feet - 14 * 32) < 1, true, 'feet at ' + r.feet);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('animation: walking right changes the walk frame at least 3 times', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [] });
+  await wait(page, 60);
+  await page.keyboard.down('ArrowRight');
+  const cols = [];
+  for (let i = 0; i < 13; i++) {
+    await wait(page, 40);
+    cols.push(await page.evaluate(() => (__scene.frame.row === 1 ? __scene.frame.col : -1)));
+  }
+  await page.keyboard.up('ArrowRight');
+  const changes = cols.filter((c, i) => i > 0 && c !== cols[i - 1] && c >= 0).length;
+  assert.ok(changes >= 3, 'walk column changes: ' + changes + ' in ' + cols.join(','));
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('feel: coyote jump works 50 ms after leaving a ledge', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [] });
+  await page.evaluate(() => {
+    __scene.player.x = 5 * World.TILE; __scene.player.y = 14 * World.TILE - __scene.player.h;
+    __scene.player.vy = 0; __scene.player.vx = 0;
+  });
+  await wait(page, 60);
+  await page.keyboard.down('ArrowRight');
+  // Walk until the body leaves the ground at the pit edge.
+  let left = false;
+  for (let i = 0; i < 150 && !left; i++) {
+    await wait(page, 10);
+    left = await page.evaluate(() => !__scene.player.grounded);
+  }
+  assert.ok(left, 'the body never left the ground');
+  await page.keyboard.up('ArrowRight');
+  await wait(page, 50);
+  const before = await page.evaluate(() => __scene.player.y);
+  await page.keyboard.press('ArrowUp');
+  await wait(page, 60);
+  const after = await page.evaluate(() => __scene.player.y);
+  assert.ok(after < before - 3, 'no coyote jump: y ' + before + ' -> ' + after);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('feel: jump pressed just before landing still jumps', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [] });
+  // Start 40 px above the floor, falling. Press Up while still in the air.
+  await page.evaluate(() => {
+    __scene.player.x = 5 * World.TILE; __scene.player.y = 14 * World.TILE - __scene.player.h - 40;
+    __scene.player.vy = 0; __scene.player.vx = 0;
+  });
+  await page.keyboard.press('ArrowUp');
+  let highest = 1e9;
+  for (let i = 0; i < 30; i++) {
+    await wait(page, 10);
+    highest = Math.min(highest, await page.evaluate(() => __scene.player.y));
+  }
+  // Landing feet are at 448, so the body's top is at 418. A jump lifts it at least 18 px above that.
+  assert.ok(highest < 400, 'no jump after landing; highest y ' + highest);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('feel: slash spam is limited by its cooldown', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [] });
+  await page.evaluate(() => {
+    window.__slashUses = 0;
+    const orig = Attacks.use;
+    Attacks.use = (id, scene) => { if (id === 'slash') window.__slashUses++; return orig(id, scene); };
+  });
+  for (let i = 0; i < 10; i++) { await page.keyboard.press('KeyZ'); await wait(page, 30); }
+  const uses = await page.evaluate(() => window.__slashUses);
+  assert.ok(uses >= 1 && uses <= 3, 'slash uses in 300 ms: ' + uses);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 check('spikes: touching spikes opens the selection', async (browser) => {
   const page = await newPage(browser);
   await startPlay(page, { hand: ['ranger'] });

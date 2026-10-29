@@ -315,6 +315,11 @@ const World = (() => {
           ctx.drawImage(images.dirt, px, py, TILE, TILE);
           ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
           ctx.fillRect(px, py, TILE, TILE);
+          // A light top edge makes ledges readable against the dark sky.
+          if (!isSolid(ty > 0 ? at(tx, ty - 1) : ".")) {
+            ctx.fillStyle = "#9c8fb0";
+            ctx.fillRect(px, py, TILE, 3);
+          }
         } else if (ch === "=") {
           ctx.drawImage(images.dirt, px, py, TILE, TILE);
           ctx.drawImage(images.grass, px, py, TILE, TILE);
