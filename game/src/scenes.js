@@ -216,6 +216,8 @@ class PlayScene {
       grass: IMG.grass,
       dirt: IMG.dirt,
       tree: IMG.tree,
+      mage: IMG.mage,
+      warlord: IMG.warlord,
     };
     this.cam = { x: 0, y: 0 };
     this.active = active;
@@ -228,6 +230,8 @@ class PlayScene {
     this.downFired = false;
     this.dashT = 0;
     this.floatT = 0;
+    this.scurryT = 0;
+    this.ghostT = 0;
     this.pauseSel = 0;
     this.player = this.newBody(World.spawn.x, World.spawn.y);
     Enemies.spawnFromLevel();
@@ -262,7 +266,9 @@ class PlayScene {
     const move = (Input.down("right") ? 1 : 0) - (Input.down("left") ? 1 : 0);
 
     if (move !== 0) p.facing = move;
-    p.vx = move * 130;
+    // Rat scurry: faster walking for a short time.
+    if (this.scurryT > 0) this.scurryT -= dt;
+    p.vx = move * (this.scurryT > 0 ? 220 : 130);
     if (this.dashT > 0) {
       this.dashT -= dt;
       p.vx = p.facing * 320;
@@ -308,9 +314,10 @@ class PlayScene {
     }
     Attacks.update(dt);
     World.updatePlatforms(dt);
+    if (this.ghostT > 0) this.ghostT -= dt;
     this.checkEnemyContact(p, prevBottom);
     if (this.mode !== "play") return;
-    if (Attacks.hitByHostile(p)) {
+    if (this.ghostT <= 0 && Attacks.hitByHostile(p)) {
       this.beginSelection("slain");
       return;
     }
@@ -348,8 +355,11 @@ class PlayScene {
       if (this.overlaps(p, sg)) this.signText = sg.text;
     }
 
+    // A boss level keeps the exit closed while a warlord is alive.
+    const bossLocked = World.level.boss && Enemies.list().some((e) => e.kind === "warlord" && !e.dead);
+    World.setFlagOpen(!bossLocked);
     const exit = World.exit();
-    if (exit && this.mode === "play" && this.overlaps(p, exit)) this.mode = "complete";
+    if (exit && this.mode === "play" && !bossLocked && this.overlaps(p, exit)) this.mode = "complete";
   }
 
   updatePause() {
@@ -406,10 +416,9 @@ class PlayScene {
       if (enemy.dead || !this.overlaps(p, enemy)) continue;
       const stomp = p.vy > 0 && prevBottom <= enemy.y + 6;
       if (stomp) {
-        enemy.dead = true;
-        Enemies.dropCard(enemy);
+        Enemies.defeat(enemy);
         p.vy = -260;
-      } else {
+      } else if (this.ghostT <= 0) {
         this.beginSelection("slain");
         return;
       }
@@ -458,6 +467,8 @@ class PlayScene {
     this.mode = "play";
     this.dashT = 0;
     this.floatT = 0;
+    this.scurryT = 0;
+    this.ghostT = 0;
     Attacks.reset();
   }
 
@@ -552,6 +563,8 @@ class PlayScene {
       HUD.draw(ctx, -1);
       this.drawBanner(ctx, CHARACTERS[this.active].name + ". Left/Right walk, Up jump, A S Z X abilities.");
       this.drawSignBox(ctx);
+      this.drawAbilityBar(ctx);
+      this.drawBossBar(ctx);
     }
   }
 
@@ -561,6 +574,8 @@ class PlayScene {
     const sx = Math.round(p.x + p.w / 2 - 24 - cx);
     const sy = Math.round(p.y + p.h - 48 - cy);
     ctx.save();
+    // Ghost: the body is drawn faded while the ghost ability lasts.
+    if (this.ghostT > 0) ctx.globalAlpha = 0.5;
     if (p.facing < 0) {
       ctx.translate(sx + 48, sy);
       ctx.scale(-1, 1);
@@ -569,6 +584,35 @@ class PlayScene {
       ctx.drawImage(img, sx, sy, 48, 48);
     }
     ctx.restore();
+  }
+
+  // Health bar for the warlord while it is alive: 8 segments and a label.
+  drawBossBar(ctx) {
+    const boss = Enemies.list().find((e) => e.kind === "warlord" && !e.dead);
+    if (!boss) return;
+    const max = ENEMY_DEFS.warlord.hp;
+    ctx.font = "10px system-ui, sans-serif";
+    ctx.fillStyle = "#e8e4d8";
+    ctx.fillText("Warlord", 150, 58);
+    for (let i = 0; i < max; i++) {
+      ctx.fillStyle = i < boss.hp ? "#c2452d" : "#3a2020";
+      ctx.fillRect(210 + i * 14, 50, 12, 10);
+    }
+  }
+
+  // Strip above the hand HUD: the active character's four abilities on A, S, Z, X.
+  drawAbilityBar(ctx) {
+    const ids = CHARACTERS[this.active].abilities;
+    const keys = ["A", "S", "Z", "X"];
+    const text = ids.map((id, i) => keys[i] + " " + ABILITY_NAMES[id]).join("   ");
+    ctx.font = "8px system-ui, sans-serif";
+    const w = Math.ceil(ctx.measureText(text).width) + 16;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillRect(Engine.W / 2 - w / 2, 204, w, 14);
+    ctx.fillStyle = "#e8e4d8";
+    ctx.textAlign = "center";
+    ctx.fillText(text, Engine.W / 2, 214);
+    ctx.textAlign = "left";
   }
 
   // Box across the top of the screen with the text of the sign under the player.

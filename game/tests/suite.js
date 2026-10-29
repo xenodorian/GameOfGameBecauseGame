@@ -242,6 +242,30 @@ const abilities = [
     check: (p) => p.evaluate(() => __scene.player.vy), want: -120,
   },
   {
+    name: 'rat leap (A) jumps higher than a plain jump', who: 'rat', key: 'KeyA', wait: 20,
+    setup: (p) => placeAt(p, 200, 418),
+    check: (p) => p.evaluate(() => __scene.player.vy), want: 'leap',
+  },
+  {
+    name: 'rat scurry (S) walks faster', who: 'rat', key: 'KeyS', hold: 'ArrowRight', wait: 200,
+    setup: (p) => placeAt(p, 200, 418),
+    check: (p) => p.evaluate(() => __scene.player.vx), want: 220,
+  },
+  {
+    name: 'weaver bone bridge (S) makes a 5 tile platform', who: 'weaver', key: 'KeyS', wait: 30,
+    setup: (p) => placeAt(p, 200, 160),
+    check: (p) => p.evaluate(() => World.platforms[0] && World.platforms[0].w), want: 160,
+  },
+  {
+    name: 'weaver ghost (X) survives touching a grunt', who: 'weaver', key: 'KeyX', wait: 150,
+    setup: (p) => p.evaluate(() => {
+      const g = new Enemy('grunt', __scene.player.x, __scene.player.y);
+      g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 };
+      Enemies.list().push(g);
+    }),
+    check: (p) => p.evaluate(() => __scene.mode === 'play' && __scene.ghostT > 0), want: true,
+  },
+  {
     name: 'mage blink (X) moves 96 px', who: 'mage', key: 'KeyX', wait: 30,
     setup: (p) => placeAt(p, 200, 160),
     check: null,
@@ -267,6 +291,7 @@ for (const a of abilities) {
       await page.keyboard.press(a.key); await wait(page, a.wait);
       const got = await a.check(page);
       if (a.want === 'upward') assert.ok(got < -250 && got > -320, 'vy ' + got);
+      else if (a.want === 'leap') assert.ok(got < -500 && got > -560, 'vy ' + got);
       else assert.equal(got, a.want);
     }
     assert.deepEqual(page.errors, []);

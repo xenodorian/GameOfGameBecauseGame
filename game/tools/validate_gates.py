@@ -38,6 +38,8 @@ ABILITY_SETS = {
     "knight": {"charge", "bash"},
     "ranger": {"hop", "rope"},
     "mage": {"float", "blink"},
+    "rat": {"leap"},
+    "weaver": {"bridge"},
 }
 
 
@@ -107,10 +109,12 @@ def explore(rows, abilities, start, ropes):
     """
     grid = Grid(rows, ropes, breakable="bash" in abilities)
     hop = "hop" in abilities
+    leap = "leap" in abilities
     blink = "blink" in abilities
     charge = "charge" in abilities
     floatable = "float" in abilities
-    can_rope = "rope" in abilities
+    can_rope = "rope" in abilities or "bridge" in abilities
+    rope_len = 5 if "bridge" in abilities else 3
 
     sx, sy = start
     s0 = grid.settle(sx, sy)
@@ -126,7 +130,7 @@ def explore(rows, abilities, start, ropes):
             seen.add(state)
             queue.append(state)
 
-    max_up = 4 if hop else 2
+    max_up = 5 if leap else (4 if hop else 2)
     max_across = 6 if blink else (5 if charge else 3)
 
     while queue:
@@ -172,7 +176,7 @@ def explore(rows, abilities, start, ropes):
                 if all(grid.air(x + step * i, y - 3) for i in range(0, abs(dxh) + 1)):
                     push((x + dxh, grid.settle(x + dxh, y - 3)))
 
-        if can_rope and all(grid.air(x + i, y - 1) for i in (1, 2, 3)):
+        if can_rope and all(grid.air(x + i, y - 1) for i in range(1, rope_len + 1)):
             rope_sources.add((x, y))
 
     return set(seen), rope_sources
@@ -185,8 +189,9 @@ def reachable(rows, abilities, start):
         reached, sources = explore(rows, abilities, start, frozenset(ropes))
         grid = Grid(rows, frozenset(ropes), breakable="bash" in abilities)
         new = set()
+        rope_len = 5 if "bridge" in abilities else 3
         for x, y in sources:
-            for i in (1, 2, 3):
+            for i in range(1, rope_len + 1):
                 cell = (x + i, y - 1)
                 if cell not in ropes and grid.air(*cell):
                     new.add(cell)

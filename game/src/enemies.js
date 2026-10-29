@@ -34,6 +34,22 @@ const ENEMY_DEFS = {
     jumpEvery: 1.4,
   },
   // Stands its ground and fires a hostile arrow at the player when lined up.
+  // Boss. Walks at the player, jumps, and fires. Takes 8 hits.
+  warlord: {
+    sprite: "warlord",
+    w: 44,
+    h: 58,
+    drawW: 44,
+    drawH: 58,
+    speed: 50,
+    chaseSpeed: 80,
+    sight: 400,
+    hp: 8,
+    card: "knight",
+    jumpVy: -420,
+    jumpEvery: 3.0,
+    fireEvery: 2.2,
+  },
   archer: {
     sprite: "bone_weaver",
     w: 22,
@@ -63,6 +79,29 @@ class Enemy {
     this.stunT = 0;
     this.jumpT = def.jumpEvery || 0;
     this.fireT = def.fireEvery || 0;
+    this.hp = def.hp || 1;
+    this.hurtT = 0;
+  }
+
+  // Jump on a timer while the enemy is on the ground and the player is near.
+  tryJump(dt, chasing) {
+    const d = this.def;
+    this.jumpT -= dt;
+    if (this.grounded && chasing && this.jumpT <= 0) {
+      this.vy = d.jumpVy;
+      this.jumpT = d.jumpEvery;
+    }
+  }
+
+  // Fire a hostile arrow on a timer while the player is lined up.
+  tryFire(dt, chasing, dx) {
+    const d = this.def;
+    this.fireT -= dt;
+    if (chasing && this.fireT <= 0) {
+      this.dir = dx >= 0 ? 1 : -1;
+      Attacks.fireHostile(this.x + this.w / 2, this.y + 12, this.dir);
+      this.fireT = d.fireEvery;
+    }
   }
 
   update(dt, player) {
@@ -70,6 +109,7 @@ class Enemy {
     const dx = player.x + player.w / 2 - (this.x + this.w / 2);
     const dy = player.y + player.h / 2 - (this.y + this.h / 2);
     const chasing = Math.abs(dx) < d.sight && Math.abs(dy) < 64;
+    if (this.hurtT > 0) this.hurtT -= dt;
 
     if (this.stunT > 0) {
       // Stunned by shield bash: no walking or chasing, gravity still applies.
@@ -80,22 +120,8 @@ class Enemy {
       return;
     }
 
-    if (d.jumpVy) {
-      this.jumpT -= dt;
-      if (this.grounded && chasing && this.jumpT <= 0) {
-        this.vy = d.jumpVy;
-        this.jumpT = d.jumpEvery;
-      }
-    }
-
-    if (d.fireEvery) {
-      this.fireT -= dt;
-      if (chasing && this.fireT <= 0) {
-        this.dir = dx >= 0 ? 1 : -1;
-        Attacks.fireHostile(this.x + this.w / 2, this.y + 12, this.dir);
-        this.fireT = d.fireEvery;
-      }
-    }
+    if (d.jumpVy) this.tryJump(dt, chasing);
+    if (d.fireEvery) this.tryFire(dt, chasing, dx);
 
     if (chasing) {
       this.dir = dx >= 0 ? 1 : -1;
@@ -119,16 +145,20 @@ class Enemy {
   }
 
   draw(ctx, images, camX, camY) {
+    // Hurt enemies blink: skip every other 0.1 s.
+    if (this.hurtT > 0 && Math.floor(this.hurtT / 0.1) % 2 === 0) return;
     const img = images[this.def.sprite];
-    const sx = Math.round(this.x + this.w / 2 - 24 - camX);
-    const sy = Math.round(this.y + this.h - 48 - camY);
+    const dw = this.def.drawW || 48;
+    const dh = this.def.drawH || 48;
+    const sx = Math.round(this.x + this.w / 2 - dw / 2 - camX);
+    const sy = Math.round(this.y + this.h - dh - camY);
     ctx.save();
     if (this.dir > 0) {
-      ctx.translate(sx + 48, sy);
+      ctx.translate(sx + dw, sy);
       ctx.scale(-1, 1);
-      ctx.drawImage(img, 0, 0, 48, 48);
+      ctx.drawImage(img, 0, 0, dw, dh);
     } else {
-      ctx.drawImage(img, sx, sy, 48, 48);
+      ctx.drawImage(img, sx, sy, dw, dh);
     }
     ctx.restore();
   }
@@ -196,8 +226,14 @@ const Enemies = (() => {
   }
 
   // Removes an enemy and drops its card. Used by stomps, melee, and arrows.
+  // A hit. Enemies with more than 1 hp survive and flash for 0.6 s.
   function defeat(enemy) {
-    if (enemy.dead) return;
+    if (enemy.dead || enemy.hurtT > 0) return;
+    if (enemy.hp > 1) {
+      enemy.hp -= 1;
+      enemy.hurtT = 0.6;
+      return;
+    }
     enemy.dead = true;
     dropCard(enemy);
   }

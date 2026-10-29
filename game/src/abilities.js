@@ -24,10 +24,10 @@ const CHARACTERS = {
     sprite: "bone_weaver",
     abilities: ["shoot", "bone_bridge", "slash", "ghost"],
   },
-  // Placeholder art: the Knight sprite until mage art (robe layers) is made.
+  // Mage art is the Knight sprite tinted purple (see main.js).
   mage: {
     name: "Mage",
-    sprite: "knight",
+    sprite: "mage",
     abilities: ["spell_bolt", "float", "slash", "blink"],
   },
 };
@@ -43,6 +43,10 @@ const ABILITY_NAMES = {
   spell_bolt: "Spell bolt",
   float: "Float",
   blink: "Blink",
+  leap: "Leap",
+  scurry: "Scurry",
+  bone_bridge: "Bone bridge",
+  ghost: "Ghost",
 };
 
 // Attacks in flight: melee hitboxes, projectiles, and rope platforms.
@@ -105,11 +109,32 @@ const Attacks = (() => {
         World.addPlatform({ x, y, w: 3 * World.TILE, h: 6, life: 6 });
         break;
       }
+      case "bone_bridge": {
+        // Bone bridge: the anchor, but 5 tiles long and it lasts longer.
+        const x = p.facing > 0 ? p.x + p.w + 4 : p.x - 4 - 5 * World.TILE;
+        const y = p.y + p.h - 2 * World.TILE;
+        World.addPlatform({ x, y, w: 5 * World.TILE, h: 6, life: 8, color: "#e8e2d0" });
+        break;
+      }
+      case "ghost":
+        // Ghost: enemy contact and arrows pass through for a short time.
+        scene.ghostT = 1.5;
+        break;
       case "float":
         scene.floatT = 1.2;
         break;
       case "blink":
         blink(p);
+        break;
+      case "leap":
+        // Rat leap: a high jump from the ground, about 5 tiles.
+        if (p.grounded) {
+          p.vy = -540;
+          p.jumping = false;
+        }
+        break;
+      case "scurry":
+        scene.scurryT = 2.0;
         break;
       case "hop":
         if (!p.grounded && !p.hopUsed) {

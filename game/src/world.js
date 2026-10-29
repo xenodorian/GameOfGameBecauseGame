@@ -17,6 +17,7 @@ const THEMES = {
 //   m  mud revenant spawn (drawn as empty)
 //   j  rat king spawn (drawn as empty)
 //   a  archer spawn (drawn as empty)
+//   W  warlord boss spawn (drawn as empty)
 //   F  level exit flag (drawn as a pole and flag)
 //   c  card pickup on the ground (random character card)
 //   k  card pickup on the main route (not a secret)
@@ -34,12 +35,14 @@ const World = (() => {
   let height = 0;
   let spawn = { x: 0, y: 0 };
   let exit = null;
+  // The flag is drawn dimmed while a boss keeps it closed.
+  let flagOpen = true;
   // Temporary one-way platforms made in play (arrow anchor rope). Each has a life in seconds.
   const platforms = [];
   const enemySpawns = [];
   const pickupSpawns = [];
   const signs = [];
-  const MARKERS = { g: "grunt", m: "mud_revenant", j: "rat_king", a: "archer" };
+  const MARKERS = { g: "grunt", m: "mud_revenant", j: "rat_king", a: "archer", W: "warlord" };
 
   // Loads level i from LEVELS. Every system reads the current level through these values.
   function load(i) {
@@ -68,6 +71,25 @@ const World = (() => {
         if (ch === "i") signs.push({ x: tx * TILE, y: ty * TILE, w: TILE, h: TILE, text: (level.signs || [])[signN++] || "" });
       })
     );
+  }
+
+  function setFlagOpen(open) {
+    flagOpen = open;
+  }
+
+  // Flag pole and pennant on the exit tile.
+  function drawFlag(ctx, px, py) {
+    ctx.globalAlpha = flagOpen ? 1 : 0.3;
+    ctx.fillStyle = "#5b4a3a";
+    ctx.fillRect(px + 14, py - 24, 3, 56);
+    ctx.fillStyle = "#e0b84a";
+    ctx.beginPath();
+    ctx.moveTo(px + 17, py - 24);
+    ctx.lineTo(px + 30, py - 18);
+    ctx.lineTo(px + 17, py - 12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
   }
 
   // Sets one tile (used by tests and by the sign and spike code).
@@ -178,7 +200,7 @@ const World = (() => {
   function drawPlatforms(ctx, camX, camY) {
     for (const pl of platforms) {
       // Rope: a brown line with posts at both ends.
-      ctx.fillStyle = "#7a5230";
+      ctx.fillStyle = pl.color || "#7a5230";
       ctx.fillRect(Math.round(pl.x - camX), Math.round(pl.y - camY), pl.w, 3);
       ctx.fillRect(Math.round(pl.x - camX), Math.round(pl.y - camY), 3, pl.h + 6);
       ctx.fillRect(Math.round(pl.x + pl.w - camX - 3), Math.round(pl.y - camY), 3, pl.h + 6);
@@ -300,6 +322,8 @@ const World = (() => {
           ctx.drawImage(images.tree, px, py, TILE, TILE);
         } else if (ch === "^") {
           drawSpikes(ctx, px, py);
+        } else if (ch === "F") {
+          drawFlag(ctx, px, py);
         }
       }
     }
@@ -332,6 +356,7 @@ const World = (() => {
     platforms,
     draw,
     drawSigns,
+    setFlagOpen,
     THEMES,
     overlapping,
     load,

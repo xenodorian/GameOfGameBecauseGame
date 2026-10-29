@@ -426,6 +426,7 @@ const THEMES = {
 //   m  mud revenant spawn (drawn as empty)
 //   j  rat king spawn (drawn as empty)
 //   a  archer spawn (drawn as empty)
+//   W  warlord boss spawn (drawn as empty)
 //   F  level exit flag (drawn as a pole and flag)
 //   c  card pickup on the ground (random character card)
 //   k  card pickup on the main route (not a secret)
@@ -443,12 +444,14 @@ const World = (() => {
   let height = 0;
   let spawn = { x: 0, y: 0 };
   let exit = null;
+  // The flag is drawn dimmed while a boss keeps it closed.
+  let flagOpen = true;
   // Temporary one-way platforms made in play (arrow anchor rope). Each has a life in seconds.
   const platforms = [];
   const enemySpawns = [];
   const pickupSpawns = [];
   const signs = [];
-  const MARKERS = { g: "grunt", m: "mud_revenant", j: "rat_king", a: "archer" };
+  const MARKERS = { g: "grunt", m: "mud_revenant", j: "rat_king", a: "archer", W: "warlord" };
 
   // Loads level i from LEVELS. Every system reads the current level through these values.
   function load(i) {
@@ -477,6 +480,25 @@ const World = (() => {
         if (ch === "i") signs.push({ x: tx * TILE, y: ty * TILE, w: TILE, h: TILE, text: (level.signs || [])[signN++] || "" });
       })
     );
+  }
+
+  function setFlagOpen(open) {
+    flagOpen = open;
+  }
+
+  // Flag pole and pennant on the exit tile.
+  function drawFlag(ctx, px, py) {
+    ctx.globalAlpha = flagOpen ? 1 : 0.3;
+    ctx.fillStyle = "#5b4a3a";
+    ctx.fillRect(px + 14, py - 24, 3, 56);
+    ctx.fillStyle = "#e0b84a";
+    ctx.beginPath();
+    ctx.moveTo(px + 17, py - 24);
+    ctx.lineTo(px + 30, py - 18);
+    ctx.lineTo(px + 17, py - 12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
   }
 
   // Sets one tile (used by tests and by the sign and spike code).
@@ -587,7 +609,7 @@ const World = (() => {
   function drawPlatforms(ctx, camX, camY) {
     for (const pl of platforms) {
       // Rope: a brown line with posts at both ends.
-      ctx.fillStyle = "#7a5230";
+      ctx.fillStyle = pl.color || "#7a5230";
       ctx.fillRect(Math.round(pl.x - camX), Math.round(pl.y - camY), pl.w, 3);
       ctx.fillRect(Math.round(pl.x - camX), Math.round(pl.y - camY), 3, pl.h + 6);
       ctx.fillRect(Math.round(pl.x + pl.w - camX - 3), Math.round(pl.y - camY), 3, pl.h + 6);
@@ -709,6 +731,8 @@ const World = (() => {
           ctx.drawImage(images.tree, px, py, TILE, TILE);
         } else if (ch === "^") {
           drawSpikes(ctx, px, py);
+        } else if (ch === "F") {
+          drawFlag(ctx, px, py);
         }
       }
     }
@@ -741,6 +765,7 @@ const World = (() => {
     platforms,
     draw,
     drawSigns,
+    setFlagOpen,
     THEMES,
     overlapping,
     load,
@@ -846,6 +871,22 @@ const ENEMY_DEFS = {
     jumpEvery: 1.4,
   },
   // Stands its ground and fires a hostile arrow at the player when lined up.
+  // Boss. Walks at the player, jumps, and fires. Takes 8 hits.
+  warlord: {
+    sprite: "warlord",
+    w: 44,
+    h: 58,
+    drawW: 44,
+    drawH: 58,
+    speed: 50,
+    chaseSpeed: 80,
+    sight: 400,
+    hp: 8,
+    card: "knight",
+    jumpVy: -420,
+    jumpEvery: 3.0,
+    fireEvery: 2.2,
+  },
   archer: {
     sprite: "bone_weaver",
     w: 22,
@@ -875,6 +916,29 @@ class Enemy {
     this.stunT = 0;
     this.jumpT = def.jumpEvery || 0;
     this.fireT = def.fireEvery || 0;
+    this.hp = def.hp || 1;
+    this.hurtT = 0;
+  }
+
+  // Jump on a timer while the enemy is on the ground and the player is near.
+  tryJump(dt, chasing) {
+    const d = this.def;
+    this.jumpT -= dt;
+    if (this.grounded && chasing && this.jumpT <= 0) {
+      this.vy = d.jumpVy;
+      this.jumpT = d.jumpEvery;
+    }
+  }
+
+  // Fire a hostile arrow on a timer while the player is lined up.
+  tryFire(dt, chasing, dx) {
+    const d = this.def;
+    this.fireT -= dt;
+    if (chasing && this.fireT <= 0) {
+      this.dir = dx >= 0 ? 1 : -1;
+      Attacks.fireHostile(this.x + this.w / 2, this.y + 12, this.dir);
+      this.fireT = d.fireEvery;
+    }
   }
 
   update(dt, player) {
@@ -882,6 +946,7 @@ class Enemy {
     const dx = player.x + player.w / 2 - (this.x + this.w / 2);
     const dy = player.y + player.h / 2 - (this.y + this.h / 2);
     const chasing = Math.abs(dx) < d.sight && Math.abs(dy) < 64;
+    if (this.hurtT > 0) this.hurtT -= dt;
 
     if (this.stunT > 0) {
       // Stunned by shield bash: no walking or chasing, gravity still applies.
@@ -892,22 +957,8 @@ class Enemy {
       return;
     }
 
-    if (d.jumpVy) {
-      this.jumpT -= dt;
-      if (this.grounded && chasing && this.jumpT <= 0) {
-        this.vy = d.jumpVy;
-        this.jumpT = d.jumpEvery;
-      }
-    }
-
-    if (d.fireEvery) {
-      this.fireT -= dt;
-      if (chasing && this.fireT <= 0) {
-        this.dir = dx >= 0 ? 1 : -1;
-        Attacks.fireHostile(this.x + this.w / 2, this.y + 12, this.dir);
-        this.fireT = d.fireEvery;
-      }
-    }
+    if (d.jumpVy) this.tryJump(dt, chasing);
+    if (d.fireEvery) this.tryFire(dt, chasing, dx);
 
     if (chasing) {
       this.dir = dx >= 0 ? 1 : -1;
@@ -931,16 +982,20 @@ class Enemy {
   }
 
   draw(ctx, images, camX, camY) {
+    // Hurt enemies blink: skip every other 0.1 s.
+    if (this.hurtT > 0 && Math.floor(this.hurtT / 0.1) % 2 === 0) return;
     const img = images[this.def.sprite];
-    const sx = Math.round(this.x + this.w / 2 - 24 - camX);
-    const sy = Math.round(this.y + this.h - 48 - camY);
+    const dw = this.def.drawW || 48;
+    const dh = this.def.drawH || 48;
+    const sx = Math.round(this.x + this.w / 2 - dw / 2 - camX);
+    const sy = Math.round(this.y + this.h - dh - camY);
     ctx.save();
     if (this.dir > 0) {
-      ctx.translate(sx + 48, sy);
+      ctx.translate(sx + dw, sy);
       ctx.scale(-1, 1);
-      ctx.drawImage(img, 0, 0, 48, 48);
+      ctx.drawImage(img, 0, 0, dw, dh);
     } else {
-      ctx.drawImage(img, sx, sy, 48, 48);
+      ctx.drawImage(img, sx, sy, dw, dh);
     }
     ctx.restore();
   }
@@ -1008,8 +1063,14 @@ const Enemies = (() => {
   }
 
   // Removes an enemy and drops its card. Used by stomps, melee, and arrows.
+  // A hit. Enemies with more than 1 hp survive and flash for 0.6 s.
   function defeat(enemy) {
-    if (enemy.dead) return;
+    if (enemy.dead || enemy.hurtT > 0) return;
+    if (enemy.hp > 1) {
+      enemy.hp -= 1;
+      enemy.hurtT = 0.6;
+      return;
+    }
     enemy.dead = true;
     dropCard(enemy);
   }
@@ -1054,10 +1115,10 @@ const CHARACTERS = {
     sprite: "bone_weaver",
     abilities: ["shoot", "bone_bridge", "slash", "ghost"],
   },
-  // Placeholder art: the Knight sprite until mage art (robe layers) is made.
+  // Mage art is the Knight sprite tinted purple (see main.js).
   mage: {
     name: "Mage",
-    sprite: "knight",
+    sprite: "mage",
     abilities: ["spell_bolt", "float", "slash", "blink"],
   },
 };
@@ -1073,6 +1134,10 @@ const ABILITY_NAMES = {
   spell_bolt: "Spell bolt",
   float: "Float",
   blink: "Blink",
+  leap: "Leap",
+  scurry: "Scurry",
+  bone_bridge: "Bone bridge",
+  ghost: "Ghost",
 };
 
 // Attacks in flight: melee hitboxes, projectiles, and rope platforms.
@@ -1135,11 +1200,32 @@ const Attacks = (() => {
         World.addPlatform({ x, y, w: 3 * World.TILE, h: 6, life: 6 });
         break;
       }
+      case "bone_bridge": {
+        // Bone bridge: the anchor, but 5 tiles long and it lasts longer.
+        const x = p.facing > 0 ? p.x + p.w + 4 : p.x - 4 - 5 * World.TILE;
+        const y = p.y + p.h - 2 * World.TILE;
+        World.addPlatform({ x, y, w: 5 * World.TILE, h: 6, life: 8, color: "#e8e2d0" });
+        break;
+      }
+      case "ghost":
+        // Ghost: enemy contact and arrows pass through for a short time.
+        scene.ghostT = 1.5;
+        break;
       case "float":
         scene.floatT = 1.2;
         break;
       case "blink":
         blink(p);
+        break;
+      case "leap":
+        // Rat leap: a high jump from the ground, about 5 tiles.
+        if (p.grounded) {
+          p.vy = -540;
+          p.jumping = false;
+        }
+        break;
+      case "scurry":
+        scene.scurryT = 2.0;
         break;
       case "hop":
         if (!p.grounded && !p.hopUsed) {
@@ -1464,6 +1550,8 @@ class PlayScene {
       grass: IMG.grass,
       dirt: IMG.dirt,
       tree: IMG.tree,
+      mage: IMG.mage,
+      warlord: IMG.warlord,
     };
     this.cam = { x: 0, y: 0 };
     this.active = active;
@@ -1476,6 +1564,8 @@ class PlayScene {
     this.downFired = false;
     this.dashT = 0;
     this.floatT = 0;
+    this.scurryT = 0;
+    this.ghostT = 0;
     this.pauseSel = 0;
     this.player = this.newBody(World.spawn.x, World.spawn.y);
     Enemies.spawnFromLevel();
@@ -1510,7 +1600,9 @@ class PlayScene {
     const move = (Input.down("right") ? 1 : 0) - (Input.down("left") ? 1 : 0);
 
     if (move !== 0) p.facing = move;
-    p.vx = move * 130;
+    // Rat scurry: faster walking for a short time.
+    if (this.scurryT > 0) this.scurryT -= dt;
+    p.vx = move * (this.scurryT > 0 ? 220 : 130);
     if (this.dashT > 0) {
       this.dashT -= dt;
       p.vx = p.facing * 320;
@@ -1556,9 +1648,10 @@ class PlayScene {
     }
     Attacks.update(dt);
     World.updatePlatforms(dt);
+    if (this.ghostT > 0) this.ghostT -= dt;
     this.checkEnemyContact(p, prevBottom);
     if (this.mode !== "play") return;
-    if (Attacks.hitByHostile(p)) {
+    if (this.ghostT <= 0 && Attacks.hitByHostile(p)) {
       this.beginSelection("slain");
       return;
     }
@@ -1596,8 +1689,11 @@ class PlayScene {
       if (this.overlaps(p, sg)) this.signText = sg.text;
     }
 
+    // A boss level keeps the exit closed while a warlord is alive.
+    const bossLocked = World.level.boss && Enemies.list().some((e) => e.kind === "warlord" && !e.dead);
+    World.setFlagOpen(!bossLocked);
     const exit = World.exit();
-    if (exit && this.mode === "play" && this.overlaps(p, exit)) this.mode = "complete";
+    if (exit && this.mode === "play" && !bossLocked && this.overlaps(p, exit)) this.mode = "complete";
   }
 
   updatePause() {
@@ -1654,10 +1750,9 @@ class PlayScene {
       if (enemy.dead || !this.overlaps(p, enemy)) continue;
       const stomp = p.vy > 0 && prevBottom <= enemy.y + 6;
       if (stomp) {
-        enemy.dead = true;
-        Enemies.dropCard(enemy);
+        Enemies.defeat(enemy);
         p.vy = -260;
-      } else {
+      } else if (this.ghostT <= 0) {
         this.beginSelection("slain");
         return;
       }
@@ -1706,6 +1801,8 @@ class PlayScene {
     this.mode = "play";
     this.dashT = 0;
     this.floatT = 0;
+    this.scurryT = 0;
+    this.ghostT = 0;
     Attacks.reset();
   }
 
@@ -1800,6 +1897,8 @@ class PlayScene {
       HUD.draw(ctx, -1);
       this.drawBanner(ctx, CHARACTERS[this.active].name + ". Left/Right walk, Up jump, A S Z X abilities.");
       this.drawSignBox(ctx);
+      this.drawAbilityBar(ctx);
+      this.drawBossBar(ctx);
     }
   }
 
@@ -1809,6 +1908,8 @@ class PlayScene {
     const sx = Math.round(p.x + p.w / 2 - 24 - cx);
     const sy = Math.round(p.y + p.h - 48 - cy);
     ctx.save();
+    // Ghost: the body is drawn faded while the ghost ability lasts.
+    if (this.ghostT > 0) ctx.globalAlpha = 0.5;
     if (p.facing < 0) {
       ctx.translate(sx + 48, sy);
       ctx.scale(-1, 1);
@@ -1817,6 +1918,35 @@ class PlayScene {
       ctx.drawImage(img, sx, sy, 48, 48);
     }
     ctx.restore();
+  }
+
+  // Health bar for the warlord while it is alive: 8 segments and a label.
+  drawBossBar(ctx) {
+    const boss = Enemies.list().find((e) => e.kind === "warlord" && !e.dead);
+    if (!boss) return;
+    const max = ENEMY_DEFS.warlord.hp;
+    ctx.font = "10px system-ui, sans-serif";
+    ctx.fillStyle = "#e8e4d8";
+    ctx.fillText("Warlord", 150, 58);
+    for (let i = 0; i < max; i++) {
+      ctx.fillStyle = i < boss.hp ? "#c2452d" : "#3a2020";
+      ctx.fillRect(210 + i * 14, 50, 12, 10);
+    }
+  }
+
+  // Strip above the hand HUD: the active character's four abilities on A, S, Z, X.
+  drawAbilityBar(ctx) {
+    const ids = CHARACTERS[this.active].abilities;
+    const keys = ["A", "S", "Z", "X"];
+    const text = ids.map((id, i) => keys[i] + " " + ABILITY_NAMES[id]).join("   ");
+    ctx.font = "8px system-ui, sans-serif";
+    const w = Math.ceil(ctx.measureText(text).width) + 16;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillRect(Engine.W / 2 - w / 2, 204, w, 14);
+    ctx.fillStyle = "#e8e4d8";
+    ctx.textAlign = "center";
+    ctx.fillText(text, Engine.W / 2, 214);
+    ctx.textAlign = "left";
   }
 
   // Box across the top of the screen with the text of the sign under the player.
@@ -1942,8 +2072,26 @@ function loadImages(urls) {
   return Promise.all(jobs);
 }
 
+// A copy of an image with a color laid over its opaque pixels.
+function tint(img, rgba) {
+  const c = document.createElement("canvas");
+  c.width = img.width;
+  c.height = img.height;
+  const g = c.getContext("2d");
+  g.drawImage(img, 0, 0);
+  g.globalCompositeOperation = "source-atop";
+  g.fillStyle = rgba;
+  g.fillRect(0, 0, c.width, c.height);
+  g.globalCompositeOperation = "source-over";
+  return c;
+}
+
 loadImages(ASSET_URLS)
-  .then(() => Engine.start(new TitleScene()))
+  .then(() => {
+    IMG.mage = tint(IMG.knight_right, "rgba(120, 70, 200, 0.45)");
+    IMG.warlord = tint(IMG.grunt, "rgba(150, 30, 30, 0.45)");
+    Engine.start(new TitleScene());
+  })
   .catch((err) => {
     document.body.textContent = err.message;
     console.error(err);
