@@ -16,33 +16,56 @@ const TILE = 32;
 //   k  card pickup on the main route (not a secret)
 //   p  power-up on the ground (draws a random card into hand or deck)
 //   .  empty air
-// Level data lives in levels.js. Multi-level loading comes in task A2.
-const tiles0 = LEVELS[0].rows;
-
 const World = (() => {
-  const tiles = tiles0.map((row) => row.split(""));
+  let index = 0;
+  let tiles = [];
+  let rows = 0;
+  let cols = 0;
+  let width = 0;
+  let height = 0;
+  let spawn = { x: 0, y: 0 };
+  let exit = null;
   // Temporary one-way platforms made in play (arrow anchor rope). Each has a life in seconds.
   const platforms = [];
-  const rows = tiles.length;
-  const cols = tiles[0].length;
-  const width = cols * TILE;
-  const height = rows * TILE;
-
-  let spawn = { x: 0, y: 0 };
   const enemySpawns = [];
-  const MARKERS = { g: "grunt", m: "mud_revenant", j: "rat_king", a: "archer" };
   const pickupSpawns = [];
-  let exit = null;
-  tiles.forEach((row, ty) =>
-    row.forEach((ch, tx) => {
-      if (ch === "S") spawn = { x: tx * TILE, y: ty * TILE };
-      // The exit zone is 4 tiles tall, reaching 3 tiles above the flag, so a
-      // jump that clears the flag's tile still completes the level.
-      if (ch === "F") exit = { x: tx * TILE, y: (ty - 3) * TILE, w: TILE, h: 4 * TILE };
-      if (MARKERS[ch]) enemySpawns.push({ kind: MARKERS[ch], x: tx * TILE, y: ty * TILE });
-      if (ch === "c" || ch === "k" || ch === "p") pickupSpawns.push({ power: ch === "p", x: tx * TILE, y: ty * TILE });
-    })
-  );
+  const signs = [];
+  const MARKERS = { g: "grunt", m: "mud_revenant", j: "rat_king", a: "archer" };
+
+  // Loads level i from LEVELS. Every system reads the current level through these values.
+  function load(i) {
+    index = i;
+    const level = LEVELS[i];
+    tiles = level.rows.map((row) => row.split(""));
+    rows = tiles.length;
+    cols = tiles[0].length;
+    width = cols * TILE;
+    height = rows * TILE;
+    spawn = { x: 0, y: 0 };
+    exit = null;
+    platforms.length = 0;
+    enemySpawns.length = 0;
+    pickupSpawns.length = 0;
+    signs.length = 0;
+    let signN = 0;
+    tiles.forEach((row, ty) =>
+      row.forEach((ch, tx) => {
+        if (ch === "S") spawn = { x: tx * TILE, y: ty * TILE };
+        // The exit zone is 4 tiles tall, reaching 3 tiles above the flag, so a
+        // jump that clears the flag's tile still completes the level.
+        if (ch === "F") exit = { x: tx * TILE, y: (ty - 3) * TILE, w: TILE, h: 4 * TILE };
+        if (MARKERS[ch]) enemySpawns.push({ kind: MARKERS[ch], x: tx * TILE, y: ty * TILE });
+        if (ch === "c" || ch === "k" || ch === "p") pickupSpawns.push({ power: ch === "p", x: tx * TILE, y: ty * TILE });
+        if (ch === "i") signs.push({ x: tx * TILE, y: ty * TILE, w: TILE, h: TILE, text: (level.signs || [])[signN++] || "" });
+      })
+    );
+  }
+
+  // Sets one tile (used by tests and by the sign and spike code).
+  function setTile(tx, ty, ch) {
+    if (tx < 0 || ty < 0 || tx >= cols || ty >= rows) return;
+    tiles[ty][tx] = ch;
+  }
 
   function at(tx, ty) {
     if (tx < 0 || ty < 0 || tx >= cols || ty >= rows) return ".";
@@ -206,17 +229,22 @@ const World = (() => {
     }
   }
 
-  return {
+  const api = {
     TILE,
-    width,
-    height,
-    cols,
-    rows,
-    spawn,
+    get width() { return width; },
+    get height() { return height; },
+    get cols() { return cols; },
+    get rows() { return rows; },
+    get spawn() { return spawn; },
+    get enemySpawns() { return enemySpawns; },
+    get pickupSpawns() { return pickupSpawns; },
+    get index() { return index; },
+    get level() { return LEVELS[index]; },
+    count: LEVELS.length,
+    signs,
     exit: () => exit,
-    enemySpawns,
-    pickupSpawns,
     at,
+    setTile,
     isStandable,
     moveBody,
     closestSafeSpace,
@@ -226,5 +254,8 @@ const World = (() => {
     platforms,
     draw,
     overlapping,
+    load,
   };
+  load(0);
+  return api;
 })();

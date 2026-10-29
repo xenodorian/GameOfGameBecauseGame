@@ -65,7 +65,7 @@ Written by Opus for executor agents. This file is the only task list. Do the tas
 4. Search the whole repo for `LEVEL_ROWS` (`grep -rn LEVEL_ROWS game`) and update every use. The validator is fixed in A3; for this task only, change its `load_rows()` to read `game/src/levels.js` and take the first `rows: [` block.
 5. Add `k` to the legend comment in `world.js`: `k  card pickup on the main route (not a secret)`. In the marker parsing, treat `k` like `c` (push a pickup with `power: false`).
 
-### [ ] A2: `World.load(index)`
+### [~] A2: `World.load(index)` (build and gates pass; suite run pending)
 Rewrite the top of the `World` IIFE so a level can be loaded at any time. Use this structure:
 ```js
 const World = (() => {
