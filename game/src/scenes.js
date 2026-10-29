@@ -494,13 +494,14 @@ class PlayScene {
   }
 
   draw(ctx) {
-    ctx.fillStyle = "#7fb6e0";
+    const theme = THEMES[World.level.theme];
+    ctx.fillStyle = theme.sky;
     ctx.fillRect(0, 0, Engine.W, Engine.H);
 
     const cx = Math.round(this.cam.x);
     const cy = Math.round(this.cam.y);
-    drawHills(ctx, cx * 0.25, "#a8cde8", 150, 0.012, 14);
-    drawHills(ctx, cx * 0.5, "#6f9fbf", 190, 0.02, 20);
+    drawHills(ctx, cx * 0.25, theme.far, 150, 0.012, 14);
+    drawHills(ctx, cx * 0.5, theme.near, 190, 0.02, 20);
     World.draw(ctx, this.images, cx, cy, Engine.W, Engine.H);
     World.drawSigns(ctx, cx, cy);
     World.drawPlatforms(ctx, cx, cy);

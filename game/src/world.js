@@ -1,6 +1,12 @@
 // Tile map, tile legend, and axis-separated collision.
 const TILE = 32;
 
+// Colors per theme. "field" keeps the original outdoor look.
+const THEMES = {
+  field: { sky: "#7fb6e0", far: "#a8cde8", near: "#6f9fbf" },
+  dungeon: { sky: "#17141f", far: "#2a2533", near: "#3a3242" },
+};
+
 // Legend:
 //   #  solid brick wall
 //   =  solid grass ground
@@ -280,12 +286,17 @@ const World = (() => {
         const py = Math.round(ty * TILE - camY);
         if (ch === "#") ctx.drawImage(images.wall, px, py, TILE, TILE);
         else if (ch === "x") drawCracked(ctx, images.wall, px, py);
-        else if (ch === "=") {
+        else if (ch === "=" && LEVELS[index].theme === "dungeon") {
+          // Dungeon ground is bare dirt, shaded darker.
+          ctx.drawImage(images.dirt, px, py, TILE, TILE);
+          ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+          ctx.fillRect(px, py, TILE, TILE);
+        } else if (ch === "=") {
           ctx.drawImage(images.dirt, px, py, TILE, TILE);
           ctx.drawImage(images.grass, px, py, TILE, TILE);
         } else if (ch === "_") {
           ctx.drawImage(images.grass, px, py, TILE, TILE);
-        } else if (ch === "T") {
+        } else if (ch === "T" && LEVELS[index].theme !== "dungeon") {
           ctx.drawImage(images.tree, px, py, TILE, TILE);
         } else if (ch === "^") {
           drawSpikes(ctx, px, py);
@@ -321,6 +332,7 @@ const World = (() => {
     platforms,
     draw,
     drawSigns,
+    THEMES,
     overlapping,
     load,
   };
