@@ -320,7 +320,7 @@ Keep "Greenwood Road" geometry. Put four `i` tiles on air tiles of row 13 (the r
 ### [x] E8: Level 8 "Warlord's Throne"
 - Theme `dungeon`, `boss: true`. Width 40, height 14. A flat arena with two `=` platforms 3 tiles up, a `W` in the middle-right, `F` at the right end. One `k` card near the start. No pits, no spikes.
 
-### [~] E9: Balance pass (no art or code changes). Gates pass for every level (item 1). Items 2 and 3 not done: no bot check for level 2, and no terrain review of 20-column stretches.
+### [x] E9: Balance pass (no art or code changes)
 1. For each level, run `--map N basic` and confirm the exit is marked.
 2. In the suite, add a check `bot: keyboard bot reaches the exit of level 2 as the knight` using the existing playthrough bot code with `new PlayScene(1)`. If the bot fails only because of its own simple logic (it walks right and jumps), not because the level is broken, write that in the Decisions log and do not add the check.
 3. Read each level as a grid. If any stretch of 20 columns has no enemy, no pickup, and no height change, add something there.
@@ -393,5 +393,9 @@ Keep "Greenwood Road" geometry. Put four `i` tiles on air tiles of row 13 (the r
 
 (Executor agents add one line per decision here: task id, what was unclear, what was chosen.)
 
+- E9: the level 2 keyboard bot check was dropped. The bot only looks at the tile ahead on its own row, so it walks into the step at column 40 and never jumps. The validator shows basic moves can clear the step, so the level is fine; the bot is the limit. No check added, per the E9 rule.
+- E9: a main-route card (k) was added at the quiet start of levels 1 to 4 (columns 5 to 7), so no 20-column stretch is empty.
 - Opus: exit zone stays 4 tiles tall (jumping over the flag completes the level).
 - C1: a rat or weaver card could be selected before C2/C3 existed, which left the active character undefined and froze play. Added their CHARACTERS entries (C2/C3 step 1) with unimplemented ability ids that do nothing.
+
+EXPANSION COMPLETE
