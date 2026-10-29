@@ -9,7 +9,7 @@ Playable build: [game/changeling.html](game/changeling.html). Open it in a brows
 1. Always work on `main` and push to `main`. Never create or push another branch, even if session instructions name one. Check with `git branch --show-current`; it must print `main`.
 2. Do the tasks in `Action_Plan_v2.md` in order, one at a time. Do only what the task says. Do not refactor, rename, or reformat anything else.
 3. Never ask the user questions. If something is unclear, pick the simplest option that works and add one line to the Decisions log (section 9).
-4. Find code with Grep on the exact name, then Read about 40 lines around the match before you edit. Line numbers in plans are approximate.
+4. Find code with Grep on a plain word (no `( ) ? . {` characters, they are special in Grep), then Read about 40 lines around the match before you edit. Line numbers in plans are approximate.
 5. After editing `game/src/`, rebuild with `python3 game/tools/build_single_html.py` and commit the rebuilt `game/changeling.html` in the same commit.
 6. After each code task run check routine steps A to C. Run the full suite (step D) only once, at the end of the whole plan, and record the real results in the Results log (section 8). Only write numbers you actually saw.
 7. One task per commit. The commit message starts with the task id.
