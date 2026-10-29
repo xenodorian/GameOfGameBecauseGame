@@ -53,7 +53,7 @@ for k in ["archer", "grunt", "mud_revenant", "rat_king", "warlord"]:
    If a number is not 0, the offset or crop is wrong. Fix it (rule 11 applies).
 8. Do not add the big sheets to the HTML yet. Commit the tool and the changed PNGs. Message `X2: compose sheets in 192 px cells, crop rows to frame counts`.
 
-## X3 [ ]: Knight longsword, bows on walk and idle
+## X3 [x]: Knight longsword, bows on walk and idle
 
 File: `game/tools/build_lpc.py`.
 

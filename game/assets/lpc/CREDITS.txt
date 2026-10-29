@@ -31,10 +31,10 @@ shield/heater/revised/trim
   authors: bluecarrot16, Sander Frenken (castelonia), ElizaWy, JaidynReiman
   licenses: OGA-BY 3.0
   https://opengameart.org/content/lpc-shields
-weapon/sword/arming
-  authors: ElizaWy; walk and down by JaidynReiman
-  licenses: OGA-BY 3.0
-  https://github.com/ElizaWy/LPC/tree/main/Characters/Props/Sword%2001%20-%20Arming%20Sword https://opengameart.org/content/lpc-expanded-sit-run-jump-more
+weapon/sword/longsword
+  authors: Johannes Sjölund (wulax), bluecarrot16
+  licenses: OGA-BY 3.0, CC-BY-SA 3.0
+  https://opengameart.org/content/lpc-medieval-fantasy-character-sprites https://opengameart.org/content/lpc-extended-weapon-animations
 [ranger]
 body/bodies/male
   authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)

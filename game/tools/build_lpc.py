@@ -34,7 +34,22 @@ BIG = 192
 COUNT = {"idle": 2, "walk": 9, "slash": 6, "thrust": 8, "spellcast": 7, "shoot": 13, "hurt": 6, "jump": 5}
 BIG_KEYS = ["knight", "ranger", "mage", "rat", "weaver"]
 # A layer pattern -> {anim: fixed path}, for animations that live in another folder (filled below).
-PATH_OVERRIDE = {}
+PATH_OVERRIDE = {
+    "weapon/sword/longsword/universal_behind/{anim}/longsword.png": {
+        "slash": "weapon/sword/longsword/attack_slash/behind/longsword.png",
+        "thrust": "weapon/sword/longsword/attack_thrust/behind/longsword.png",
+    },
+    "weapon/sword/longsword/{anim}/longsword.png": {
+        "slash": "weapon/sword/longsword/attack_slash/longsword.png",
+        "thrust": "weapon/sword/longsword/attack_thrust/longsword.png",
+    },
+    "weapon/ranged/bow/normal/universal/background/{anim}/light.png": {
+        "walk": "weapon/ranged/bow/normal/walk/background/light.png",
+    },
+    "weapon/ranged/bow/normal/universal/foreground/{anim}/light.png": {
+        "walk": "weapon/ranged/bow/normal/walk/foreground/light.png",
+    },
+}
 
 # Each character is a list of (item folder, zPos). zPos values come from the generator's
 # sheet_definitions, looked up by folder in scan_zpos(); the value here is only a fallback.
@@ -45,7 +60,7 @@ CHARACTERS = {
         ("torso/armour/plate/male/{anim}.png", 60), ("arms/armour/plate/male/{anim}.png", 60),
         ("hat/helmet/greathelm/male/{anim}.png", 130),
         ("shield/heater/revised/trim/bg/{anim}.png", 3), ("shield/heater/revised/trim/fg/{anim}.png", 115),
-        ("weapon/sword/arming/universal/bg/{anim}/steel.png", 9), ("weapon/sword/arming/universal/fg/{anim}/steel.png", 140),
+        ("weapon/sword/longsword/universal_behind/{anim}/longsword.png", 9), ("weapon/sword/longsword/{anim}/longsword.png", 140),
     ],
     "ranger": [
         ("body/bodies/male/{anim}.png", 10), ("head/heads/human/male/{anim}.png", 100),
@@ -91,7 +106,7 @@ CHARACTERS = {
 def item_folder(pattern):
     """The item folder a layer pattern belongs to, for example body/bodies/male."""
     parts = pattern.split("/")
-    cut = next(i for i, p in enumerate(parts) if p.startswith("{anim}") or p.endswith(".png"))
+    cut = next((i for i, p in enumerate(parts) if p.startswith("{anim}") or p.endswith(".png")), len(parts))
     return "/".join(parts[:cut]).rstrip("/")
 
 
@@ -230,6 +245,7 @@ def main():
     for key, layers in CHARACTERS.items():
         compose(lpc, key, layers, zmap, report)
         folders = [f for f, _ in layers]
+        folders += [str(pathlib.Path(p).parent) for f in list(folders) if f in PATH_OVERRIDE for p in PATH_OVERRIDE[f].values()]
         all_credit_lines += [f"[{key}]"] + credits_for(defs, {k: v[1] for k, v in zfound.items()}, folders)
         print("wrote", OUT / f"{key}.png")
     (OUT / "CREDITS.txt").write_text("\n".join(all_credit_lines) + "\n", encoding="utf-8")
