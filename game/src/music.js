@@ -211,7 +211,7 @@ const Music = {
   current: null,
   master: null,
   buffers: {},
-  VOLUME: 0.35,
+  VOLUME: 0.22,
   FADE: 0.8,
 
   loadSetting() {
