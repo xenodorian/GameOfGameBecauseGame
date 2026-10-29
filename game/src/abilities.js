@@ -72,6 +72,7 @@ const Attacks = (() => {
   // are stored on the scene and read in its update.
   function use(id, scene) {
     const p = scene.player;
+    Sfx.play("ability");
     switch (id) {
       case "slash":
         hitboxes.push({ ...faceRect(p, 36, 24, 4), t: 0.15, kind: "slash" });

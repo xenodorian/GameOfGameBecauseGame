@@ -46,11 +46,24 @@ const Hand = (() => {
     deck.length = 0;
   }
 
+  // Plain data for the save file, and back again.
+  function serialize() {
+    return { hand: hand.slice(), deck: deck.slice() };
+  }
+
+  function restore(data) {
+    for (let i = 0; i < SLOTS; i++) hand[i] = data.hand[i] || null;
+    deck.length = 0;
+    deck.push(...data.deck);
+  }
+
   return {
     SLOTS,
     collect,
     discard,
     reset,
+    serialize,
+    restore,
     get: (slot) => hand[slot],
     slots: () => hand.slice(),
     deckCount: () => deck.length,

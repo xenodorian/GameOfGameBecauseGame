@@ -67,7 +67,9 @@ const World = (() => {
         // jump that clears the flag's tile still completes the level.
         if (ch === "F") exit = { x: tx * TILE, y: (ty - 3) * TILE, w: TILE, h: 4 * TILE };
         if (MARKERS[ch]) enemySpawns.push({ kind: MARKERS[ch], x: tx * TILE, y: ty * TILE });
-        if (ch === "c" || ch === "k" || ch === "p") pickupSpawns.push({ power: ch === "p", x: tx * TILE, y: ty * TILE });
+        if (ch === "c" || ch === "k" || ch === "p") {
+          pickupSpawns.push({ power: ch === "p", secret: ch !== "k", x: tx * TILE, y: ty * TILE });
+        }
         if (ch === "i") signs.push({ x: tx * TILE, y: ty * TILE, w: TILE, h: TILE, text: (level.signs || [])[signN++] || "" });
       })
     );
@@ -357,6 +359,8 @@ const World = (() => {
     draw,
     drawSigns,
     setFlagOpen,
+    // Secrets (c and p markers) in level i.
+    countSecrets: (i) => LEVELS[i].rows.reduce((n, row) => n + [...row].filter((ch) => ch === "c" || ch === "p").length, 0),
     THEMES,
     overlapping,
     load,

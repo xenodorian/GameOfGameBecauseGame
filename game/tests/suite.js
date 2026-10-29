@@ -54,6 +54,7 @@ check('menus: title, play, pause, back, credits', async (browser) => {
   assert.equal(await page.evaluate(() => Engine.current().mode), 'play');
   await page.keyboard.press('Enter'); await wait(page, 80);
   await page.keyboard.press('ArrowDown'); await wait(page, 80);
+  await page.keyboard.press('ArrowDown'); await wait(page, 80);
   await page.keyboard.press('Enter'); await wait(page, 80);
   assert.equal(await name(), 'TitleScene');
   await page.keyboard.press('ArrowDown'); await wait(page, 80);
@@ -562,6 +563,47 @@ check('signs: standing at a sign shows its text', async (browser) => {
   assert.equal(await page.evaluate(() => __scene.signText), 'Test sign text.');
   assert.deepEqual(page.errors, []);
   await page.close();
+});
+
+check('boss: warlord takes 8 hits, then the exit opens', async (browser) => {
+  const page = await newPage(browser);
+  await page.keyboard.press('Enter'); await wait(page, 120);
+  await page.evaluate(() => {
+    window.__scene = new PlayScene(World.count - 1); Engine.setScene(window.__scene);
+  });
+  const boss = await page.evaluate(() => Enemies.list().find((e) => e.kind === 'warlord') ? true : false);
+  assert.equal(boss, true);
+  for (let i = 0; i < 8; i++) {
+    await page.evaluate(() => {
+      const w = Enemies.list().find((e) => e.kind === 'warlord');
+      if (w) { w.hurtT = 0; Enemies.defeat(w); }
+    });
+  }
+  assert.equal(await page.evaluate(() => Enemies.list().some((e) => e.kind === 'warlord' && !e.dead)), false);
+  await page.evaluate(() => { const f = World.exit(); __scene.player.x = f.x; __scene.player.y = f.y; });
+  await wait(page, 100);
+  assert.equal(await page.evaluate(() => __scene.mode), 'complete');
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('save: finishing level 1 and reloading offers Continue, which starts level 2', async (browser) => {
+  // A plain context: the default page helper clears storage on every load.
+  const context = await browser.newContext({ viewport: { width: 960, height: 540 } });
+  const page = await context.newPage();
+  page.errors = [];
+  page.on('pageerror', (e) => page.errors.push(e.message));
+  await page.goto(url); await wait(page, 300);
+  await page.evaluate(() => { window.__scene = new PlayScene(0); Engine.setScene(window.__scene); });
+  await page.evaluate(() => { const f = World.exit(); __scene.player.x = f.x; __scene.player.y = f.y; });
+  await wait(page, 100);
+  await page.keyboard.press('Enter'); await wait(page, 150);
+  await page.reload(); await wait(page, 300);
+  assert.equal(await page.evaluate(() => Engine.current().items[0]), 'Continue');
+  await page.keyboard.press('Enter'); await wait(page, 150);
+  assert.equal(await page.evaluate(() => World.index), 1);
+  assert.deepEqual(page.errors, []);
+  await context.close();
 });
 
 check('gates: validate_gates.py exits 0', async () => {

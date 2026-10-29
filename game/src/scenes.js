@@ -91,21 +91,68 @@ function drawMenu(ctx, title, items, sel, footer) {
 }
 
 // Title screen: start, input check, credits.
+// Save for Continue: the level, character, hand, and run stats, in localStorage.
+// Every call is guarded, since storage can be blocked.
+const SaveGame = {
+  key: "changeling_save",
+  save(data) {
+    try {
+      localStorage.setItem(this.key, JSON.stringify(data));
+    } catch (e) {
+      /* storage unavailable: no save */
+    }
+  },
+  load() {
+    try {
+      const raw = localStorage.getItem(this.key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  },
+  clear() {
+    try {
+      localStorage.removeItem(this.key);
+    } catch (e) {
+      /* storage unavailable */
+    }
+  },
+};
+
+// Stats for the whole run, shown at the end.
+const Run = { deaths: 0, secrets: 0, startTime: 0 };
+
+function newRun() {
+  Run.deaths = 0;
+  Run.secrets = 0;
+  Run.startTime = performance.now();
+}
+
 class TitleScene {
   constructor() {
-    this.items = ["Play", "Input check", "Credits"];
+    const saved = SaveGame.load();
+    this.items = saved ? ["Continue", "New game", "Input check", "Credits"] : ["Play", "Input check", "Credits"];
     this.sel = 0;
+    this.saved = saved;
   }
 
   update() {
     this.sel = menuStep(this.sel, this.items.length);
-    if (menuConfirm()) {
-      if (this.sel === 0) {
-        Hand.reset();
-        Engine.setScene(new PlayScene());
-      }
-      if (this.sel === 1) Engine.setScene(new InputTestScene());
-      if (this.sel === 2) Engine.setScene(new CreditsScene());
+    if (!menuConfirm()) return;
+    const choice = this.items[this.sel];
+    if (choice === "Continue") {
+      Hand.restore(this.saved.cards);
+      Object.assign(Run, this.saved.run);
+      Engine.setScene(new PlayScene(this.saved.level, this.saved.active));
+    } else if (choice === "Play" || choice === "New game") {
+      SaveGame.clear();
+      Hand.reset();
+      newRun();
+      Engine.setScene(new IntroScene());
+    } else if (choice === "Input check") {
+      Engine.setScene(new InputTestScene());
+    } else if (choice === "Credits") {
+      Engine.setScene(new CreditsScene());
     }
   }
 
@@ -117,6 +164,16 @@ class TitleScene {
 // Credits: sources and licenses for the art and code.
 // Ending screen. Shown after the last level. Text is filled in by task F2.
 class EndingScene {
+  constructor() {
+    this.total = 0;
+    for (let i = 0; i < World.count; i++) this.total += World.countSecrets(i);
+    const secs = Math.floor((performance.now() - Run.startTime) / 1000);
+    const mm = String(Math.floor(secs / 60)).padStart(2, "0");
+    const ss = String(secs % 60).padStart(2, "0");
+    this.stats = "Deaths: " + Run.deaths + "    Secrets: " + Run.secrets + " of " + this.total + "    Time: " + mm + ":" + ss;
+    SaveGame.clear();
+  }
+
   update() {
     if (menuConfirm()) Engine.setScene(new CreditsScene());
   }
@@ -126,10 +183,50 @@ class EndingScene {
     ctx.fillRect(0, 0, Engine.W, Engine.H);
     ctx.fillStyle = "#e8e4d8";
     ctx.textAlign = "center";
-    ctx.font = "18px system-ui, sans-serif";
-    ctx.fillText("The end", Engine.W / 2, 110);
+    ctx.font = "14px system-ui, sans-serif";
+    ctx.fillText("The Warlord falls. The faces return to their owners.", Engine.W / 2, 80);
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillText(this.stats, Engine.W / 2, 116);
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillText("Thanks for playing.", Engine.W / 2, 146);
     ctx.font = "11px system-ui, sans-serif";
-    ctx.fillText("Enter: credits", Engine.W / 2, 140);
+    ctx.fillText("Enter: credits", Engine.W / 2, 180);
+    ctx.textAlign = "left";
+  }
+}
+
+// Black screen with three lines shown one at a time, then Enter to begin.
+class IntroScene {
+  constructor() {
+    this.lines = [
+      "A warlord has stolen every face in the kingdom.",
+      "You are a changeling. Beat a foe and its face is yours.",
+      "Take back the faces. Climb to the throne.",
+    ];
+    this.t = 0;
+  }
+
+  update(dt) {
+    this.t += dt;
+    if (menuConfirm()) {
+      if (this.t < this.lines.length * 1.5) this.t = this.lines.length * 1.5;
+      else Engine.setScene(new PlayScene(0));
+    }
+  }
+
+  draw(ctx) {
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, Engine.W, Engine.H);
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.font = "13px system-ui, sans-serif";
+    this.lines.forEach((line, i) => {
+      if (this.t >= i * 1.5 + 0.5) ctx.fillText(line, Engine.W / 2, 90 + i * 34);
+    });
+    if (this.t >= this.lines.length * 1.5) {
+      ctx.font = "11px system-ui, sans-serif";
+      ctx.fillText("Enter: begin", Engine.W / 2, 220);
+    }
     ctx.textAlign = "left";
   }
 }
@@ -152,6 +249,7 @@ class CreditsScene {
       "Dungeon Crawl Stone Soup tiles: DCSS team. Mostly CC0; see assets/tiles/LICENSE_DCSS.txt.",
       "Sprite Foundry Fantasy Heroes (48px and HD), Monster Pack, Goblin Warband: MIT.",
       "Game code and build: this repository.",
+      "Design and code: built with Claude Code",
     ];
     lines.forEach((line, i) => ctx.fillText(line, 16, 56 + i * 18));
     ctx.fillStyle = "#9fb0c0";
@@ -233,8 +331,13 @@ class PlayScene {
     this.scurryT = 0;
     this.ghostT = 0;
     this.pauseSel = 0;
+    this.flashT = 0;
+    this.secretsFound = 0;
+    this.secretsTotal = World.countSecrets(World.index);
+    this.bannerT = 2.5;
     this.player = this.newBody(World.spawn.x, World.spawn.y);
     Enemies.spawnFromLevel();
+    if (World.index >= 1) SaveGame.save({ level: World.index, active: this.active, cards: Hand.serialize(), run: { ...Run } });
   }
 
   newBody(x, y) {
@@ -277,6 +380,7 @@ class PlayScene {
     if (p.grounded) p.hopUsed = false;
     if (Input.pressed("up") && p.grounded) {
       p.vy = -340;
+      Sfx.play("jump");
       p.jumping = true;
     }
     // Releasing jump early cuts the arc short.
@@ -315,6 +419,9 @@ class PlayScene {
     Attacks.update(dt);
     World.updatePlatforms(dt);
     if (this.ghostT > 0) this.ghostT -= dt;
+    if (this.bannerT > 0) this.bannerT -= dt;
+    if (this.flashT > 0) this.flashT -= dt;
+    Effects.update(dt);
     this.checkEnemyContact(p, prevBottom);
     if (this.mode !== "play") return;
     if (this.ghostT <= 0 && Attacks.hitByHostile(p)) {
@@ -331,6 +438,11 @@ class PlayScene {
         pickup.t += dt;
         if (pickup.t >= 0.3) {
           Hand.collect(pickup.cardId);
+          Sfx.play("pickup");
+          if (pickup.secret) {
+            Run.secrets += 1;
+            this.secretsFound += 1;
+          }
           // A power-up also draws one more random card.
           if (pickup.power) Hand.collect(Object.keys(CARD_DEFS)[Math.floor(Math.random() * Object.keys(CARD_DEFS).length)]);
           pickup.state = "done";
@@ -359,14 +471,18 @@ class PlayScene {
     const bossLocked = World.level.boss && Enemies.list().some((e) => e.kind === "warlord" && !e.dead);
     World.setFlagOpen(!bossLocked);
     const exit = World.exit();
-    if (exit && this.mode === "play" && !bossLocked && this.overlaps(p, exit)) this.mode = "complete";
+    if (exit && this.mode === "play" && !bossLocked && this.overlaps(p, exit)) {
+      this.mode = "complete";
+      Sfx.play("complete");
+    }
   }
 
   updatePause() {
-    this.pauseSel = menuStep(this.pauseSel, 2);
+    this.pauseSel = menuStep(this.pauseSel, 3);
     if (menuBack()) this.mode = "play";
     if (menuConfirm()) {
       if (this.pauseSel === 0) this.mode = "play";
+      else if (this.pauseSel === 1) Sfx.enabled = !Sfx.enabled;
       else Engine.setScene(new TitleScene());
     }
   }
@@ -412,6 +528,8 @@ class PlayScene {
 
   // A stomp needs the player falling and above the enemy's top on the last step.
   checkEnemyContact(p, prevBottom) {
+    // Right after a respawn the player is safe for one second.
+    if (this.flashT > 0) return;
     for (const enemy of Enemies.list()) {
       if (enemy.dead || !this.overlaps(p, enemy)) continue;
       const stomp = p.vy > 0 && prevBottom <= enemy.y + 6;
@@ -429,6 +547,8 @@ class PlayScene {
   // hand card to become. With an empty hand, the Knight returns.
   beginSelection(reason) {
     this.reason = reason;
+    Sfx.play("hurt");
+    if (reason !== "discarded") Run.deaths += 1;
     this.deathPos = { x: this.player.x, y: this.player.y };
     if (Hand.slots().every((c) => c === null)) {
       this.respawn("knight");
@@ -469,6 +589,7 @@ class PlayScene {
     this.floatT = 0;
     this.scurryT = 0;
     this.ghostT = 0;
+    this.flashT = 1.0;
     Attacks.reset();
   }
 
@@ -514,6 +635,8 @@ class PlayScene {
     drawHills(ctx, cx * 0.25, theme.far, 150, 0.012, 14);
     drawHills(ctx, cx * 0.5, theme.near, 190, 0.02, 20);
     World.draw(ctx, this.images, cx, cy, Engine.W, Engine.H);
+    // Screen shake after a warlord hit (the engine resets the transform each frame).
+    if (Effects.shakeT > 0) ctx.translate(Math.round((Math.random() * 2 - 1) * 3), Math.round((Math.random() * 2 - 1) * 3));
     World.drawSigns(ctx, cx, cy);
     World.drawPlatforms(ctx, cx, cy);
     Attacks.draw(ctx, cx, cy);
@@ -521,6 +644,7 @@ class PlayScene {
     for (const enemy of Enemies.list()) {
       if (!enemy.dead) enemy.draw(ctx, this.images, cx, cy);
     }
+    Effects.draw(ctx, cx, cy);
     for (const pickup of Enemies.pickups()) {
       if (pickup.state !== "done") pickup.draw(ctx, cx, cy, pickup.target || { x: 0, y: 0 });
     }
@@ -536,7 +660,7 @@ class PlayScene {
       ctx.font = "16px system-ui, sans-serif";
       ctx.fillText("Paused", Engine.W / 2, 110);
       ctx.font = "14px system-ui, sans-serif";
-      ["Resume", "Title screen"].forEach((label, i) => {
+      ["Resume", "Sound: " + (Sfx.enabled ? "On" : "Off"), "Title screen"].forEach((label, i) => {
         ctx.fillStyle = i === this.pauseSel ? "#d9a441" : "#e8e4d8";
         ctx.fillText((i === this.pauseSel ? "> " : "  ") + label, Engine.W / 2, 144 + i * 26);
       });
@@ -550,8 +674,10 @@ class PlayScene {
       ctx.font = "16px system-ui, sans-serif";
       ctx.fillText("Level complete", Engine.W / 2, 110);
       ctx.font = "11px system-ui, sans-serif";
+      ctx.fillText("Secrets found: " + this.secretsFound + " of " + this.secretsTotal, Engine.W / 2, 128);
+      ctx.font = "11px system-ui, sans-serif";
       const more = World.index + 1 < World.count;
-      ctx.fillText(more ? "Enter: next level" : "Enter: continue", Engine.W / 2, 132);
+      ctx.fillText(more ? "Enter: next level" : "Enter: continue", Engine.W / 2, 146);
       ctx.textAlign = "left";
     } else if (this.mode === "discardCard") {
       HUD.draw(ctx, this.sel);
@@ -563,12 +689,15 @@ class PlayScene {
       HUD.draw(ctx, -1);
       this.drawBanner(ctx, CHARACTERS[this.active].name + ". Left/Right walk, Up jump, A S Z X abilities.");
       this.drawSignBox(ctx);
+      this.drawBanner2(ctx);
       this.drawAbilityBar(ctx);
       this.drawBossBar(ctx);
     }
   }
 
   drawBody(ctx, cx, cy) {
+    // Flash after a respawn: skip every other 0.1 s.
+    if (this.flashT > 0 && Math.floor(this.flashT / 0.1) % 2 === 0) return;
     const p = this.player;
     const img = this.images[CHARACTERS[this.active].sprite];
     const sx = Math.round(p.x + p.w / 2 - 24 - cx);
@@ -584,6 +713,20 @@ class PlayScene {
       ctx.drawImage(img, sx, sy, 48, 48);
     }
     ctx.restore();
+  }
+
+  // Level name for the first 2.5 seconds, fading out over the last 0.5.
+  drawBanner2(ctx) {
+    if (this.bannerT <= 0) return;
+    ctx.globalAlpha = Math.min(1, this.bannerT / 0.5);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.fillRect(120, 80, 240, 30);
+    ctx.fillStyle = "#e8e4d8";
+    ctx.font = "14px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Level " + (World.index + 1) + ": " + World.level.name, Engine.W / 2, 100);
+    ctx.textAlign = "left";
+    ctx.globalAlpha = 1;
   }
 
   // Health bar for the warlord while it is alive: 8 segments and a label.

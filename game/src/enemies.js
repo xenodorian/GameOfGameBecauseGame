@@ -168,9 +168,10 @@ class Enemy {
 // cardId is a character id, or "random" to pick one when it is collected.
 // A power-up is a gold pickup. It draws one card and then one more.
 class CardPickup {
-  constructor(cardId, x, y, { power = false, pop = true } = {}) {
+  constructor(cardId, x, y, { power = false, pop = true, secret = false } = {}) {
     this.cardId = cardId;
     this.power = power;
+    this.secret = secret;
     this.x = x;
     this.y = y;
     this.w = 14;
@@ -208,6 +209,40 @@ class CardPickup {
   }
 }
 
+// Visual effects: defeat bursts and a short screen shake. Drawn in code.
+const Effects = {
+  shakeT: 0,
+  bursts: [],
+  burst(x, y, color) {
+    const parts = [];
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      parts.push({ x, y, vx: Math.cos(a) * 60, vy: -80 + Math.sin(a) * 30 });
+    }
+    this.bursts.push({ parts, color, t: 0 });
+  },
+  update(dt) {
+    if (this.shakeT > 0) this.shakeT -= dt;
+    for (const b of this.bursts) {
+      b.t += dt;
+      for (const q of b.parts) {
+        q.vy += 400 * dt;
+        q.x += q.vx * dt;
+        q.y += q.vy * dt;
+      }
+    }
+    this.bursts = this.bursts.filter((b) => b.t < 0.4);
+  },
+  draw(ctx, camX, camY) {
+    for (const b of this.bursts) {
+      ctx.globalAlpha = 1 - b.t / 0.4;
+      ctx.fillStyle = b.color;
+      for (const q of b.parts) ctx.fillRect(Math.round(q.x - camX), Math.round(q.y - camY), 4, 4);
+    }
+    ctx.globalAlpha = 1;
+  },
+};
+
 // Places enemies and card pickups for one level, and runs their updates.
 const Enemies = (() => {
   let list = [];
@@ -216,7 +251,7 @@ const Enemies = (() => {
   function spawnFromLevel() {
     list = World.enemySpawns.map((s) => new Enemy(s.kind, s.x, s.y));
     pickups = World.pickupSpawns.map(
-      (s) => new CardPickup("random", s.x, s.y, { power: s.power, pop: false })
+      (s) => new CardPickup("random", s.x, s.y, { power: s.power, pop: false, secret: s.secret })
     );
   }
 
@@ -232,9 +267,13 @@ const Enemies = (() => {
     if (enemy.hp > 1) {
       enemy.hp -= 1;
       enemy.hurtT = 0.6;
+      Sfx.play(enemy.kind === "warlord" ? "boss" : "hit");
+      if (enemy.kind === "warlord") Effects.shakeT = 0.15;
       return;
     }
     enemy.dead = true;
+    Sfx.play("hit");
+    Effects.burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, CARD_DEFS[ENEMY_DEFS[enemy.kind].card].color);
     dropCard(enemy);
   }
 

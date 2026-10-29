@@ -17,7 +17,7 @@ ASSETS = GAME / "assets"
 OUT = GAME / "changeling.html"
 
 # Load order matters. Each file may use the globals from the files above it.
-SCRIPTS = ["engine.js", "input.js", "levels.js", "world.js", "cards.js", "enemies.js", "abilities.js", "scenes.js", "main.js"]
+SCRIPTS = ["engine.js", "sfx.js", "input.js", "levels.js", "world.js", "cards.js", "enemies.js", "abilities.js", "scenes.js", "main.js"]
 
 # Asset key -> file under game/assets. Keys are what the JS asks for.
 IMAGES = {
