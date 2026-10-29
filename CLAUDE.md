@@ -11,14 +11,14 @@ Playable build: [game/changeling.html](game/changeling.html). Open it in a brows
 3. Never ask the user questions. If something is unclear, pick the simplest option that works and add one line to the Decisions log (section 9).
 4. Find code with Grep on the exact name, then Read about 40 lines around the match before you edit. Line numbers in plans are approximate.
 5. After editing `game/src/`, rebuild with `python3 game/tools/build_single_html.py` and commit the rebuilt `game/changeling.html` in the same commit.
-6. Before calling work done, run the check routine (section 2) and record the real results in the Results log (section 8). Only write numbers you actually saw.
+6. After each code task run check routine steps A to C. Run the full suite (step D) only once, at the end of the whole plan, and record the real results in the Results log (section 8). Only write numbers you actually saw.
 7. One task per commit. The commit message starts with the task id.
 8. Never delete, skip, or weaken a test to make it pass. Change a test only if the task changed that behavior on purpose.
 9. Player text is plain and short. No em dashes, no emojis.
 10. Do not add internet files unless the task says so. Sound is made in code. LPC sheets are the character art. Effects are drawn in code (section 5).
 11. If a task fails three times, stop it. Run `git checkout -- game` to drop its uncommitted edits, log what failed, mark it `[~]`, and move on.
 
-## 2. Check routine (after every code task)
+## 2. Check routine (steps A to C after every code task; step D only once, at the end of a plan)
 
 Step A. Rebuild. It must print no error:
 ```bash
@@ -86,7 +86,7 @@ On a network error retry after 2 s, 4 s, 8 s, 16 s. If rejected because `main` m
 
 ## 5. Effects system (added 2026-10-29)
 
-Reverse engineered from a user-supplied wizard beam pixel animation (procedural Python, Pillow plus numpy). Its key ideas, now in the game:
+Reverse engineered from a user-supplied wizard beam pixel animation (procedural Python, Pillow plus numpy). The original is in `reference/wizard_beam_pixel_art.zip` (PROCESS.txt explains the method; src/render.py is the renderer). Its key ideas, now in the game:
 
 - Energy bands. Each effect is a smooth energy value cut into flat colour bands by thresholds 0.92, 0.80, 0.66, 0.50, 0.30 (white core, pale, mid, deep), plus a faint halo below 0.30. Beam profile: `1.08 * (1 - (d / (w + 2.5)) ^ 1.6)`. `Glow.bandWidths(w)` returns the distance of each band from the axis.
 - Ramps in `Glow.RAMPS`, 5 colours core to edge: `arcane` (violet, mage), `steel` (blue white, blades and bows), `ember` (warm, hits; warm against cold, like the torch in the source), `bone` (pale green, unused so far).

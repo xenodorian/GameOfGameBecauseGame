@@ -1,5 +1,7 @@
 # Action Plan v2: effects follow-up
 
+Context: the effects method from `reference/wizard_beam_pixel_art.zip` is already in the game (`CLAUDE.md` section 5: mage beam, banded slash, thrust, bash, hits, flares, shake, flash). This plan fixes the one known test failure and spreads the effects to the remaining attacks.
+
 For a small, fast model. Read `CLAUDE.md` sections 1, 2, and 5 first. Then do the tasks below in order, one at a time.
 
 ## How to work
@@ -9,9 +11,9 @@ For a small, fast model. Read `CLAUDE.md` sections 1, 2, and 5 first. Then do th
 3. Do only what the task says. Copy code exactly as written here.
 4. To find code: use Grep with the exact text given in the task (for example `Grep pattern="function fireHostile" path="game/src"`). Read about 20 lines around the match. Then Edit.
 5. If an Edit fails, Read the file again and copy `old_string` exactly from it. Do not guess.
-6. After each code task, run the check routine in `CLAUDE.md` section 2 (steps A to D). All must pass.
+6. After each code task, run check routine steps A to C in `CLAUDE.md` section 2. Do NOT run the full suite (step D) until V7. It is slow and expensive.
 7. Commit message starts with the task id, for example `V2: weaver arrows glow`. Mark the task `[x]` in this file in the same commit.
-8. After the commit, add one row to the Results log (`CLAUDE.md` section 8): date, `git rev-parse --short HEAD`, gates result, the real suite pass and fail counts.
+8. After the commit, add one row to the Results log (`CLAUDE.md` section 8): date, `git rev-parse --short HEAD`, gates result, and `suite not run` (the suite runs only in V7).
 9. If a task fails 3 times: run `git checkout -- game`, add one line to the Decisions log (`CLAUDE.md` section 9) saying what failed, mark the task `[~]`, move on.
 10. Never ask the user questions.
 
@@ -19,13 +21,12 @@ For a small, fast model. Read `CLAUDE.md` sections 1, 2, and 5 first. Then do th
 
 The last suite run (effects pass) had 1 failure: `stomp defeats a grunt and drops a card; side contact respawns safely`. Message: `'play' == 'select'` (game/tests/suite.js, the line `assert.equal(await page.evaluate(() => __scene.mode), 'select');`).
 
-1. Run the suite once (check routine step D). If that check passes, write "stomp check passed on rerun" in the Decisions log and mark V0 `[x]`.
-2. If it fails again: in that check, find the two lines `await wait(page, 80);` and `await wait(page, 250);` that come right after `__scene.player.x = __r.x - 10; __scene.player.y = __r.y;`. Replace both with one line:
+1. In that check, find the two lines `await wait(page, 80);` and `await wait(page, 250);` that come right after `__scene.player.x = __r.x - 10; __scene.player.y = __r.y;`. Replace both with one line:
 ```js
   await page.waitForFunction(() => __scene.mode === 'select', null, { timeout: 3000 });
 ```
-   This waits for the game instead of the wall clock (same fix as T1). Run the suite again.
-3. If it still fails, mark `[~]` and log it.
+   This waits for the game instead of the wall clock (same fix as T1).
+2. Run `node --check game/tests/suite.js`. Do not run the suite; V7 does that.
 
 ## V1 [ ]: Test that the beam hits two enemies
 
@@ -51,8 +52,7 @@ File: `game/tests/suite.js`.
     check: (p) => p.evaluate(() => __g.dead && __g2.dead), want: true,
   },
 ```
-4. Run `node --check game/tests/suite.js`, then the check routine. The suite count goes up by 1.
-5. If only this new check fails, change `950` to `930` and run again. If it still fails, mark `[~]`.
+4. Run `node --check game/tests/suite.js`. Do not run the suite; V7 does that. If this check fails in V7, change `950` to `930` and run the suite one more time.
 
 ## V2 [ ]: Weaver arrows glow bone green
 
@@ -66,7 +66,7 @@ File: `game/src/abilities.js`.
 ```js
       if (q.owner === "weaver") Glow.disc(ctx, q.x - cx + (dir > 0 ? 0 : 14), q.y - cy + 1, 4, "bone", 0.6);
 ```
-3. Check routine. Then run the screenshot tool and open `game/tests/shots/c_weaver_ab1.png` with Read. You should see a pale green glow at the arrow tail. Write what you saw in the commit message.
+3. Check routine steps A to C. V6 checks how it looks.
 
 ## V3 [ ]: Archer arrows flash on release
 
@@ -77,7 +77,7 @@ File: `game/src/abilities.js`.
 ```js
     Effects.flare(x, y + 2, "ember");
 ```
-3. Check routine.
+3. Check routine steps A to C.
 
 ## V4 [ ]: Warlord hits flash the screen
 
@@ -88,7 +88,7 @@ File: `game/src/enemies.js`.
 ```js
       if (enemy.kind === "warlord") { Effects.shake(0.15, 3); Effects.flash(0.04); }
 ```
-3. Check routine.
+3. Check routine steps A to C.
 
 ## V5 [ ]: Blink throws arcane sparks
 
@@ -103,7 +103,7 @@ File: `game/src/abilities.js`.
 ```js
         Effects.spray(p.x + p.w / 2, p.y + p.h / 2, -p.facing, "arcane", 6);
 ```
-4. Check routine. The test `mage blink (X) moves 96 px` must still pass.
+4. Check routine steps A to C.
 
 ## V6 [ ]: Visual check of all effects
 
@@ -118,10 +118,11 @@ No code change.
 ## V7 [ ]: Close out
 
 1. Run `git status`. It must show a clean tree after your last commit.
-2. Run the check routine steps B and D once more.
-3. Add a final row to the Results log with the real numbers.
-4. Mark V7 `[x]`. Add the line `ACTION PLAN V2 COMPLETE` at the end of this file.
-5. Commit and push. Message: `V7: close out`.
+2. Run check routine step B, then step D (the full suite) ONE time. This is the only suite run in the plan.
+3. If checks fail, look only at the ones from V0, V1, or code changed in V2 to V5. Fix with the smallest change, then run the suite one more time. If it still fails, log the failing names in the Decisions log and do not run it again.
+4. Add a final row to the Results log with the real numbers.
+5. Mark V7 `[x]`. Add the line `ACTION PLAN V2 COMPLETE` at the end of this file.
+6. Commit and push. Message: `V7: close out`.
 
 ## Not in this plan (do not do these)
 
