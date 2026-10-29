@@ -98,9 +98,9 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
 
 Status key: [ ] not started, [~] in progress, [x] done. Hardware, other browsers, art, and sound are out of scope for this round.
 
-- [ ] Main level content: add enemies and cards along the main route, without changing its route geometry.
-- [ ] Gated secret: a second secret card above the main route. Reachable by ranger (hop) and mage (float plus jump), not by basic moves or the knight.
-- [ ] Enemy type: a fourth enemy, a ranged archer that fires at the player when lined up. Hostile arrows that hit the player trigger the death selection.
+- [x] Main level content: added a grunt (row 13, col 34), a card (row 12, col 22), and the archer (row 13, col 56) along the main route. Route geometry unchanged.
+- [x] Gated secret: a card on a platform at row 10, cols 46 to 49 (card at row 8, col 47). Ranger hop from col 45 reaches it; mage float plus jump reaches it. By hand analysis, basic moves and the knight cannot. Not re-run through `validate_gates.py`, per instruction.
+- [x] Enemy type: archer (Sprite Foundry bone weaver sprite, MIT). Stands still, fires a hostile arrow when lined up within 200 px every 1.6 s. A hit opens the death selection. Not tested, per instruction.
 
 ## Build workflow (task list)
 
