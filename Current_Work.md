@@ -94,7 +94,7 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
     - Chasm pocket power-up (col 70, row 13): knight (charge), ranger (rope and drop), mage (blink). Basic moves cannot reach it.
     - Main route: every character reaches the exit.
 
-## Review findings and task list for executor agents (2026-10-29)
+## Opus review notes: findings and task list for executor agents (2026-10-29)
 
 Written by a review pass for cheaper models to execute. Do the tasks in order. Each task is small. After every task, run the two checks below and do not move on until they match the expected result.
 
