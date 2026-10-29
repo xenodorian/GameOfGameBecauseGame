@@ -1,0 +1,267 @@
+OPUS REVIEW LOG: Changeling (Knight of a thousand faces)
+=========================================================
+
+Written 2026-10-29 by the Claude Code agent at the end of Action Plan v2 and the
+weapon pass. Purpose: a complete list of known issues, unfinished work, and
+decisions that need a second look. Each item says what is wrong or missing, where
+it lives, what was tried, and what would settle it.
+
+Repo state when written
+  Branch: main
+  Last commit before this log: d6e2ded (weapons: rat dagger, weaver bow, weapons
+  stay in hand on idle and jump)
+  Gates: validate_gates.py exit 0 (last run after d6e2ded)
+  Last full suite: 53 passed, 0 failed, exit 0 (run at V7, commit 427aced). The
+  full suite was NOT rerun after d6e2ded.
+
+Conventions used here
+  "Verified" means a command or a file was actually looked at in this session.
+  "Not verified" means the claim is an inference from code or from the plan.
+  Paths are relative to the repo root unless stated.
+
+
+------------------------------------------------------------------------------
+PART 1. WEAPONS AND CHARACTER ART (highest priority; the user asked for this)
+------------------------------------------------------------------------------
+
+The user asked for: every character has a weapon, animations checked closely for
+fluidity, projectiles fire from the correct spot, and polish wherever possible.
+Only part of this is done.
+
+W1. Knight has no sword during slash or thrust (and hurt, spellcast, shoot).
+    Where: game/tools/build_lpc.py, CHARACTERS["knight"], sword layers.
+    Verified: knight.png sheet. Row 2 (slash) and row 3 (thrust) show the shield
+    and body with no sword. The arming sword only has idle, walk, combat_idle,
+    and hurt frames in the LPC generator (Glob of weapon/sword/arming/universal).
+    The attack is the main action of the knight, so this is the biggest visible
+    gap.
+    Tried: longsword_alt slash exists but its frames are 128 px on a different
+    grid (weapon/sword/longsword_alt/slash/longsword_alt.png, viewed). build_lpc.py
+    crops 64 px cells, so it would be cropped wrong. Not tried: dagger thrust for
+    the knight (not done; would look wrong with the arming sword elsewhere).
+    To settle: either add an offset-aware 128 px path to build_lpc.py, or find a
+    64 px sword set with slash and thrust, or draw the frames by hand. Check that
+    the chosen sword keeps the same blade length across idle, walk, and attack.
+
+W2. Ranger has no bow in idle, walk, jump, slash, thrust, or spellcast.
+    Where: CHARACTERS["ranger"] bow layers in build_lpc.py.
+    Verified: the normal bow in the LPC generator has only shoot and hurt
+    (Glob of weapon/ranged/bow/normal/universal). A broader glob found only
+    great-bow walk frames, which are a different, larger bow.
+    Result in game: the bow appears only during shoot and hurt.
+    To settle: decide whether to use the great bow walk frames for walk only
+    (visual check needed), or to hold the bow by reusing the shoot first frame
+    for idle (likely looks wrong), or accept the gap and document it in CLAUDE.md.
+
+W3. Bone weaver has no bow in idle, walk, jump, or the melee rows.
+    Where: CHARACTERS["weaver"], added in d6e2ded.
+    Same cause as W2 (the same bow set). Shoot and hurt only.
+    Also check: the weaver's shoot arrows are bone-coloured (V2). The bow is
+    steel-coloured in the sheet, so the bow and the bone arrows may not match.
+    Not verified visually at sprite scale (the screenshots are too small).
+
+W4. Mage staff is missing on slash and shoot.
+    Where: CHARACTERS["mage"], staff layers.
+    Verified: staff sheets (weapon/magic/simple) have walk, thrust, spellcast,
+    hurt. Slash and shoot are hidden. Idle and jump now use the walk frame (d6e2ded).
+    Mage slash in the game still shows the staff hidden. Check whether this
+    looks wrong when the mage swings.
+
+W5. Rat dagger: visible on walk, slash, thrust, hurt, idle (walk pose), and jump
+    (walk pose). Not on spellcast or shoot (hidden). Dagger rows are 64 px.
+    Verified: rat.png sheet, rows 2 and 3 show the dagger.
+    Open question: the rat's dagger in idle is the walk-pose dagger; check that
+    the hand position matches the idle body pose. Not verified at scale.
+
+W6. Grunt, archer, warlord, rat king, and mud revenant have no weapons.
+    The user's request said "all characters". This log reads that as the five
+    playable characters (knight, ranger, mage, rat, bone weaver). The enemies are
+    listed here because the wording could include them.
+    Where: CHARACTERS in build_lpc.py. The archer is a skeleton with no bow.
+    The warlord has armour and helmet but no weapon. Rat king has a crown but no
+    weapon.
+    To settle: the user should say whether enemies need weapons.
+
+W7. Zombie (mud_revenant) and skeleton (weaver, archer) have no jump frames.
+    Where: body sheets. Verified: body/bodies/zombie has no jump folder; skeleton
+    has idle, walk, slash, thrust, spellcast, shoot, hurt only.
+    Result: jump uses walk (zombie) or idle (skeleton, weaver). Check the feel of
+    jump for both characters.
+
+W8. Sheet has stray frames beyond the animation's frame count.
+    Where: game/tools/build_lpc.py, compose(). When one layer has more frames
+    than the first layer, the frame list grows and extra columns get filled with
+    frames from the longer layer only.
+    Verified: rat.png, row 0 (idle), columns 2 to 8 show a dagger with no body.
+    The game reads only the first 2 idle columns (ANIM_ROWS idle count 2), so
+    gameplay is not affected. The sheet is still messy and could confuse a future
+    reader or tool. Fix: crop each row to the animation's frame count in compose().
+    Not changed in this session.
+
+W9. Weapon layering and z-order are hard-coded.
+    Where: build_lpc.py CHARACTERS zPos values. Known from CLAUDE.md: the knight
+    shield bg is 3 in the code but its definition says 6 (harmless). Not verified
+    against all characters.
+
+W10. Idle and jump weapon fallback is a design change.
+     Where: compose() in build_lpc.py, "weapons only reuse their walk pose on idle
+     and jump". Logged in CLAUDE.md decisions. The rule "weapon layers never use
+     the attack fallback" still holds for slash, thrust, spellcast, shoot, hurt.
+     Needs a visual check at sprite scale on the knight (sword in idle) and mage
+     (staff in idle).
+
+W11. Art was never checked at sprite scale after d6e2ded.
+     Screenshots (game/tests/shots/c_*.png) are 960 by 540. Sprites are small;
+     weapon details are hard to judge. A zoomed crop or a sheet-level contact
+     sheet is needed.
+
+
+------------------------------------------------------------------------------
+PART 2. ANIMATION FLUIDITY AND PROJECTILE ORIGINS (not started)
+------------------------------------------------------------------------------
+
+A1. Projectile origins not audited.
+    Where: game/src/abilities.js, "shoot" case around line 107 to 120. Player
+    arrows spawn at x = p.x + p.w (right) or p.x - 8 (left), y = p.y + 12. Hostile
+    arrows (fireHostile) use the enemy's x and y + 2 from the archer's code.
+    Not verified: whether the bow tip or the hand on the sprite matches these
+    points on each frame of the shoot row. The shoot row has 13 frames, and the
+    arm position changes across them. A spawn point that is correct on frame 0
+    may be wrong on the frame where the arrow is released.
+    Also: the weaver's arrow and the ranger's arrow share the same spawn code.
+    To settle: draw a per-frame origin table from the sheet (hand pixel per frame),
+    then pick the spawn point from the frame that is showing when the shot fires.
+
+A2. Mage beam origin not audited.
+    Where: abilities.js, beam with body p and dir p.facing. The beam starts from
+    the body position, and the staff tip is drawn separately (V6 screenshot shows
+    the beam leaving the staff tip; not measured in pixels).
+
+A3. Hit and slash effect origins not audited.
+    Where: faceRect and the slash/thrust hitboxes. The visible slash arc and the
+    hitbox are drawn in different places in code. Not measured.
+
+A4. Animation frame timing not reviewed frame by frame.
+    Where: game/src/anim.js ACTION_LENGTH and ANIM_ROWS. Spellcast 0.3 s over 7
+    frames, shoot 0.3 s over 13 frames, slash 0.2 s over 6 frames, thrust 0.24 s
+    over 8 frames, jump 0.25 s over 5 frames. Walk uses walkDist / 6 px per frame.
+    Not verified: any of these feel right in play. No frame was watched in motion.
+
+A5. Idle frame count is 2 (ANIM_ROWS idle [0, 2]) and the idle loop changes every
+    0.5 s (time * 2). A single breathing frame is not used. Could look stiff.
+    Not verified.
+
+A6. Landing and hurt poses.
+    Landing uses idle col 0 for landT, which may read as a snap back to standing.
+    Not verified.
+
+A7. Sheet credits: CREDITS.txt was regenerated in d6e2ded (dagger and bow entries
+    added). The credits file is generated, so a manual edit would be lost.
+
+
+------------------------------------------------------------------------------
+PART 3. GAMEPLAY AND LEVEL ISSUES (carried from CLAUDE.md section 6)
+------------------------------------------------------------------------------
+
+G1. Warlord spawn overlaps the arena platform. Horizontal movement snaps it to the
+    tile edge. Tests place it in open air, so the suite does not show it.
+    Where: level 8 (levels.js). Not fixed.
+
+G2. Level banner covers the top of sprites for the first 2.5 s. Designed, but it
+    hides the head of the character in l1_mid, l5_mid, and l7_mid (CLAUDE.md
+    section 10). Not fixed.
+
+G3. l4_mid screenshot shows the selection screen, because the capture dropped the
+    player in a pit. Screenshot harness issue, not verified as a game bug.
+
+G4. Exclusive secrets: weaver-only secret is in level 7 (spec said levels 2 or 6).
+    Exit zone is 4 tiles tall. Level 2 keyboard-bot check was dropped. These are
+    accepted spec deviations (CLAUDE.md section 6). Listed so the reviewer can
+    decide whether to keep them.
+
+G5. Every character must finish the main route of every level. The gate checks
+    (validate_gates.py) pass for all 8 levels, and the rule is enforced by the
+    gate model, not by playing the game. A real play-through by each character
+    has not been done.
+
+G6. The bone weaver's bow (W3) and ranger's bow (W2) do not appear during their
+    idle or walk, so a player may think the weapon is missing.
+
+
+------------------------------------------------------------------------------
+PART 4. TESTING GAPS
+------------------------------------------------------------------------------
+
+T1. The full suite was last run at V7 (commit 427aced, 53 passed, 0 failed). It
+    was not rerun after the weapon changes in d6e2ded. Rerun the full suite
+    before trusting d6e2ded. Plan rule: the full suite runs once per plan; this
+    needs an explicit decision.
+
+T2. The suite has no test that checks a weapon layer is present on a given
+    animation. The weapon work has no automated check.
+
+T3. Not tested: real devices, other browsers, gamepad and touch (simulated only),
+    sound quality. CLAUDE.md section 6.
+
+T4. Test notes that still rely on timing (CLAUDE.md section 6): input stand-still
+    check, warlord knockback (steps the update directly), knight charge waits on
+    the game clock. Passing now, but timing-sensitive.
+
+
+------------------------------------------------------------------------------
+PART 5. LICENSES AND CREDITS
+------------------------------------------------------------------------------
+
+L1. DCSS tiles: mostly CC0, per-tile licenses not checked (CLAUDE.md section 10).
+    Confirm before any commercial release.
+
+L2. LPC art licenses are mixed (OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0). The new dagger
+    and bow credits in game/assets/lpc/CREDITS.txt come from the LPC definition
+    files. Check the bow credit line: it lists a second bow walk author set; confirm
+    the bow used (normal/universal) is the one credited.
+
+L3. Pixelify Sans (OFL 1.1), fine.
+
+
+------------------------------------------------------------------------------
+PART 6. PROCESS AND REPO NOTES
+------------------------------------------------------------------------------
+
+P1. Branch: the session named claude/nifty-thompson-wt7lnz. The user asked for
+    main, and CLAUDE.md says main. All work is on main. The old local main (53
+    commits behind origin) is kept at tag backup-stale-local-main-2. The
+    claude/nifty-thompson-wt7lnz remote branch still exists and was not touched.
+
+P2. Action_Plan_v2.md was completed (V0 to V7, ACTION PLAN V2 COMPLETE line).
+    Some of its "not in this plan" items are now the open work in this log.
+
+P3. The LPC generator checkout used by build_lpc.py is at /home/user/lpc_gen
+    (outside the repo, cloned from GitHub in this session). The build command is
+    python3 game/tools/build_lpc.py /home/user/lpc_gen. Re-clone if the path is gone.
+
+P4. One Bash command that listed the LPC checkout was blocked by the auto-mode
+    classifier ([Code from External]). Glob was used instead. Later, the project's
+    own build_lpc.py ran without a block. No workaround was used.
+
+P5. Decision: the user's preferences say never use em dashes or emojis in
+    user-facing text. Checked for the files written this session (CLAUDE.md
+    additions and this log). Not checked across the whole repo.
+
+
+------------------------------------------------------------------------------
+PART 7. SUGGESTED ORDER FOR THE OPUS AGENT
+------------------------------------------------------------------------------
+
+1. Rerun the full suite on d6e2ded (T1). Record the result in the CLAUDE.md
+   Results log. Do not change code first.
+2. Fix W8 (crop sheet rows to animation counts). It is small and removes noise
+   from every sheet.
+3. Render a zoomed contact sheet per character (2x or 4x) to check W1 to W7 and
+   W10 and W11 at sprite scale. Decide each weapon gap with the user (W1, W2, W4,
+   W6).
+4. Audit A1 (projectile origins) with a per-frame table before changing any spawn
+   point.
+5. Frame-by-frame review of A4 and A5 (timing and idle), watching the sheet
+   frames in order.
+6. Gameplay items G1 and G2 (level 8 spawn, banner overlap).
+7. Licenses L1 and L2 before any release.
