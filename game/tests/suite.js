@@ -102,6 +102,9 @@ check('stomp defeats a grunt and drops a card; side contact respawns safely', as
     __scene.player.x = __r.x - 10; __scene.player.y = __r.y;
   });
   await wait(page, 80);
+  // The stomped grunt left a card in hand, so the side contact opens the choice first.
+  assert.equal(await page.evaluate(() => __scene.mode), 'select');
+  await page.keyboard.press('KeyZ'); await wait(page, 80);
   assert.equal(await page.evaluate(() => __scene.mode), 'play');
   assert.equal(await page.evaluate(() => __r.dead), false);
   assert.deepEqual(page.errors, []);
