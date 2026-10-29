@@ -491,6 +491,7 @@ const Attacks = (() => {
   }
 
   function fireHostile(x, y, dir) {
+    Effects.flare(x, y + 2, "ember");
     hostile.push({ x, y, w: 8, h: 4, vx: dir * 240, life: 2.5 });
   }
 

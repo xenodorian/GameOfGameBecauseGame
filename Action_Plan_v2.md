@@ -87,7 +87,7 @@ new_string:
 ```
 Then check routine steps A to C (`node --check game/src/abilities.js`).
 
-## V3 [ ]: Archer arrows flash on release
+## V3 [x]: Archer arrows flash on release
 
 File: `game/src/abilities.js`. Edit:
 
@@ -102,7 +102,7 @@ new_string:
 ```
 Then check routine steps A to C.
 
-## V4 [ ]: Warlord hits flash the screen
+## V4 [x]: Warlord hits flash the screen
 
 File: `game/src/enemies.js`. Edit:
 

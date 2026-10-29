@@ -436,7 +436,7 @@ const Enemies = (() => {
         enemy.knockVx = enemy.x + enemy.w / 2 >= fromX ? 160 : -160;
       }
       Sfx.play(enemy.kind === "warlord" ? "boss" : "hit");
-      if (enemy.kind === "warlord") Effects.shake(0.15, 3);
+      if (enemy.kind === "warlord") { Effects.shake(0.15, 3); Effects.flash(0.04); }
       return;
     }
     enemy.dead = true;

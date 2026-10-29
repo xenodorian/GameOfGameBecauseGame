@@ -149,6 +149,8 @@ Open work:
 - Weapon layers never use the attack fallback; a weapon with no frame for an animation is hidden there.
 - Selection card is 140 px tall, not 108, to fit the idle frame and four ability names.
 - Spec deviations accepted: see section 6.
+- Action Plan v2 V3 and V4: committed together (both touch the rebuilt HTML). Deviation from one task per commit.
+- Action Plan v2: local `main` was 53 commits behind `origin/main` (old history). Kept it at tag `backup-stale-local-main-2`, reset `main` to `origin/main`.
 
 ## 10. Environment and licenses
 
