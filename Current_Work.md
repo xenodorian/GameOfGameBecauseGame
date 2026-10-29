@@ -73,7 +73,7 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
 ## Build status (updated this session)
 
 - Playable build: `game/changeling.html` (one file). Rebuild with `python3 game/tools/build_single_html.py`. Source is in `game/src/`.
-- Full test suite: `NODE_PATH=$(npm root -g) node game/tests/suite.js` (Playwright with Chromium). It runs 24 checks, including all keyboard playthroughs and the gate validator, and exits non-zero on failure. Last run: 24 of 24 pass.
+- Full test suite: `NODE_PATH=$(npm root -g) node game/tests/suite.js` (Playwright with Chromium). It runs 25 checks, including all keyboard playthroughs and the gate validator, and exits non-zero on failure. Last run: 25 of 25 pass.
 - Done or partly done: Phases 0 to 8. Phase 9 is the release step and is done except the real-device checks. Phase 4 has all 12 abilities coded but not every effect is tested. Phase 6 has the exit and level-complete screen only. Phases 7 to 9 are mostly open.
 - Open items for the next session: secret areas and their gates, the gate validation tool, the title and pause screens, the credits screen, a real-device pass (gamepad, phone, iOS full screen), and LPC attack sheets and mage art.
 - Decisions (all made by the build agent; no open questions remain):
@@ -85,6 +85,8 @@ Gating examples for secret areas: Ranger's arrow anchor reaches high ledges. Mag
   - A freed hand slot refills from the top of the deck.
   - Float is a hover. Hold Up to climb at 120 px/s for 1.2 s. Without Up, the fall slows. Decided because a float that cannot climb cannot open a ledge.
   - There is no game-over state. Deaths are unlimited, and the selection replaces a lives system.
+  - Voluntary character swap: not added. Characters change only through death or discard (see above).
+  - Enemy variety: a third enemy, the rat king (jumper), hops toward a nearby player. Drops a ranger card.
   - Power-up (gold pickup): draws two random cards, one into the hand or deck, then one more.
   - The mage keeps the Knight sprite as placeholder art until the robe layers are made.
   - Gate validation is a tile-level model (game/tools/validate_gates.py). Gate reach, by character:
@@ -125,7 +127,7 @@ Status key: [ ] not started, [~] in progress, [x] done.
 - [~] Knight, Ranger, and Mage implemented with all four abilities each. All 12 abilities are coded. Verified in headless Chromium: slash, shield bash, charge, shoot, arrow anchor (stand on the rope), hop, blink, float. Thrust and spell bolt share the code paths of slash and shoot but are not separately tested. Mage uses the Knight sprite as placeholder art.
 - [ ] Ability effects use the LPC attack sheets for animation timing. Not done: abilities currently draw simple hitboxes and bolts.
 - [ ] Verify each LPC layer for each character renders correctly. Not done: no mage art yet. The Ranger uses the Sprite Foundry 48px sprite, not LPC layers.
-- [~] Character switch. Implemented as the selection after a death or discard. A voluntary swap during play is not implemented, because the design doc does not say what happens to the character being swapped out.
+- [x] Character switch. Decided: characters change only through the selection after a death or discard. There is no voluntary swap key, so the design needs no extra input. The swapped-out character is lost, as in the death rule.
 
 ### Phase 5: Death, respawn, and discard
 - [x] Death screen with 3 hand cards, left and right selection, confirm with Z or A. Verified in headless Chromium.
