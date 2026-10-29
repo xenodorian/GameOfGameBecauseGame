@@ -465,6 +465,9 @@ Run all three checks. Record the real suite count and the gates summary (includi
 
 - E9: the level 2 keyboard bot check was dropped. The bot only looks at the tile ahead on its own row, so it walks into the step at column 40 and never jumps. The validator shows basic moves can clear the step, so the level is fine; the bot is the limit. No check added, per the E9 rule.
 - R1: suite 38 of 39 pass; the only failure is the gates check, as expected until R3 (secrets re-gated).
+- R2: validator now has the spacing, minimum, and exclusive-secret checks. Level minimums still fail for several levels (R4) and exclusives are missing (R3).
+- R3 (partial): validator arc check now sweeps every row the jump crosses, so jumps cannot pass through walls. Level 2: rat-only secret built as a sealed chamber with a one-tile shaft (card at col 96, row 8). Level 2 weaver-only secret: NOT done. A seven-tile weaver gap needs a floor the other characters cannot jump onto; design still open.
+- R3 (not started): levels 3 to 7.
 - E9: a main-route card (k) was added at the quiet start of levels 1 to 4 (columns 5 to 7), so no 20-column stretch is empty.
 - Opus: exit zone stays 4 tiles tall (jumping over the flag completes the level).
 - C1: a rat or weaver card could be selected before C2/C3 existed, which left the active character undefined and froze play. Added their CHARACTERS entries (C2/C3 step 1) with unimplemented ability ids that do nothing.

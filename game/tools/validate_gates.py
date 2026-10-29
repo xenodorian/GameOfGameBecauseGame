@@ -175,7 +175,9 @@ def explore(rows, abilities, start, ropes):
                     continue
                 step = 1 if across > 0 else -1
                 head_clear = all(grid.air(x, y - k) for k in range(1, up + 1))
-                arc_clear = all(grid.air(x + step * i, y - min(up, 1)) for i in range(1, abs(across)))
+                # Every column the arc crosses must be clear from the target row up to the start row.
+                sweep = range(ty, y) if up > 0 else [y]
+                arc_clear = all(grid.air(x + step * i, r) for i in range(1, abs(across)) for r in sweep)
                 if head_clear and arc_clear:
                     push((tx, grid.settle(tx, ty)))
 
