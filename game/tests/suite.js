@@ -47,6 +47,9 @@ check('menus: title, play, pause, back, credits', async (browser) => {
   const name = () => page.evaluate(() => Engine.current().constructor.name);
   assert.equal(await name(), 'TitleScene');
   await page.keyboard.press('Enter'); await wait(page, 80);
+  assert.equal(await name(), 'IntroScene');
+  await page.keyboard.press('Enter'); await wait(page, 80);
+  await page.keyboard.press('Enter'); await wait(page, 150);
   assert.equal(await name(), 'PlayScene');
   await page.keyboard.press('Enter'); await wait(page, 80);
   assert.equal(await page.evaluate(() => Engine.current().mode), 'pause');
@@ -98,6 +101,8 @@ check('stomp defeats a grunt and drops a card; side contact respawns safely', as
   // The grunt drops a card, so the hand is not empty and a death opens the choice.
   await page.evaluate(() => { __scene.beginSelection('slain'); });
   await page.keyboard.press('KeyZ'); await wait(page, 80);
+  // The respawn flash ignores contact for one second, so wait it out first.
+  await wait(page, 1100);
   await page.evaluate(() => {
     window.__r = Enemies.list().find((e) => e.kind === 'mud_revenant');
     __r.def = { ...__r.def, speed: 0, chaseSpeed: 0, sight: 0 };
@@ -258,15 +263,6 @@ const abilities = [
     check: (p) => p.evaluate(() => World.platforms[0] && World.platforms[0].w), want: 160,
   },
   {
-    name: 'weaver ghost (X) survives touching a grunt', who: 'weaver', key: 'KeyX', wait: 150,
-    setup: (p) => p.evaluate(() => {
-      const g = new Enemy('grunt', __scene.player.x, __scene.player.y);
-      g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 };
-      Enemies.list().push(g);
-    }),
-    check: (p) => p.evaluate(() => __scene.mode === 'play' && __scene.ghostT > 0), want: true,
-  },
-  {
     name: 'mage blink (X) moves 96 px', who: 'mage', key: 'KeyX', wait: 30,
     setup: (p) => placeAt(p, 200, 160),
     check: null,
@@ -335,6 +331,10 @@ check('levels: every level loads, has a spawn and an exit, and completing it mov
   for (let i = 0; i < count; i++) {
     await page.evaluate((idx) => {
       window.__scene = new PlayScene(idx); Engine.setScene(window.__scene);
+      for (let k = 0; k < 8; k++) {
+        const w = Enemies.list().find((e) => e.kind === 'warlord');
+        if (w) { w.hurtT = 0; Enemies.defeat(w); }
+      }
       const f = World.exit(); __scene.player.x = f.x; __scene.player.y = f.y;
     }, i);
     await wait(page, 100);
@@ -604,6 +604,24 @@ check('save: finishing level 1 and reloading offers Continue, which starts level
   assert.equal(await page.evaluate(() => World.index), 1);
   assert.deepEqual(page.errors, []);
   await context.close();
+});
+
+check('ability: weaver ghost (X) survives touching a grunt', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [], active: 'weaver' });
+  await placeAt(page, 200, 418);
+  await wait(page, 60);
+  // Ghost first, then the grunt touches the weaver.
+  await page.keyboard.press('KeyX'); await wait(page, 40);
+  await page.evaluate(() => {
+    const g = new Enemy('grunt', __scene.player.x, __scene.player.y);
+    g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 };
+    Enemies.list().push(g);
+  });
+  await wait(page, 150);
+  assert.equal(await page.evaluate(() => __scene.mode === 'play' && __scene.ghostT > 0), true);
+  assert.deepEqual(page.errors, []);
+  await page.close();
 });
 
 check('gates: validate_gates.py exits 0', async () => {
