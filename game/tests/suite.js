@@ -88,8 +88,9 @@ check('stomp defeats a grunt and drops a card; side contact respawns safely', as
   const page = await newPage(browser);
   await startPlay(page, { hand: [], freeze: false });
   await page.evaluate(() => { window.__g = Enemies.list().find((e) => e.kind === 'grunt'); });
-  await page.evaluate(() => { __g.x = __scene.player.x; __g.y = __scene.player.y + 60; __g.def = { ...__g.def, speed: 0, chaseSpeed: 0, sight: 0 }; });
-  await page.evaluate(() => { __scene.player.y -= 80; });
+  // Grunt stands on the floor at col 15; knight drops onto it from above.
+  await page.evaluate(() => { __g.x = 480; __g.y = 418; __g.def = { ...__g.def, speed: 0, chaseSpeed: 0, sight: 0 }; });
+  await page.evaluate(() => { __scene.player.x = 480; __scene.player.y = 300; __scene.player.vy = 0; });
   await wait(page, 700);
   assert.equal(await page.evaluate(() => __g.dead), true);
   // The grunt drops a card, so the hand is not empty and a death opens the choice.
