@@ -1,7 +1,8 @@
 // Records a short scripted moment to a GIF (and a PNG strip) so feel can be judged in motion.
 //   NODE_PATH=$(npm root -g) node game/tests/capture_gif.js <scenario> [outDir]
 // Scenarios: kill (knight slashes two grunts), beam (mage beam through two grunts),
-//            jump (run and jump), hurt (grunt walks into the knight).
+//            jump (run and jump), hurt (grunt walks into the knight),
+//            grunt, rat, archer, revenant (each enemy's tell and attack against a standing knight).
 // Needs ffmpeg. Output: <outDir>/<scenario>.gif and <scenario>_strip.png (default game/tests/shots/gif).
 const { chromium } = require('playwright');
 const path = require('path');
@@ -19,6 +20,10 @@ const SETUP = {
   beam: { who: 'mage', enemies: [[70, 'grunt'], [150, 'rat_king']], keys: [[150, 'KeyA']] },
   jump: { who: 'knight', enemies: [], keys: [[50, 'ArrowRight', 'down'], [300, 'ArrowUp', 'down'], [700, 'ArrowUp', 'up'], [1000, 'ArrowUp', 'down'], [1150, 'ArrowUp', 'up'], [1500, 'ArrowRight', 'up']] },
   hurt: { who: 'knight', enemies: [[60, 'grunt', true]], keys: [] },
+  grunt: { who: 'knight', enemies: [[90, 'grunt', true]], keys: [], ms: 2000 },
+  rat: { who: 'knight', enemies: [[110, 'rat_king', true]], keys: [], ms: 2200 },
+  archer: { who: 'knight', enemies: [[150, 'archer', true]], keys: [], ms: 2400 },
+  revenant: { who: 'knight', enemies: [[120, 'mud_revenant', true]], keys: [], ms: 2600 },
 }[scenario];
 
 (async () => {
@@ -43,7 +48,7 @@ const SETUP = {
   const t0 = Date.now();
   const pending = SETUP.keys.slice();
   let n = 0;
-  while (Date.now() - t0 < 1600) {
+  while (Date.now() - t0 < (SETUP.ms || 1600)) {
     const now = Date.now() - t0;
     while (pending.length && pending[0][0] <= now) {
       const [, key, mode] = pending.shift();

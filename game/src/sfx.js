@@ -29,6 +29,8 @@ const SFX_PRESETS = {
     [[0.5, 0, 784, 0, 0.05, 0.1, 1], 0.2],
     [[0.5, 0, 1047, 0, 0.05, 0.15, 1], 0.3],
   ],
+  // Enemy wind-up tell: a short low growl.
+  tell: [[[0.35, 0, 140, 0.02, 0.08, 0.1, 2, 1, -2, 0, 0, 0, 0, 0.2], 0]],
   // Face swap: a quick rising shimmer over a soft puff.
   swap: [
     [[0.35, 0, 300, 0.01, 0.06, 0.12, 1, 1, 14], 0],

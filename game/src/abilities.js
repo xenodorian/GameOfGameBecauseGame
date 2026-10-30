@@ -338,7 +338,11 @@ const Attacks = (() => {
     for (const h of hostile) {
       h.life -= dt;
       h.x += h.vx * dt;
-      if (World.overlapping(h.x, h.y, h.w, h.h).some((c) => World.isSolid(c.ch))) h.life = 0;
+      if (h.gravity) { h.vy += h.gravity * dt; h.y += h.vy * dt; }
+      if (World.overlapping(h.x, h.y, h.w, h.h).some((c) => World.isSolid(c.ch))) {
+        if (h.kind === "mud") Effects.dust(h.x + 4, h.y + 4, "#6b5a3a", 5, 2, 0.3, -40);
+        h.life = 0;
+      }
     }
     for (let i = hostile.length - 1; i >= 0; i--) {
       if (hostile[i].life <= 0) hostile.splice(i, 1);
@@ -723,11 +727,24 @@ const Attacks = (() => {
       } else drawArrow(ctx, Math.round(q.x - cx), Math.round(q.y - cy), dir, "#c8a46a", "#d8d8e0", "#e8e4d8");
     }
     for (const h of hostile) {
+      if (h.kind === "mud") {
+        const x = Math.round(h.x - cx);
+        const y = Math.round(h.y - cy);
+        ctx.fillStyle = "#3a2e1e"; ctx.fillRect(x, y + 1, 8, 6); ctx.fillRect(x + 1, y, 6, 8);
+        ctx.fillStyle = "#6b5a3a"; ctx.fillRect(x + 1, y + 1, 6, 6);
+        ctx.fillStyle = "#9a8458"; ctx.fillRect(x + 2, y + 2, 2, 2);
+        continue;
+      }
       drawArrow(ctx, Math.round(h.x - cx), Math.round(h.y - cy), h.vx > 0 ? 1 : -1, "#5a3a2a", "#d8d8e0", "#c2452d");
     }
   }
 
-  function fireHostile(x, y, dir) {
+  // opts (E4 mud blob): { vx, vy, gravity, kind: "mud" }. Default is a straight arrow.
+  function fireHostile(x, y, dir, opts) {
+    if (opts && opts.kind === "mud") {
+      hostile.push({ x, y, w: 8, h: 8, vx: opts.vx, vy: opts.vy, gravity: opts.gravity, kind: "mud", life: 3 });
+      return;
+    }
     Effects.flare(x, y + 2, "ember");
     hostile.push({ x, y, w: 8, h: 4, vx: dir * 240, life: 2.5 });
   }
@@ -762,5 +779,5 @@ const Attacks = (() => {
     shotBody = null;
   }
 
-  return { use, update, draw, fireHostile, beamActive: () => !!beam, hitByHostile, hostileCount: () => hostile.length, reset, consumeHit, debug, COOLDOWN };
+  return { use, update, draw, fireHostile, beamActive: () => !!beam, hitByHostile, hostileCount: () => hostile.length, hostileList: () => hostile, reset, consumeHit, debug, COOLDOWN };
 })();

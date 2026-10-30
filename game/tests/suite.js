@@ -1056,6 +1056,30 @@ check('swap: D cycles faces through the hand, keeps HP, waits 2 s between swaps'
   await page.close();
 });
 
+check('tells: grunt winds up before it lunges; revenant lobs mud that hurts', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [], active: 'knight', freeze: false });
+  await page.evaluate(() => {
+    Enemies.list().length = 0;
+    const p = __scene.player; p.x = 200; p.y = 418;
+    const g = new Enemy('grunt', 260, 418); Enemies.list().push(g); window.__g = g;
+  });
+  await page.waitForFunction(() => __g.state === 'windup', null, { timeout: 3000 });
+  const x0 = await page.evaluate(() => __g.x);
+  await page.waitForFunction(() => __g.state === 'lunge' || __scene.hp < 10, null, { timeout: 3000 });
+  assert.ok(await page.evaluate((x) => __g.x <= x + 0.5, x0), 'grunt held still during windup');
+  await page.waitForFunction(() => __scene.hp < 10, null, { timeout: 3000 });
+  await page.evaluate(() => {
+    Enemies.list().length = 0; __scene.hp = 10; __scene.hpInvT = 0;
+    const p = __scene.player; p.x = 200; p.y = 418; p.vx = 0; p.vy = 0;
+    const r = new Enemy('mud_revenant', 300, 418); r.def = { ...r.def, speed: 0, chaseSpeed: 0 }; Enemies.list().push(r);
+  });
+  try { await page.waitForFunction(() => __scene.hp < 10, null, { timeout: 5000 }); }
+  catch (e) { throw new Error('revenant: ' + await page.evaluate(() => JSON.stringify({ hp: __scene.hp, p: [__scene.player.x, __scene.player.y], e: Enemies.list().map((q) => [q.kind, q.x, q.y, q.lobT, q.dead]), h: Attacks.hostileList() }))); }
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 check('gates: validate_gates.py exits 0', async () => {
   execFileSync('python3', [path.join(GAME, 'tools', 'validate_gates.py')], { stdio: 'pipe' });
 });

@@ -11,6 +11,8 @@ const ENEMY_DEFS = {
     chaseSpeed: 75,
     sight: 140,
     card: "ranger",
+    // E1: inside 64 px on the same row it winds up 0.4 s, lunges 0.2 s at 240 px/s, then recovers 0.5 s.
+    lunge: { range: 64, windup: 0.4, time: 0.2, speed: 240, recover: 0.5, every: 1.2 },
   },
   mud_revenant: {
     sprite: "mud_revenant",
@@ -20,6 +22,8 @@ const ENEMY_DEFS = {
     chaseSpeed: 40,
     sight: 110,
     card: "mage",
+    // E4: every 3 s it rises for 0.5 s, then lobs a mud blob that lands near the player.
+    lob: { every: 3.0, tell: 0.5, vy: -260, gravity: 700 },
   },
   // Hops toward the player when it is near and on the ground.
   rat_king: {
@@ -32,6 +36,8 @@ const ENEMY_DEFS = {
     card: "rat",
     jumpVy: -330,
     jumpEvery: 1.4,
+    // E2: crouches 0.3 s before each hop.
+    crouch: 0.3,
   },
   // Stands its ground and fires a hostile arrow at the player when lined up.
   // Boss. Walks at the player, jumps, and fires. Takes 8 hits.
@@ -87,6 +93,14 @@ class Enemy {
     this.hp = def.hp || 1;
     this.hurtT = 0;
     this.animT = 0;
+    // Round 4 tells. state: "" (walk), "windup", "lunge", "recover". tellT > 0 blinks the sprite white.
+    this.state = "";
+    this.stateT = 0;
+    this.lungeCd = 0;
+    this.crouchT = 0;
+    this.tellT = 0;
+    // The first lob comes soon after the player is seen.
+    this.lobT = def.lob ? 1.2 : 0;
   }
 
   // Jump on a timer while the enemy is on the ground and the player is near.
@@ -94,8 +108,12 @@ class Enemy {
     const d = this.def;
     this.jumpT -= dt;
     if (this.grounded && chasing && this.jumpT <= 0) {
+      // E2: a crouch first, so the hop can be read and dodged.
+      if (d.crouch && this.crouchT <= 0) { this.crouchT = d.crouch; this.tellT = d.crouch; return; }
+      if (this.crouchT > 0) return;
       this.vy = d.jumpVy;
       this.jumpT = d.jumpEvery;
+      Effects.dust(this.x + this.w / 2, this.y + this.h, "#8a7a66", 3, 2, 0.2);
     }
   }
 
@@ -103,6 +121,9 @@ class Enemy {
   tryFire(dt, chasing, dx) {
     const d = this.def;
     this.fireT -= dt;
+    // E3: the last 0.4 s before a shot is a visible draw (pose, aim line, blink).
+    this.aiming = chasing && this.fireT <= 0.4;
+    if (this.aiming) { this.dir = dx >= 0 ? 1 : -1; this.tellT = Math.max(this.tellT, this.fireT); }
     if (chasing && this.fireT <= 0) {
       this.dir = dx >= 0 ? 1 : -1;
       Attacks.fireHostile(this.x + this.w / 2, this.y + (d.fireY || 12), this.dir);
@@ -118,8 +139,12 @@ class Enemy {
     const dy = player.y + player.h / 2 - (this.y + this.h / 2);
     const chasing = Math.abs(dx) < d.sight && Math.abs(dy) < 64;
     if (this.hurtT > 0) this.hurtT -= dt;
+    if (this.tellT > 0) this.tellT -= dt;
+    if (this.lungeCd > 0) this.lungeCd -= dt;
 
     if (this.stunT > 0) {
+      this.state = "";
+      this.crouchT = 0;
       // Stunned by shield bash: no walking or chasing, gravity still applies.
       this.stunT -= dt;
       this.vx = 0;
@@ -137,6 +162,22 @@ class Enemy {
 
     if (d.jumpVy) this.tryJump(dt, chasing);
     if (d.fireEvery) this.tryFire(dt, chasing, dx);
+    if (this.crouchT > 0) {
+      // Crouching rat king: holds still, then the next tryJump hops.
+      this.crouchT -= dt;
+      this.vx = 0;
+      if (this.crouchT <= 0) {
+        this.crouchT = 0;
+        this.vy = d.jumpVy;
+        this.jumpT = d.jumpEvery;
+        Effects.dust(this.x + this.w / 2, this.y + this.h, "#8a7a66", 3, 2, 0.2);
+      }
+      this.vy = Math.min(this.vy + 900 * dt, 600);
+      World.moveBody(this, dt);
+      return;
+    }
+    if (d.lunge && this.updateLunge(dt, chasing, dx, dy)) return;
+    if (d.lob && this.updateLob(dt, chasing, dx, player)) return;
 
     if (chasing) {
       this.dir = dx >= 0 ? 1 : -1;
@@ -159,6 +200,55 @@ class Enemy {
     }
   }
 
+  // E1 grunt: windup (still, crouched, blinking), lunge (fast dash), recover (still: punish window).
+  // Returns true while it owns the movement this step.
+  updateLunge(dt, chasing, dx, dy) {
+    const L = this.def.lunge;
+    if (!this.state) {
+      if (!(chasing && this.grounded && this.lungeCd <= 0 && Math.abs(dx) < L.range && Math.abs(dy) < 20)) return false;
+      this.state = "windup";
+      this.stateT = L.windup;
+      this.tellT = L.windup;
+      this.dir = dx >= 0 ? 1 : -1;
+      Sfx.play("tell");
+    }
+    this.stateT -= dt;
+    if (this.state === "lunge") {
+      this.vx = this.dir * L.speed;
+      if (Math.random() < 0.5) Effects.dust(this.x + this.w / 2 - this.dir * 8, this.y + this.h, "#8a7a66", 1, 2, 0.2);
+    } else this.vx = 0;
+    if (this.stateT <= 0) {
+      if (this.state === "windup") { this.state = "lunge"; this.stateT = L.time; }
+      else if (this.state === "lunge") { this.state = "recover"; this.stateT = L.recover; }
+      else { this.state = ""; this.lungeCd = L.every; }
+    }
+    this.vy = Math.min(this.vy + 900 * dt, 600);
+    World.moveBody(this, dt);
+    return true;
+  }
+
+  // E4 mud revenant: every few seconds it stops, rises with bubbles, and lobs a blob in an arc
+  // timed to land where the player stands.
+  updateLob(dt, chasing, dx, player) {
+    const L = this.def.lob;
+    if (!chasing) return false;
+    this.lobT -= dt;
+    if (this.lobT > L.tell) return false;
+    if (this.tellT <= 0 && this.lobT > 0) this.tellT = this.lobT;
+    this.dir = dx >= 0 ? 1 : -1;
+    this.vx = 0;
+    if (Math.random() < 0.3) Effects.dust(this.x + this.w / 2 + (Math.random() - 0.5) * 16, this.y + this.h - 4, "#6b5a3a", 1, 2, 0.4, -40);
+    if (this.lobT <= 0) {
+      const flight = (2 * -L.vy) / L.gravity;
+      const vx = Math.max(-200, Math.min(200, dx / flight));
+      Attacks.fireHostile(this.x + this.w / 2 - 4, this.y + 4, this.dir, { vx, vy: L.vy, gravity: L.gravity, kind: "mud" });
+      this.lobT = L.every;
+    }
+    this.vy = Math.min(this.vy + 900 * dt, 600);
+    World.moveBody(this, dt);
+    return true;
+  }
+
   draw(ctx, images, camX, camY) {
     const dw = this.def.drawW || 64;
     const dh = this.def.drawH || 64;
@@ -168,6 +258,8 @@ class Enemy {
     // Hurt: the hurt row, a white silhouette. Archers stand and idle. Others walk.
     let frame;
     if (this.hurtT > 0) frame = { row: ANIM_ROWS.hurt[0], col: 0 };
+    else if (this.aiming) frame = { row: ANIM_ROWS.shoot[0], col: Math.min(ANIM_ROWS.shoot[1] - 1, 4) };
+    else if (this.state === "windup" || this.state === "recover" || this.crouchT > 0) frame = { row: ANIM_ROWS.idle[0], col: 0 };
     else if (this.def.idle) frame = { row: ANIM_ROWS.idle[0], col: Math.floor(this.animT * 3) % ANIM_ROWS.idle[1] };
     else frame = { row: ANIM_ROWS.walk[0], col: 1 + Math.floor(this.animT * 6) % (ANIM_ROWS.walk[1] - 1) };
     let sheet = IMG["lpc_" + this.kind];
@@ -175,8 +267,22 @@ class Enemy {
     if (this.hurtT > (this.hurtMax || 0.6) - 0.1) {
       sheet = Effects.tinted(sheet, frame.col, frame.row, "#ffffff");
       frame = { row: 0, col: 0 };
+    } else if (this.tellT > 0 && Math.floor(this.tellT / 0.08) % 2 === 0) {
+      // Round 4 tell: blink warm white while winding up.
+      sheet = Effects.tinted(sheet, frame.col, frame.row, "#fff2c0");
+      frame = { row: 0, col: 0 };
     }
     ctx.save();
+    // Wind-up and crouch squash about the feet; the lunge stretches forward.
+    const squash = this.state === "windup" || this.crouchT > 0 ? 0.12 : 0;
+    const lean = this.state === "lunge" ? 0.12 : 0;
+    if (squash || lean) {
+      const fx0 = Math.round(this.x + this.w / 2 - camX);
+      const fy0 = Math.round(this.y + this.h - camY);
+      ctx.translate(fx0, fy0);
+      ctx.scale(1 + squash + lean, 1 - squash - lean * 0.5);
+      ctx.translate(-fx0, -fy0);
+    }
     if (this.dir < 0) {
       ctx.translate(sx + dw, sy);
       ctx.scale(-1, 1);
@@ -185,6 +291,14 @@ class Enemy {
       ctx.drawImage(sheet, frame.col * 64, frame.row * 64, 64, 64, sx, sy, dw, dh);
     }
     ctx.restore();
+    // E3: an archer drawing its bow shows a dotted aim line along the arrow's path.
+    if (this.aiming) {
+      const ay = Math.round(this.y + (this.def.fireY || 12) + 2 - camY);
+      const ax = Math.round(this.x + this.w / 2 + this.dir * 10 - camX);
+      ctx.fillStyle = "rgba(255, 90, 60, 0.85)";
+      const n = Math.floor((0.4 - Math.max(0, this.fireT)) / 0.4 * 14);
+      for (let i = 0; i < n; i++) ctx.fillRect(ax + this.dir * i * 6, ay, 3, 1);
+    }
     // Stunned: three small stars circle over the head.
     if (this.stunT > 0) {
       const cx = Math.round(this.x + this.w / 2 - camX);
