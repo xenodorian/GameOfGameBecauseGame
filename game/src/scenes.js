@@ -1170,11 +1170,11 @@ class PlayScene {
     if (this.bannerT <= 0) return;
     ctx.globalAlpha = Math.min(1, this.bannerT / 0.5);
     ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
-    ctx.fillRect(120, 80, 240, 30);
+    ctx.fillRect(120, 60, 240, 26);
     ctx.fillStyle = "#e8e4d8";
     ctx.font = "14px GameFont, system-ui, sans-serif";
     ctx.textAlign = "center";
-    drawText(ctx, "Level " + (World.index + 1) + ": " + World.level.name, Engine.W / 2, 100);
+    drawText(ctx, "Level " + (World.index + 1) + ": " + World.level.name, Engine.W / 2, 78);
     ctx.textAlign = "left";
     ctx.globalAlpha = 1;
   }
@@ -1202,13 +1202,13 @@ class PlayScene {
   drawSignBox(ctx) {
     if (!this.signText) return;
     ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-    // Under the level banner, so neither the HUD nor the banner is covered.
-    ctx.fillRect(40, 118, 400, 40);
+    // Just under the HUD, above the player's head (the camera keeps the player near y 135).
+    ctx.fillRect(40, 60, 400, 38);
     ctx.fillStyle = "#ffffff";
     ctx.font = "10px GameFont, system-ui, sans-serif";
     ctx.textAlign = "center";
     const lines = wrapText(ctx, this.signText, 380);
-    lines.forEach((line, i) => drawText(ctx, line, Engine.W / 2, 134 + i * 14));
+    lines.forEach((line, i) => drawText(ctx, line, Engine.W / 2, 75 + i * 14));
     ctx.textAlign = "left";
   }
 
@@ -1513,7 +1513,7 @@ const HUD = (() => {
     const cy = r.y + 21;
     ctx.fillRect(cx - 5, cy - 2, 7, 1); ctx.fillRect(cx + 1, cy - 3, 1, 3);
     ctx.fillRect(cx - 2, cy + 2, 7, 1); ctx.fillRect(cx - 2, cy + 1, 1, 3);
-    if (has && !PlayScene.swapUsed) {
+    if (has && !PlayScene.swapUsed && !World.level.boss) {
       const bob = Math.round(Math.sin(scene.time * 6) * 2);
       ctx.font = "10px GameFont, system-ui, sans-serif";
       ctx.fillStyle = "rgba(10, 12, 18, 0.75)";
