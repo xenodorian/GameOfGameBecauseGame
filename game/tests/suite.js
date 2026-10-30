@@ -308,6 +308,18 @@ const abilities = [
     check: (p) => p.evaluate(() => __g.dead && __g2.dead), want: true,
   },
   {
+    // Level 1 step at cols 28 to 31 (top y 416): the mage on it, a grunt on the ground (top y 448) 3 tiles on.
+    name: 'mage beam (A) hits a grunt standing one tile lower', who: 'mage', key: 'KeyA', wait: 800,
+    setup: (p) => p.evaluate(() => {
+      const g = new Enemy('grunt', 33 * 32, 448 - 30);
+      g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 };
+      Enemies.list().push(g);
+      window.__g = g;
+      __scene.player.x = 30 * 32 + 7; __scene.player.y = 416 - __scene.player.h; __scene.player.facing = 1;
+    }),
+    check: (p) => p.evaluate(() => __g.dead), want: true,
+  },
+  {
     name: 'mage nova (Z) defeats a grunt on each side', who: 'mage', key: 'KeyZ', wait: 300,
     setup: (p) => p.evaluate(() => {
       const list = [];

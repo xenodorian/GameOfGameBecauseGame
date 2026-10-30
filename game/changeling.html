@@ -3729,8 +3729,9 @@ const Attacks = (() => {
           b.len += step;
         }
       }
-      // Hits the body band (just above the head to the feet), not only the drawn axis, so grounded enemies are hit.
-      const rect = { x: b.dir > 0 ? o.x : o.x - b.len, y: b.body.y - 6, w: b.len, h: b.body.h + 6 };
+      // Hits the body band (just above the head to 20 px below the feet), not only the drawn axis, so grounded
+      // enemies are hit, and so is a foe standing one tile lower right in front (a step down or a dip).
+      const rect = { x: b.dir > 0 ? o.x : o.x - b.len, y: b.body.y - 6, w: b.len, h: b.body.h + 26 };
       for (const e of Enemies.list()) {
         if (e.dead || b.hit.has(e) || !overlaps(rect, e)) continue;
         b.hit.add(e);

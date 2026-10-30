@@ -61,8 +61,11 @@ async function hold(page, key, ms) { await page.keyboard.down(key); await wait(p
     const p = s.player;
     const e = Enemies.list().find((q) => q.kind === 'grunt') || Enemies.list()[0];
     e.def = { ...e.def, speed: 0, chaseSpeed: 0, sight: 0 };
+    // Fixed spots on level 1's flat start (ground top at y 448, cols 0 to 11), not "wherever the walk
+    // ended": a timing-dependent spot once put the grunt over the pit at cols 12 and 13.
+    p.x = 4 * 32 + 7; p.y = 448 - p.h; p.vx = 0; p.vy = 0;
     p.facing = 1;
-    e.x = p.x + p.w + 90; e.y = p.y + p.h - e.h; e.vy = 0;
+    e.x = p.x + p.w + 90; e.y = 448 - e.h; e.vx = 0; e.vy = 0;
     window.__beamTarget = e;
     return { kind: e.kind };
   });
