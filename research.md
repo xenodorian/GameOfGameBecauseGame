@@ -236,7 +236,7 @@ Each line is a brief seed. The director or the worker expands it with the templa
 - [x] V5 Scene fades and a title-card intro.
 
 ### Round 7: levels
-- [ ] L1 Level 1 first 30 seconds (5.9) and enemy introduction order across levels 1 to 4 (move or swap enemy spawns only).
+- [x] L1 Level 1 first 30 seconds (5.9) and enemy introduction order across levels 1 to 4 (move or swap enemy spawns only). Done for level 1 only: grunts plus one mud revenant at the end (it drops the Mage, so the beam shows up early). Levels 2 to 4 unchanged (rat kings and archers already arrive there).
 - [ ] L2 Optional face routes in levels 1, 3, 5 (5.5) with face-icon signs.
 - [ ] L3 Trim dead stretches in levels 6 and 7 if the round GIF shows them dragging. Otherwise skip and log.
 
