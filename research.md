@@ -212,7 +212,7 @@ Each line is a brief seed. The director or the worker expands it with the templa
 - [x] C1 Ranger `volley` on Z.
 - [x] C2 Mage `nova` on Z.
 - [x] C3 Rat `gnaw` on Z.
-- [ ] C4 Weaver `bone_toss` on Z.
+- [x] C4 Weaver `bone_toss` on Z.
 - [ ] C5 Face swap on D (5.3), with HUD cooldown and first-time prompt.
 - [ ] C6 Selection and swap strip show each face's four ability names and a one-line identity.
 

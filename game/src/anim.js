@@ -19,7 +19,7 @@ const ACTION_LENGTH = { slash: 0.2, thrust: 0.24, spellcast: 0.3, shoot: 0.3, ju
 // The animation each ability plays. Abilities not listed play no action.
 const ACTION_FOR_ABILITY = {
   slash: "slash", thrust: "thrust", shield_bash: "slash", charge: "thrust",
-  shoot: "shoot", arrow_anchor: "shoot", volley: "shoot", spell_bolt: "slash", bone_bridge: "spellcast",
+  shoot: "shoot", arrow_anchor: "shoot", volley: "shoot", bone_toss: "shoot", spell_bolt: "slash", bone_bridge: "spellcast",
   blink: "spellcast", nova: "spellcast", gnaw: "thrust", float: "spellcast", ghost: "spellcast",
   leap: "jump", hop: "jump", scurry: "walk",
 };

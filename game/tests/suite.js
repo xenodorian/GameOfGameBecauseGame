@@ -245,6 +245,17 @@ const abilities = [
     check: (p) => p.evaluate(() => __g.dead), want: true,
   },
   {
+    // C4: the bone arcs up and drops onto a grunt about three tiles ahead on the same floor.
+    name: 'weaver bone toss (Z) lobs onto a grunt ahead', who: 'weaver', key: 'KeyZ', wait: 900,
+    setup: (p) => p.evaluate(() => {
+      const g = new Enemy('grunt', 950, 386);
+      g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 };
+      Enemies.list().push(g); window.__g = g;
+      __scene.player.x = 860; __scene.player.y = 386; __scene.player.facing = 1;
+    }),
+    check: (p) => p.evaluate(() => __g.dead), want: true,
+  },
+  {
     name: 'ranger arrow anchor (S) makes a platform', who: 'ranger', key: 'KeyS', wait: 30,
     setup: (p) => placeAt(p, 200, 160),
     check: (p) => p.evaluate(() => World.platforms.length), want: 1,
@@ -1028,7 +1039,10 @@ check('gates: validate_gates.py exits 0', async () => {
 (async () => {
   const browser = await chromium.launch();
   let failed = 0;
+  // SUITE_ONLY=regex runs only the checks whose names match (cheap reruns while working).
+  const only = process.env.SUITE_ONLY ? new RegExp(process.env.SUITE_ONLY) : null;
   for (const { name, fn } of checks) {
+    if (only && !only.test(name)) continue;
     try {
       await fn(browser);
       console.log('PASS  ' + name);
@@ -1038,6 +1052,6 @@ check('gates: validate_gates.py exits 0', async () => {
     }
   }
   await browser.close();
-  console.log(`\n${checks.length - failed} passed, ${failed} failed`);
+  console.log(`\n${(only ? checks.filter((c) => only.test(c.name)).length : checks.length) - failed} passed, ${failed} failed`);
   process.exit(failed ? 1 : 0);
 })();

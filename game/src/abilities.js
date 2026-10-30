@@ -22,7 +22,7 @@ const CHARACTERS = {
   weaver: {
     name: "Bone Weaver",
     sprite: "bone_weaver",
-    abilities: ["shoot", "bone_bridge", "slash", "ghost"],
+    abilities: ["shoot", "bone_bridge", "bone_toss", "ghost"],
   },
   // Mage art is the Knight sprite tinted purple (see main.js).
   mage: {
@@ -39,6 +39,7 @@ const ABILITY_NAMES = {
   volley: "Volley",
   nova: "Nova",
   gnaw: "Gnaw",
+  bone_toss: "Bone toss",
   thrust: "Thrust",
   shoot: "Shoot",
   arrow_anchor: "Arrow anchor",
@@ -80,7 +81,7 @@ const Attacks = (() => {
   // Seconds before each ability can fire again.
   const COOLDOWN = {
     slash: 0.18, thrust: 0.28, shield_bash: 0.45, charge: 0.6, shoot: 0.25, spell_bolt: 0.5,
-    arrow_anchor: 0.8, volley: 1.0, nova: 1.2, gnaw: 0.5, bone_bridge: 1.0, hop: 0, float: 0, blink: 0.4, leap: 0, scurry: 3.0, ghost: 4.0,
+    arrow_anchor: 0.8, volley: 1.0, bone_toss: 0.6, nova: 1.2, gnaw: 0.5, bone_bridge: 1.0, hop: 0, float: 0, blink: 0.4, leap: 0, scurry: 3.0, ghost: 4.0,
   };
 
   function faceRect(p, reach, h, dy) {
@@ -133,6 +134,10 @@ const Attacks = (() => {
         break;
       case "volley":
         // Three arrows fanned up-forward, released on the same frame as a shot.
+        pendingShot = { t: 0, owner: scene.active, kind: id, scene };
+        break;
+      case "bone_toss":
+        // An arcing bone, lobbed on the release frame. Falls with gravity, so it hits around corners and below ledges.
         pendingShot = { t: 0, owner: scene.active, kind: id, scene };
         break;
       case "arrow_anchor": {
@@ -310,6 +315,7 @@ const Attacks = (() => {
     for (const q of projectiles) {
       q.life -= dt;
       q.x += q.vx * dt;
+      if (q.grav) { q.vy += q.grav * dt; q.spin += dt * 18 * (q.vx > 0 ? 1 : -1); }
       if (q.vy) q.y += q.vy * dt;
       if (World.overlapping(q.x, q.y, q.w, q.h).some((c) => World.isSolid(c.ch))) {
         // Hitting a wall: a few dust squares in the arrow's colour.
@@ -351,6 +357,14 @@ const Attacks = (() => {
     Effects.flare(nock, cy + 8, s.owner === "weaver" ? "bone" : "steel");
     shotBody = p;
     shotHold = 0.25;
+    if (s.kind === "bone_toss") {
+      projectiles.push({
+        x: nock - 4, y: cy, w: 8, h: 8,
+        vx: p.facing * 160, vy: -260, grav: 900,
+        life: 1.6, owner: s.owner, kind: s.kind, volley: true, spin: 0,
+      });
+      return;
+    }
     if (s.kind === "volley") {
       // Fan at 0, -20 and -40 degrees. Volley arrows do not count toward the shot limit.
       for (const deg of [0, 20, 40]) {
@@ -565,6 +579,24 @@ const Attacks = (() => {
     if (fade === 0) Glow.star(ctx, x, y, 6 * (1 - grow) + 2, Math.floor(n.t * 60), "arcane", 1 - grow);
   }
 
+  // A spinning bone: a pale shaft with two knobbed ends and a faint bone-green glow.
+  function drawBone(ctx, q, cx, cy) {
+    const x = Math.round(q.x - cx) + 4;
+    const y = Math.round(q.y - cy) + 4;
+    Glow.disc(ctx, x, y, 5, "bone", 0.45);
+    ctx.save();
+    ctx.translate(x, y);
+    // Snap the spin to 8 steps so it reads as pixel art, not a smooth rotation.
+    ctx.rotate(Math.round(q.spin / (Math.PI / 4)) * (Math.PI / 4));
+    ctx.fillStyle = "#3a3428";
+    ctx.fillRect(-6, -2, 12, 4);
+    ctx.fillStyle = "#efe8d2";
+    ctx.fillRect(-5, -1, 10, 2);
+    ctx.fillRect(-6, -2, 2, 2); ctx.fillRect(-6, 0, 2, 2);
+    ctx.fillRect(4, -2, 2, 2); ctx.fillRect(4, 0, 2, 2);
+    ctx.restore();
+  }
+
   // A 14 by 3 arrow pointing along its direction: shaft, head, and two fletching pixels.
   function drawArrow(ctx, x, y, dir, shaft, head, fletch) {
     const tail = dir > 0 ? x : x + 14;
@@ -679,6 +711,7 @@ const Attacks = (() => {
     for (const n of novas) drawNova(ctx, n, cx, cy);
     for (const q of projectiles) {
       const dir = q.vx > 0 ? 1 : -1;
+      if (q.kind === "bone_toss") { drawBone(ctx, q, cx, cy); continue; }
       if (q.owner === "weaver") Glow.disc(ctx, q.x - cx + (dir > 0 ? 0 : 14), q.y - cy + 1, 4, "bone", 0.6);
       if (q.vy) {
         // Angled arrow: turn it about its middle.
