@@ -2735,7 +2735,7 @@ const CHARACTERS = {
   ranger: {
     name: "Ranger",
     sprite: "ranger_right",
-    abilities: ["shoot", "arrow_anchor", "slash", "hop"],
+    abilities: ["shoot", "arrow_anchor", "volley", "hop"],
   },
   // Ability ids here are defined in C2 and C3. Until then they do nothing.
   rat: {
@@ -2760,6 +2760,7 @@ const ABILITY_NAMES = {
   shield_bash: "Shield bash",
   charge: "Charge",
   slash: "Slash",
+  volley: "Volley",
   thrust: "Thrust",
   shoot: "Shoot",
   arrow_anchor: "Arrow anchor",
@@ -2795,7 +2796,7 @@ const Attacks = (() => {
   // Seconds before each ability can fire again.
   const COOLDOWN = {
     slash: 0.18, thrust: 0.28, shield_bash: 0.45, charge: 0.6, shoot: 0.25, spell_bolt: 0.5,
-    arrow_anchor: 0.8, bone_bridge: 1.0, hop: 0, float: 0, blink: 0.4, leap: 0, scurry: 3.0, ghost: 4.0,
+    arrow_anchor: 0.8, volley: 1.0, bone_bridge: 1.0, hop: 0, float: 0, blink: 0.4, leap: 0, scurry: 3.0, ghost: 4.0,
   };
 
   function faceRect(p, reach, h, dy) {
@@ -2837,6 +2838,10 @@ const Attacks = (() => {
         break;
       case "shoot":
         // The arrow leaves the bowstring on the release frame, not when the key is pressed.
+        pendingShot = { t: 0, owner: scene.active, kind: id, scene };
+        break;
+      case "volley":
+        // Three arrows fanned up-forward, released on the same frame as a shot.
         pendingShot = { t: 0, owner: scene.active, kind: id, scene };
         break;
       case "arrow_anchor": {
@@ -2965,6 +2970,7 @@ const Attacks = (() => {
     for (const q of projectiles) {
       q.life -= dt;
       q.x += q.vx * dt;
+      if (q.vy) q.y += q.vy * dt;
       if (World.overlapping(q.x, q.y, q.w, q.h).some((c) => World.isSolid(c.ch))) {
         // Hitting a wall: a few dust squares in the arrow's colour.
         Effects.dust(q.x, q.y, "#e8e4d8", 3, 2, 0.25);
@@ -3005,7 +3011,19 @@ const Attacks = (() => {
     Effects.flare(nock, cy + 8, s.owner === "weaver" ? "bone" : "steel");
     shotBody = p;
     shotHold = 0.25;
-    const live = projectiles.filter((q) => q.owner === s.owner).length;
+    if (s.kind === "volley") {
+      // Fan at 0, -20 and -40 degrees. Volley arrows do not count toward the shot limit.
+      for (const deg of [0, 20, 40]) {
+        const a = (deg * Math.PI) / 180;
+        projectiles.push({
+          x: p.facing > 0 ? nock : nock - 8, y: cy + 6, w: 8, h: 4,
+          vx: p.facing * Math.cos(a) * 380, vy: -Math.sin(a) * 380,
+          life: 1.2, owner: s.owner, kind: s.kind, volley: true,
+        });
+      }
+      return;
+    }
+    const live = projectiles.filter((q) => q.owner === s.owner && !q.volley).length;
     if (live >= MAX_PROJECTILES) return;
     projectiles.push({
       x: p.facing > 0 ? nock : nock - 8,
@@ -3283,7 +3301,14 @@ const Attacks = (() => {
     for (const q of projectiles) {
       const dir = q.vx > 0 ? 1 : -1;
       if (q.owner === "weaver") Glow.disc(ctx, q.x - cx + (dir > 0 ? 0 : 14), q.y - cy + 1, 4, "bone", 0.6);
-      drawArrow(ctx, Math.round(q.x - cx), Math.round(q.y - cy), dir, "#c8a46a", "#d8d8e0", "#e8e4d8");
+      if (q.vy) {
+        // Angled arrow: turn it about its middle.
+        ctx.save();
+        ctx.translate(Math.round(q.x - cx) + 7, Math.round(q.y - cy) + 1);
+        ctx.rotate(Math.atan2(q.vy, Math.abs(q.vx)) * dir);
+        drawArrow(ctx, -7, -1, dir, "#c8a46a", "#d8d8e0", "#e8e4d8");
+        ctx.restore();
+      } else drawArrow(ctx, Math.round(q.x - cx), Math.round(q.y - cy), dir, "#c8a46a", "#d8d8e0", "#e8e4d8");
     }
     for (const h of hostile) {
       drawArrow(ctx, Math.round(h.x - cx), Math.round(h.y - cy), h.vx > 0 ? 1 : -1, "#5a3a2a", "#d8d8e0", "#c2452d");
@@ -3348,7 +3373,7 @@ const ACTION_LENGTH = { slash: 0.2, thrust: 0.24, spellcast: 0.3, shoot: 0.3, ju
 // The animation each ability plays. Abilities not listed play no action.
 const ACTION_FOR_ABILITY = {
   slash: "slash", thrust: "thrust", shield_bash: "slash", charge: "thrust",
-  shoot: "shoot", arrow_anchor: "shoot", spell_bolt: "slash", bone_bridge: "spellcast",
+  shoot: "shoot", arrow_anchor: "shoot", volley: "shoot", spell_bolt: "slash", bone_bridge: "spellcast",
   blink: "spellcast", float: "spellcast", ghost: "spellcast",
   leap: "jump", hop: "jump", scurry: "walk",
 };

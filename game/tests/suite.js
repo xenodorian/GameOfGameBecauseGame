@@ -234,6 +234,17 @@ const abilities = [
     check: (p) => p.evaluate(() => __g.dead), want: true,
   },
   {
+    // A grunt hanging in the air up and ahead of the ranger: only the angled arrows of the volley can reach it.
+    name: 'ranger volley (Z) defeats a grunt on a ledge above', who: 'ranger', key: 'KeyZ', wait: 600,
+    setup: (p) => p.evaluate(() => {
+      const g = new Enemy('grunt', 960, 340);
+      g.update = () => {};
+      Enemies.list().push(g); window.__g = g;
+      __scene.player.x = 860; __scene.player.y = 418; __scene.player.facing = 1;
+    }),
+    check: (p) => p.evaluate(() => __g.dead), want: true,
+  },
+  {
     name: 'ranger arrow anchor (S) makes a platform', who: 'ranger', key: 'KeyS', wait: 30,
     setup: (p) => placeAt(p, 200, 160),
     check: (p) => p.evaluate(() => World.platforms.length), want: 1,
@@ -325,7 +336,7 @@ for (const a of abilities) {
     } else {
       // The game clock runs slower than wall time in headless Chromium, so wait for the charge to set its speed.
       // Shots and beams release on a game-time frame (0.1 s and 0.3 s in), so those wait on the game clock too.
-      const gameWait = a.name.includes('charge') ? 0.08 : /ranger shoot|mage beam|mage spell bolt/.test(a.name) ? 0.6 : null;
+      const gameWait = a.name.includes('charge') ? 0.08 : /ranger shoot|ranger volley|mage beam|mage spell bolt|weaver bone toss/.test(a.name) ? 0.6 : null;
       const t0 = gameWait !== null ? await page.evaluate(() => __scene.time) : null;
       await page.keyboard.press(a.key); await wait(page, a.wait);
       if (t0 !== null) await page.waitForFunction((t) => __scene.time >= t, t0 + gameWait);

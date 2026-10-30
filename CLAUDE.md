@@ -64,7 +64,7 @@ On a network error retry after 2 s, 4 s, 8 s, 16 s. If rejected because `main` m
 - 8 levels. 1 to 4 outdoors (theme `field`), 5 to 7 castle (theme `dungeon`), 8 the Warlord arena: 1 Greenwood Road, 2 Bramble Hollow, 3 Old Watchtower, 4 Rotting Marsh, 5 Castle Gate, 6 Undercroft, 7 Hall of Faces, 8 Warlord's Throne.
 - Characters and ability ids (A, S, Z, X):
   - Knight: shield_bash, charge, slash, thrust. Breaks cracked walls `x`.
-  - Ranger: shoot, arrow_anchor (3 tile rope), slash, hop.
+  - Ranger: shoot, arrow_anchor (3 tile rope), volley (3 arrows fanned up-forward, 1 s cooldown), hop.
   - Mage: spell_bolt (shown as "Beam", see section 5), float, slash, blink.
   - Rat: leap (5 tiles up), scurry, slash, thrust.
   - Bone Weaver: shoot, bone_bridge (5 tile platform, 8 s), slash, ghost.

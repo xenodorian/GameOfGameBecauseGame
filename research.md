@@ -209,7 +209,7 @@ Each line is a brief seed. The director or the worker expands it with the templa
 - [ ] F4 Hit feedback: per-attack hit stop (light 0.04 s, heavy 0.08 s, kill +0.03 s), enemy white flash, knockback on non-lethal hits, player i-frame flicker, red edge flash on damage.
 
 ### Round 3: every face plays differently
-- [ ] C1 Ranger `volley` on Z.
+- [x] C1 Ranger `volley` on Z.
 - [ ] C2 Mage `nova` on Z.
 - [ ] C3 Rat `gnaw` on Z.
 - [ ] C4 Weaver `bone_toss` on Z.
