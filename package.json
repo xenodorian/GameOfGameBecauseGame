@@ -1,0 +1,15 @@
+{
+  "name": "changeling",
+  "private": true,
+  "description": "Changeling: single-file HTML platformer (game/changeling.html). Tests need Playwright with Chromium.",
+  "scripts": {
+    "build": "python3 game/tools/build_single_html.py",
+    "gates": "python3 game/tools/validate_gates.py",
+    "test": "node game/tests/suite.js",
+    "playtest": "node game/tests/playtest.js",
+    "check": "python3 game/tools/validate_gates.py && node game/tests/suite.js && node game/tests/playtest.js"
+  },
+  "devDependencies": {
+    "playwright": "1.64.1"
+  }
+}
