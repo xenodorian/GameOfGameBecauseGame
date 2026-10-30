@@ -158,6 +158,7 @@ Open work:
 | 2026-10-29 | f171abe (session 3) | exit 0 | 63 passed, 0 failed | full suite; tour.js L6 and L7 done (37.2 s, 39.9 s); probe.js checks of the L1, L3, L5 side paths |
 | 2026-10-29 | a38b354 (session 4) | exit 0 | 63 passed, 0 failed | full suite; tour.js L1 to L5 unchanged times; respawn spot check (death col 38 to col 28) |
 | 2026-10-29 | 47f6154 (session 5) | exit 0 | 64 passed, 0 failed | full suite incl. new shockwave check; L4 tour done, no deaths; crypt and hall music play in browser |
+| 2026-10-30 | 1f24cdc (session 6, fresh clone) | exit 0 | 65 passed, 0 failed | playtest.js 4 passed (also via npm install); live Pages build plays |
 
 ## 9. Decisions log (append one line per decision)
 

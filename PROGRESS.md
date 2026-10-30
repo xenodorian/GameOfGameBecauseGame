@@ -2,6 +2,13 @@
 
 Read `research.md` first (pillars in section 2, task list in section 9). Newest entry on top. Use the handoff format in research.md section 7 item 9.
 
+## 2026-10-30 Session 6 (Grok Bot): fresh-clone playtest fix, clean-clone tests, live on GitHub Pages
+- Cause of the fresh-clone playtest FAIL (mage beam): playtest.js put the grunt 90 px ahead of wherever the opening walk ended. On a slower run that spot is over the level 1 pit (cols 12 and 13); the grunt fell in, a tile below the mage, and the beam band (head to feet) missed. The suite passed because playtest.js is a separate script and the suite's beam checks use fixed coordinates. Level 1 itself was fine.
+- Fixes (commit "B7", b122940): beam hit band reaches 20 px below the feet (hits a foe one tile lower right in front); playtest places bodies on fixed flat tiles; new suite check for the one-tile-lower case (fails on the old band).
+- Z5: root `package.json` (playwright 1.64.1; `npm run check` = gates, suite, playtest), root `index.html` redirecting to `game/changeling.html`, `README.md`, AGENTS.md run notes.
+- GitHub Pages on (main, root): https://xenodorian.github.io/GameOfGameBecauseGame/ returns 200, the game file is served byte-identical, and a browser reaches the play scene there with no errors.
+- Fresh clone of 1f24cdc: validator exit 0; suite 65 passed, 0 failed; playtest 4 passed, 0 failed (with NODE_PATH and with `npm install` only).
+
 ## 2026-10-29 Director session 5 (Grok Bot): L4 pit, music per look, feel audit
 Done (47f6154):
 - L4 rat king moved from col 100 to 95, away from the 2-wide pit at 105-106. Tour: done 33.4 s, no deaths.
