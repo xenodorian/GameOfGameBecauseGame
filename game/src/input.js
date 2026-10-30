@@ -14,6 +14,7 @@ const Input = (() => {
     KeyQ: "discardSelf",
     KeyC: "discardCard",
     Enter: "start",
+    Backquote: "debug",
   };
 
   // Standard gamepad mapping. Ability order follows the design doc:

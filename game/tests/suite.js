@@ -92,7 +92,8 @@ check('hand: fill, overflow to deck, refill after discard', async (browser) => {
 
 check('stomp defeats a grunt and drops a card; side contact respawns safely', async (browser) => {
   const page = await newPage(browser);
-  await startPlay(page, { hand: [], freeze: false });
+  await startPlay(page, { hand: ['mage'], freeze: false });
+  // Two cards: the first respawn uses one, so the side-contact death below still has a card to choose.
   await page.evaluate(() => { window.__g = Enemies.list().find((e) => e.kind === 'grunt'); });
   // Grunt stands on the floor at col 15; knight drops onto it from above.
   await page.evaluate(() => { __g.x = 480; __g.y = 418; __g.def = { ...__g.def, speed: 0, chaseSpeed: 0, sight: 0 }; });
@@ -108,6 +109,8 @@ check('stomp defeats a grunt and drops a card; side contact respawns safely', as
   await page.evaluate(() => {
     window.__r = Enemies.list().find((e) => e.kind === 'mud_revenant');
     __r.def = { ...__r.def, speed: 0, chaseSpeed: 0, sight: 0 };
+    // Since the HP feedback pass a contact costs 2 of 10 HP, so start at 2 HP to make this contact lethal.
+    __scene.hp = 2;
     __scene.player.x = __r.x - 10; __scene.player.y = __r.y;
   });
   // The side contact is a hit, so the hurt pose shows before the choice opens. Wait on the game, not the wall clock.

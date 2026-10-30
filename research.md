@@ -202,10 +202,10 @@ Each line is a brief seed. The director or the worker expands it with the templa
 - [x] B4 Warlord arrows at body height (warlord arrow spawn y so the arrow centre is at player centre height on flat ground).
 
 ### Round 2: feel
-- [ ] F0 `game/src/tuning.js` (movement, camera, ability numbers moved from inline literals, added to `SCRIPTS`), a debug hitbox overlay toggled by backquote, and `game/tests/capture_gif.js` (Playwright frames to GIF via ffmpeg).
-- [ ] F1 Movement targets from 5.7: accel, decel, variable jump, fall gravity, apex hang, fall cap, coyote 0.1. Record apex px. Gates exit 0.
-- [ ] F2 Corner correction (head and ledge, 4 px).
-- [ ] F3 Camera look-ahead and vertical deadzone (5.7).
+- [x] F0 `game/src/tuning.js` (movement, camera, ability numbers moved from inline literals, added to `SCRIPTS`), a debug hitbox overlay toggled by backquote, and `game/tests/capture_gif.js` (Playwright frames to GIF via ffmpeg).
+- [x] F1 Movement targets from 5.7: accel, decel, variable jump, fall gravity, apex hang, fall cap, coyote 0.1. Record apex px. Gates exit 0.
+- [x] F2 Corner correction (head and ledge, 4 px).
+- [x] F3 Camera look-ahead and vertical deadzone (5.7).
 - [ ] F4 Hit feedback: per-attack hit stop (light 0.04 s, heavy 0.08 s, kill +0.03 s), enemy white flash, knockback on non-lethal hits, player i-frame flicker, red edge flash on damage.
 
 ### Round 3: every face plays differently

@@ -394,6 +394,7 @@ class PlayScene {
     this.bannerT = 2.5;
     this.player = this.newBody(World.spawn.x, World.spawn.y);
     Enemies.spawnFromLevel();
+    this.updateCamera(0, true);
     if (World.index >= 1) SaveGame.save({ level: World.index, active: this.active, cards: Hand.serialize(), run: { ...Run } });
   }
 
@@ -430,6 +431,7 @@ class PlayScene {
       this.hitstopT -= dt;
       return;
     }
+    if (Input.pressed("debug")) Attacks.debug.on = !Attacks.debug.on;
     this.handleDiscardKeys(dt);
     if (this.mode !== "play") return;
 
@@ -439,7 +441,13 @@ class PlayScene {
     if (move !== 0) p.facing = move;
     // Rat scurry: faster walking for a short time.
     if (this.scurryT > 0) this.scurryT -= dt;
-    p.vx = move * (this.scurryT > 0 ? 220 : 130);
+    // F1: ease toward the target speed. Turning or stopping uses the stronger decel; air control is softer.
+    const R = TUNING.run;
+    const target = move * (this.scurryT > 0 ? R.scurryMax : R.max);
+    const speeding = move !== 0 && Math.sign(p.vx) !== -move && Math.abs(target) >= Math.abs(p.vx);
+    const rate = p.grounded ? (speeding ? R.groundAccel : R.groundDecel) : (speeding ? R.airAccel : R.airDecel);
+    if (p.vx < target) p.vx = Math.min(target, p.vx + rate * dt);
+    else if (p.vx > target) p.vx = Math.max(target, p.vx - rate * dt);
     if (this.dashT > 0) {
       this.dashT -= dt;
       if (this.dashT <= 0) this.dashGraceT = 0.15;
@@ -453,15 +461,18 @@ class PlayScene {
 
     if (p.grounded) {
       p.hopUsed = false;
-      p.coyoteT = 0.08;
+      p.coyoteT = TUNING.jump.coyote;
     } else if (p.coyoteT > 0) {
       p.coyoteT -= dt;
     }
     // Coyote time and the jump buffer: a jump pressed just before landing, or just after leaving a ledge, still counts.
-    if (Input.pressed("up")) p.jumpBufT = 0.1;
+    if (Input.pressed("up")) p.jumpBufT = TUNING.jump.buffer;
     if (p.jumpBufT > 0) p.jumpBufT -= dt;
     if (p.jumpBufT > 0 && (p.grounded || p.coyoteT > 0)) {
-      p.vy = -340;
+      p.vy = TUNING.jump.vy;
+      // Take-off stretch (drawn in drawBody) and a puff of dust.
+      p.stretchT = 0.12;
+      if (p.grounded) Effects.dust(p.x + p.w / 2, p.y + p.h, "#8a7a66", 3, 2, 0.2);
       Sfx.play("jump");
       p.jumping = true;
       p.jumpBufT = 0;
@@ -469,7 +480,7 @@ class PlayScene {
     }
     // Releasing jump early cuts the arc short.
     if (p.jumping && !Input.down("up") && p.vy < 0) {
-      p.vy *= 0.5;
+      p.vy *= TUNING.jump.releaseCut;
       p.jumping = false;
     }
 
@@ -499,8 +510,14 @@ class PlayScene {
         Effects.dust(p.x + p.w / 2 - 3, p.y + p.h, "#b9a2f0", 2, 1, 0.3, -30);
       }
     } else {
-      p.vy = Math.min(p.vy + 900 * dt, 600);
+      // F1: lighter gravity going up, heavier coming down, a short hang at the apex while jump is held.
+      const J = TUNING.jump;
+      let g = p.vy < 0 ? J.riseGravity : J.fallGravity;
+      if (Math.abs(p.vy) < J.apexBand && Input.down("up") && p.jumping) g *= J.apexScale;
+      if (p.vy >= J.apexBand) p.jumping = false;
+      p.vy = Math.min(p.vy + g * dt, J.fallCap);
     }
+    this.cornerCorrect(p, dt, move);
     const prevBottom = p.y + p.h;
     // A charge breaks cracked walls it runs into.
     if (this.dashT > 0) World.breakCracked(p.facing > 0 ? p.x + p.w : p.x - 6, p.y, 6, p.h);
@@ -509,6 +526,7 @@ class PlayScene {
     // A hard landing shows the land frame for a moment.
     if (p.grounded && !p.prevGrounded && fallSpeed > 250) {
       p.landT = 0.08;
+      p.squashT = 0.1;
       Effects.dust(p.x + p.w / 2, p.y + p.h, "#8a7a66", 5, 2, 0.3);
     }
     p.prevGrounded = p.grounded;
@@ -573,13 +591,7 @@ class PlayScene {
     }
     Enemies.cleanup();
 
-    // Camera eases toward the player and stays inside the level.
-    const targetX = p.x + p.w / 2 - Engine.W / 2;
-    const targetY = p.y + p.h / 2 - Engine.H / 2;
-    this.cam.x += (targetX - this.cam.x) * 0.15;
-    this.cam.y += (targetY - this.cam.y) * 0.15;
-    this.cam.x = Math.max(0, Math.min(this.cam.x, World.width - Engine.W));
-    this.cam.y = Math.max(0, Math.min(this.cam.y, World.height - Engine.H));
+    this.updateCamera(dt, false);
 
     if (p.y > World.height) this.beginSelection("fell");
 
@@ -596,6 +608,52 @@ class PlayScene {
     if (exit && this.mode === "play" && !bossLocked && this.overlaps(p, exit)) {
       this.mode = "complete";
       Sfx.play("complete");
+    }
+  }
+
+  // F3: the camera looks ahead where the player faces. Vertically it holds still through a jump
+  // and only follows on landing or when the player leaves a deadzone, so jumps do not bob the screen.
+  updateCamera(dt, snap) {
+    const p = this.player;
+    const C = TUNING.camera;
+    if (this.lookX === undefined || snap) { this.lookX = p.facing * C.lookAhead; this.anchorY = p.y + p.h / 2; }
+    this.lookX += (p.facing * C.lookAhead - this.lookX) * Math.min(1, C.lookLerp * dt);
+    const pcy = p.y + p.h / 2;
+    let fast = false;
+    if (p.grounded || this.floatT > 0) this.anchorY = pcy;
+    else if (pcy > this.anchorY + C.deadzone) { this.anchorY = pcy - C.deadzone; fast = true; }
+    else if (pcy < this.anchorY - C.deadzone * 2) this.anchorY = pcy + C.deadzone * 2;
+    const targetX = p.x + p.w / 2 + this.lookX - Engine.W / 2;
+    const targetY = this.anchorY - Engine.H / 2;
+    const kx = snap ? 1 : 1 - Math.exp(-C.xLerp * dt);
+    const ky = snap ? 1 : 1 - Math.exp(-(fast ? C.yLerpFast : C.yLerp) * dt);
+    this.cam.x += (targetX - this.cam.x) * kx;
+    this.cam.y += (targetY - this.cam.y) * ky;
+    this.cam.x = Math.max(0, Math.min(this.cam.x, World.width - Engine.W));
+    this.cam.y = Math.max(0, Math.min(this.cam.y, World.height - Engine.H));
+  }
+
+  // F2: corner correction. A head bump on a ceiling corner slides the body up to 4 px sideways;
+  // rising into a ledge lip lifts it up to 4 px onto the ledge. Both run before the move.
+  cornerCorrect(p, dt, move) {
+    const solidAt = (x, y) => World.overlapping(x, y, p.w, p.h).some((c) => World.isSolid(c.ch));
+    if (p.vy < 0) {
+      const ny = p.y + p.vy * dt;
+      if (solidAt(p.x, ny) ) {
+        for (let k = 1; k <= TUNING.corner.head; k++) {
+          for (const d of [1, -1]) {
+            if (!solidAt(p.x + d * k, ny) && !solidAt(p.x + d * k, p.y)) { p.x += d * k; return; }
+          }
+        }
+      }
+    }
+    if (!p.grounded && move !== 0 && p.vy < 60) {
+      const nx = p.x + move * Math.max(1, Math.abs(p.vx) * dt);
+      if (solidAt(nx, p.y)) {
+        for (let k = 1; k <= TUNING.corner.ledge; k++) {
+          if (!solidAt(nx, p.y - k) && !solidAt(p.x, p.y - k)) { p.y -= k; return; }
+        }
+      }
     }
   }
 
@@ -815,6 +873,12 @@ class PlayScene {
     }
 
     if (this.mode === "play" || this.mode === "discardCard") this.drawBody(ctx, cx, cy);
+    // F0: backquote toggles hitbox outlines (player green, enemies orange, attacks red).
+    if (Attacks.debug.on) {
+      const box = (b, c) => { ctx.strokeStyle = c; ctx.strokeRect(Math.round(b.x - cx) + 0.5, Math.round(b.y - cy) + 0.5, b.w - 1, b.h - 1); };
+      box(this.player, "#4f4");
+      for (const e of Enemies.list()) if (!e.dead) box(e, "#fa4");
+    }
 
     if (this.mode === "pause") {
       HUD.draw(ctx, -1);
@@ -877,6 +941,8 @@ class PlayScene {
       if (p.animT > ACTION_LENGTH[p.action] && !p.holdPose) p.action = "";
     }
     if (p.landT > 0) p.landT -= dt;
+    if (p.stretchT > 0) p.stretchT -= dt;
+    if (p.squashT > 0) p.squashT -= dt;
     if (p.grounded) p.walkDist += Math.abs(p.vx) * dt;
     this.frame = pickFrame(p, this.time);
   }
@@ -899,6 +965,17 @@ class PlayScene {
     const sy = Math.round(p.y + p.h - (big ? 124 : 59) - cy);
     ctx.save();
     const frame = this.mode === "dying" ? { row: ANIM_ROWS.hurt[0], col: 0 } : this.frame;
+    // Squash and stretch about the feet: tall and thin on take-off, short and wide on a hard landing.
+    let scx = 1, scy = 1;
+    if (p.stretchT > 0) { const k = p.stretchT / 0.12; scx = 1 - 0.12 * k; scy = 1 + 0.14 * k; }
+    else if (p.squashT > 0) { const k = p.squashT / 0.1; scx = 1 + 0.16 * k; scy = 1 - 0.14 * k; }
+    if (scx !== 1) {
+      const fx0 = Math.round(p.x + p.w / 2 - cx);
+      const fy0 = Math.round(p.y + p.h - cy);
+      ctx.translate(fx0, fy0);
+      ctx.scale(scx, scy);
+      ctx.translate(-fx0, -fy0);
+    }
     if (this.ghostT > 0) {
       // Ghost outline: a cyan copy of the frame, one pixel out in four directions. It blinks every 0.05 s.
       if (Math.floor(this.time * 20) % 2 === 0) {
