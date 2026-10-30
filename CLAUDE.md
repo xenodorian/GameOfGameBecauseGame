@@ -61,7 +61,9 @@ On a network error retry after 2 s, 4 s, 8 s, 16 s. If rejected because `main` m
 - Face swap (C5): D (gamepad LB or Select, touch D) makes the leftmost hand card the active face; the old face goes to the back of the hand, so repeated presses cycle every face held. HP carries over, cooldowns reset, 2 s cooldown, 0.3 s safety. HUD badge right of the deck; a 'D: swap face' hint shows until the first swap (`PlayScene.swapUsed`, not saved).
 - Discard: C opens hand-card discard mode (Left and Right pick, C confirms, X or B cancels). Q (or hold Down 0.5 s on a gamepad) discards the current character and opens the selection.
 - Closest safe space: nearest grounded tile with a clear 2 by 3 tile area, no enemy or hazard within 3 tiles, search out to 20 tiles. A spot is unsafe if a `^` is within 3 columns on its row.
-- Face badges (L2): a level's optional `hints: [{ col, row, face }]` draws a bobbing face card over the secret at that tile (it follows the live pickup, which falls) until it is taken; gold glow while you wear that face. Pick hint spots from `validate_gates.py --level N` (secrets reachable by one face).
+- Face badges (L2): a level's optional `hints: [{ col, row, face }]` draws a bobbing face card over the secret at that tile (it follows the live pickup, which falls) until it is taken; gold glow while you wear that face. Pick hint spots from `validate_gates.py --level N` (secrets reachable by one face). A badge up to about 6 rows overhead pins just under the HUD with an up pointer. Badges now: L1 45,7 ranger; L2 96,8 rat; L3 66,21 ranger, 96,11 mage; L4 64,15 knight; L5 104,8 rat.
+- Looks (V7): a level's optional `look` (L6 "crypt", L7 "hall"; L4 is "marsh" by index) picks sky colours, parallax layers, tile tint and ledge edge in `World.visual()` / `layersFor` / `LOOK_TINT` (world.js). Game rules still read `theme`. Buried solid tiles darken with depth (all looks).
+- Boss arena (B6): one-way ledges at row 10 (cols 10, 23, 33) any face can jump onto; respawn keeps 7 tiles from the warlord (`closestSafeSpace`), 3 from other enemies.
 - Abilities: 4 per character on A, S, Z, X (gamepad X, Y, A, B). Every character must be able to finish the main route of every level. Secrets (`c` cards, `p` power-ups) need a specific character.
 - 8 levels. 1 to 4 outdoors (theme `field`), 5 to 7 castle (theme `dungeon`), 8 the Warlord arena: 1 Greenwood Road, 2 Bramble Hollow, 3 Old Watchtower, 4 Rotting Marsh, 5 Castle Gate, 6 Undercroft, 7 Hall of Faces, 8 Warlord's Throne.
 - Characters and ability ids (A, S, Z, X):
@@ -152,6 +154,7 @@ Open work:
 | 2026-10-29 | f04df00 (session 2) | exit 0 | 61 passed, 2 failed | both failures were checks tied to level 1's old enemy layout; fixed in 95580ce |
 | 2026-10-29 | d146e51 (session 2 close) | exit 0 | 63 passed, 0 failed | full suite; playtest.js 4 passed (apex 65.8 px, beam kills grounded grunt, no errors) |
 | 2026-10-29 | f171abe (session 3) | exit 0 | 63 passed, 0 failed | full suite; tour.js L6 and L7 done (37.2 s, 39.9 s); probe.js checks of the L1, L3, L5 side paths |
+| 2026-10-29 | a38b354 (session 4) | exit 0 | 63 passed, 0 failed | full suite; tour.js L1 to L5 unchanged times; respawn spot check (death col 38 to col 28) |
 
 ## 9. Decisions log (append one line per decision)
 

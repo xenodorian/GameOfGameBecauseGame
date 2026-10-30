@@ -2,6 +2,17 @@
 
 Read `research.md` first (pillars in section 2, task list in section 9). Newest entry on top. Use the handoff format in research.md section 7 item 9.
 
+## 2026-10-29 Director session 4 (Grok Bot): two places, badges, boss arena, polish
+Done (a38b354, one commit for four linked tasks; evidence in the body):
+- V7 L6 and L7 look like two places: a per-level `look` field. L6 crypt (cold teal, bone niches with skulls, drip fog). L7 hall (warm, lit windows, red banners with gold masks, flickering torches, red carpet).
+- L5 light L7 layout change: its tall blocks have a one-tile step at each end (stepped daises), L6 keeps sheer walls.
+- L2 badges: rat over L2 96,8, knight over L4 64,15.
+- B6 boss arena, fight numbers untouched: the pin was a respawn bug. After a death by the right wall, the respawn picked the corner behind the warlord. Respawn now keeps 7 tiles from it (death at col 38 now respawns at col 28). The high platforms the knight could not reach are now three one-way ledges 2 rows up (cols 10, 23, 33). The corner one is an escape by the exit.
+- V8 polish from the tour sheets: overhead secret badges were hidden behind the HUD (the L2 rat secret was never visible from the ground); they now pin under the HUD with an up pointer. Buried brick darkens with depth.
+Suite 63 passed, 0 failed; validator exit 0. Screens: /workspace/GameOfGameBecauseGame-shots/s4_l6_crypt2.png, s4_depth_l7.png, s4_l2_badge3.png (this box only).
+Not verified: a human boss fight with the new ledges (the tour bot only walks right and attacks forward, so its col 38 deaths say little). Ledges might let a player wait out shockwaves; that is intended.
+Next: H1 human feel check (float, blink gap, boss ledges); L4 col 102 (rat king knockback next to a 2-wide pit; the bot dies there every run); music per look (crypt and hall still use the dungeon theme); Q2 device check.
+
 ## 2026-10-29 Director session 3 (Grok Bot): levels 6 and 7, face side paths, fresh-player pass
 Done and on main (evidence in each commit body):
 - Tools: `game/tests/tour.js` (bot run per level, contact sheet plus hit, death and stuck columns) and `game/tests/probe.js` (can this face really make this move). 360fe89.
