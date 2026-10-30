@@ -76,7 +76,7 @@ async function hold(page, key, ms) { await page.keyboard.down(key); await wait(p
   ok('mage beam kills a grounded ' + beam.kind, await page.evaluate(() => window.__beamTarget.dead));
 
   // Every face's four abilities fire without errors.
-  for (const who of ['knight', 'ranger', 'mage', 'rat', 'weaver']) {
+  for (const who of ['knight', 'ranger', 'mage', 'weaver']) {
     await page.evaluate((w) => { const s = Engine.current(); s.active = w; s.cooldowns = [0, 0, 0, 0]; s.hp = 10; }, who);
     for (const k of ['KeyA', 'KeyS', 'KeyZ', 'KeyX']) {
       await page.keyboard.press(k); await wait(page, 180);

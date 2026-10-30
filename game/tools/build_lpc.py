@@ -32,7 +32,7 @@ FALLBACK = {
 # Frames are composed in BIG px cells so that weapons can reach past the 64 px body.
 BIG = 192
 COUNT = {"idle": 2, "walk": 9, "slash": 6, "thrust": 8, "spellcast": 7, "shoot": 13, "hurt": 6, "jump": 5}
-BIG_KEYS = ["knight", "ranger", "mage", "rat", "weaver"]
+BIG_KEYS = ["knight", "ranger", "mage", "weaver"]
 # A layer pattern -> {anim: fixed path}, for animations that live in another folder (filled below).
 PATH_OVERRIDE = {
     "weapon/sword/longsword/universal_behind/{anim}/longsword.png": {
@@ -78,11 +78,6 @@ CHARACTERS = {
         ("torso/clothes/longsleeve/longsleeve/female/{anim}.png", 35, "robe"),
         ("hat/magic/wizard/base/adult/{anim}/base_black.png", 130),
         ("weapon/magic/wand/male/{anim}/wand.png", 140),
-    ],
-    "rat": [
-        ("body/bodies/male/{anim}.png", 10), ("head/heads/rat/adult/{anim}.png", 100),
-        ("torso/armour/leather/male/{anim}.png", 60),
-        ("weapon/sword/dagger/behind/{anim}/dagger.png", 9), ("weapon/sword/dagger/{anim}/dagger.png", 140),
     ],
     "weaver": [
         ("body/bodies/skeleton/{anim}.png", 10), ("head/heads/skeleton/adult/{anim}.png", 100),

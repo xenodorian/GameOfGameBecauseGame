@@ -4,7 +4,7 @@
 //   macro: comma-separated steps "Keys:ms", keys joined with + (Left Right Up Down A S Z X D),
 //   e.g. "Right:300,Right+Up:400,Right+Up+X:60,Right:500".
 //   Keys: A=ab1 S=ab2 Z=ab3 X=ab4 (knight bash charge slash thrust; ranger shoot anchor volley hop;
-//   rat leap scurry gnaw thrust; weaver shoot bridge toss ghost; mage bolt float nova blink).
+//   weaver shoot bridge toss ghost; mage bolt float nova blink).
 // Prints the body tile each step, the highest row reached, and the final tile. Enemies frozen.
 const { chromium } = require('playwright');
 const path = require('path');

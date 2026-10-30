@@ -11,16 +11,9 @@ const CHARACTERS = {
   },
   ranger: {
     name: "Ranger",
-    role: "Hits high. Ropes gaps.",
+    role: "Bridges and ladders.",
     sprite: "ranger_right",
     abilities: ["shoot", "arrow_anchor", "volley", "hop"],
-  },
-  // Ability ids here are defined in C2 and C3. Until then they do nothing.
-  rat: {
-    name: "Rat",
-    role: "Fast. Leaps high.",
-    sprite: "rat_king",
-    abilities: ["leap", "scurry", "gnaw", "thrust"],
   },
   weaver: {
     name: "Bone Weaver",
@@ -43,17 +36,14 @@ const ABILITY_NAMES = {
   slash: "Slash",
   volley: "Volley",
   nova: "Nova",
-  gnaw: "Gnaw",
   bone_toss: "Bone toss",
   thrust: "Thrust",
   shoot: "Shoot",
-  arrow_anchor: "Arrow anchor",
+  arrow_anchor: "Bridge (Up: ladder)",
   hop: "Hop",
   spell_bolt: "Beam",
   float: "Float",
   blink: "Blink",
-  leap: "Leap",
-  scurry: "Scurry",
   bone_bridge: "Bone bridge",
   ghost: "Ghost",
 };
@@ -71,9 +61,6 @@ const Attacks = (() => {
   let beam = null;
   // Mage nova rings, each { x, y, t, hit }. Radius grows to NOVA.radius over NOVA.grow seconds, then fades.
   const novas = [];
-  // Rat gnaw: three bites, one every 0.1 s. { body, t, n } while it runs.
-  let gnaw = null;
-  const GNAW = { bites: 3, every: 0.1, reach: 16 };
   const NOVA = { radius: 40, grow: 0.18, end: 0.3 };
   // A ranger or weaver shot waiting for its release frame (see releaseShot).
   let pendingShot = null;
@@ -86,7 +73,7 @@ const Attacks = (() => {
   // Seconds before each ability can fire again.
   const COOLDOWN = {
     slash: 0.18, thrust: 0.28, shield_bash: 0.45, charge: 0.6, shoot: 0.25, spell_bolt: 0.5,
-    arrow_anchor: 0.8, volley: 1.0, bone_toss: 0.6, nova: 1.2, gnaw: 0.5, bone_bridge: 1.0, hop: 0, float: 0, blink: 0.4, leap: 0, scurry: 3.0, ghost: 4.0,
+    arrow_anchor: 0.8, volley: 1.0, bone_toss: 0.6, nova: 1.2, bone_bridge: 1.0, hop: 0, float: 0, blink: 0.4, ghost: 4.0,
   };
 
   function faceRect(p, reach, h, dy) {
@@ -105,6 +92,27 @@ const Attacks = (() => {
 
   // Fires one ability for the scene's player. Timed effects (charge, float)
   // are stored on the scene and read in its update.
+  // Ranger bridge height above the feet (px), and ladder height (tiles).
+  const BRIDGE_RISE = 80;
+  const LADDER_TILES = 5;
+
+  // Ranger ladder: one tile column in front of the ranger, standing on the floor below, up to
+  // LADDER_TILES tall and stopped by ceilings. In a one-tile shaft the front column is walled
+  // in, so the ranger's own column is used when it gives a taller ladder. Climb with Up/Down.
+  function ladder(p, scene) {
+    const T = World.TILE;
+    const fromRow = Math.floor((p.y + p.h - 1) / T);
+    const front = Math.floor((p.facing > 0 ? p.x + p.w + 10 : p.x - 10) / T);
+    const own = Math.floor((p.x + p.w / 2) / T);
+    const a = World.ladderIn(front, fromRow, LADDER_TILES);
+    const b = World.ladderIn(own, fromRow, LADDER_TILES);
+    const h = (l) => (l ? l.bottom - l.top : 0);
+    const l = h(a) >= h(b) ? a : b;
+    if (!l) return;
+    World.addLadder({ ...l, life: 8 });
+    Effects.dust(l.x + l.w / 2, l.bottom, "#8a7a66", 4, 2, 0.3);
+  }
+
   function use(id, scene) {
     const p = scene.player;
     Sfx.play(id === "spell_bolt" ? "beam" : "ability", scene.active);
@@ -126,9 +134,6 @@ const Attacks = (() => {
       case "spell_bolt":
         if (!beam) beam = { body: p, dir: p.facing, t: -0.2, len: 0, hitWall: false, hit: new Set(), seed: 1, motes: [] };
         break;
-      case "gnaw":
-        gnaw = { body: p, t: 0, n: 0, scene };
-        break;
       case "nova":
         novas.push({ x: p.x + p.w / 2, y: p.y + p.h / 2, t: 0, hit: new Set(), body: p });
         Effects.shake(0.12, 2);
@@ -146,12 +151,17 @@ const Attacks = (() => {
         pendingShot = { t: 0, owner: scene.active, kind: id, scene };
         break;
       case "arrow_anchor": {
-        // Rope platform three tiles long, one tile in front, at foot level.
+        // Holding Up builds a ladder instead (see ladder below).
+        if (Input.down("up")) {
+          ladder(p, scene);
+          break;
+        }
+        // Rope bridge three tiles long, in front, BRIDGE_RISE px above the feet: a bit under the
+        // ranger's highest jump (jump + hop, about 96 px), so they can jump up onto it and build
+        // the next one from there. Two at once; a third replaces the oldest (World.addPlatform).
         const x = p.facing > 0 ? p.x + p.w + 4 : p.x - 4 - 3 * World.TILE;
-        // The plank's top sits at the feet, so it bridges the gap at foot level.
-        const y = p.y + p.h;
-        World.platforms.length = 0;
-        World.addPlatform({ x, y, w: 3 * World.TILE, h: 6, life: 6 });
+        const y = p.y + p.h - BRIDGE_RISE;
+        World.addPlatform({ x, y, w: 3 * World.TILE, h: 6, life: 6, kind: "rope" });
         break;
       }
       case "bone_bridge": {
@@ -159,7 +169,6 @@ const Attacks = (() => {
         const x = p.facing > 0 ? p.x + p.w + 4 : p.x - 4 - 5 * World.TILE;
         // The plank's top sits at the feet, so it bridges the gap at foot level.
         const y = p.y + p.h;
-        World.platforms.length = 0;
         World.addPlatform({ x, y, w: 5 * World.TILE, h: 6, life: 8, color: "#e8e2d0" });
         break;
       }
@@ -176,17 +185,6 @@ const Attacks = (() => {
         break;
       case "blink":
         blink(p);
-        break;
-      case "leap":
-        // Rat leap: a high jump from the ground, about 5 tiles.
-        if (p.grounded) {
-          p.vy = -540;
-          p.jumping = false;
-          Effects.dust(p.x + p.w / 2, p.y + p.h, "#8a7a66", 5, 2, 0.3);
-        }
-        break;
-      case "scurry":
-        scene.scurryT = 2.0;
         break;
       case "hop":
         if (!p.grounded && !p.hopUsed) {
@@ -224,11 +222,6 @@ const Attacks = (() => {
       Enemies.list().forEach((e) => {
         if (e.dead || !overlaps(hb, e)) return;
         if (hb.hit && hb.hit.has(e)) return;
-        if (hb.kind === "bite") {
-          // Each bite lands on its own, even while the enemy flashes from the last one.
-          hb.hit.add(e);
-          e.hurtT = 0;
-        }
         hitThisStep = true;
         Effects.spark(e.x + e.w / 2, e.y + e.h / 2, hb.dir);
         if (hb.stun) {
@@ -250,28 +243,13 @@ const Attacks = (() => {
               }
             }
           }
-        } else Enemies.defeat(e, hb.kind === "bite" ? undefined : hb.x + hb.w / 2);
+        } else Enemies.defeat(e, hb.x + hb.w / 2);
       });
     }
     for (let i = hitboxes.length - 1; i >= 0; i--) {
       if (hitboxes[i].t <= 0) hitboxes.splice(i, 1);
     }
 
-    if (gnaw) {
-      gnaw.t += dt;
-      const p = gnaw.body;
-      while (gnaw.n < GNAW.bites && gnaw.t >= gnaw.n * GNAW.every) {
-        // A short bite box right in front of the mouth. Each bite replays the stab pose.
-        hitboxes.push({ ...faceRect(p, GNAW.reach, 16, 12), ...fx(p), t: 0.08, total: 0.08, kind: "bite", hit: new Set() });
-        if (gnaw.n > 0) {
-          Sfx.play("ability", gnaw.scene.active);
-          p.action = "thrust";
-          p.animT = 0;
-        }
-        gnaw.n++;
-      }
-      if (gnaw.n >= GNAW.bites) gnaw = null;
-    }
     for (const n of novas) {
       n.t += dt;
       // The ring follows the mage while it grows.
@@ -558,18 +536,6 @@ const Attacks = (() => {
     Glow.light(ctx, x, y, r + 6, c[3], 0.25 * (1 - prog));
   }
 
-  // Rat bite: a small glint at the mouth with two short fang ticks.
-  function drawBite(ctx, hb, cx, cy) {
-    const prog = 1 - Math.max(0, hb.t) / hb.total;
-    const x = Math.round(hb.x + (hb.dir > 0 ? hb.w : 0) - cx);
-    const y = Math.round(hb.y + hb.h / 2 - cy);
-    const c = Glow.RAMPS.ember;
-    Glow.star(ctx, x, y, 5 - prog * 2, Math.floor(prog * 4), "ember", 1 - prog * 0.5);
-    ctx.fillStyle = c[0];
-    ctx.fillRect(x - hb.dir * 6, y - 4, 1, 3);
-    ctx.fillRect(x - hb.dir * 6, y + 2, 1, 3);
-  }
-
   // Mage nova: a ring in the arcane bands that grows to the full radius, then fades.
   function drawNova(ctx, n, cx, cy) {
     const x = Math.round(n.x - cx);
@@ -721,7 +687,6 @@ const Attacks = (() => {
       if (hb.kind === "slash" && !hb.weapon) drawSlash(ctx, hb, cx, cy);
       else if (hb.kind === "thrust" && !hb.weapon) drawThrust(ctx, hb, cx, cy);
       else if (hb.kind === "bash") drawBash(ctx, hb, cx, cy);
-      else if (hb.kind === "bite") drawBite(ctx, hb, cx, cy);
     }
     if (beam) drawBeam(ctx, beam, cx, cy);
     for (const n of novas) drawNova(ctx, n, cx, cy);
@@ -822,7 +787,6 @@ const Attacks = (() => {
     hostile.length = 0;
     beam = null;
     novas.length = 0;
-    gnaw = null;
     pendingShot = null;
     shotHold = 0;
     shotBody = null;

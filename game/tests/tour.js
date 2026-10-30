@@ -31,7 +31,7 @@ for (const part of spec.split(',')) {
     await page.keyboard.press('Enter');
     await page.waitForTimeout(100);
     await page.evaluate(([n, who]) => {
-      ['ranger', 'mage', 'rat'].forEach((c) => Hand.collect(c));
+      ['ranger', 'mage', 'weaver'].forEach((c) => Hand.collect(c));
       const s = new PlayScene(n - 1, who); Engine.setScene(s);
       window.__log = { hits: [], deaths: [], start: performance.now(), done: false, maxX: 0, stuck: 0 };
       const press = (type, code) => window.dispatchEvent(new KeyboardEvent(type, { code }));

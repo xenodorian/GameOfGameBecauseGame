@@ -20,8 +20,8 @@ const ACTION_LENGTH = { slash: 0.2, thrust: 0.24, spellcast: 0.3, shoot: 0.3, ju
 const ACTION_FOR_ABILITY = {
   slash: "slash", thrust: "thrust", shield_bash: "slash", charge: "thrust",
   shoot: "shoot", arrow_anchor: "shoot", volley: "shoot", bone_toss: "shoot", spell_bolt: "slash", bone_bridge: "spellcast",
-  blink: "spellcast", nova: "spellcast", gnaw: "thrust", float: "spellcast", ghost: "spellcast",
-  leap: "jump", hop: "jump", scurry: "walk",
+  blink: "spellcast", nova: "spellcast", float: "spellcast", ghost: "spellcast",
+  hop: "jump",
 };
 
 // Sheet key for each character (see CHARACTERS in abilities.js).
@@ -29,11 +29,10 @@ const LPC_KEY = {
   knight: "lpc_knight",
   ranger: "lpc_ranger",
   mage: "lpc_mage",
-  rat: "lpc_rat",
   weaver: "lpc_weaver",
 };
 
-// Starts an action on a body when its ability fires. Scurry is a walk, so it has no action.
+// Starts an action on a body when its ability fires. Abilities with no entry have no action.
 function startAction(body, abilityId) {
   const action = ACTION_FOR_ABILITY[abilityId];
   if (!action || action === "walk") return;

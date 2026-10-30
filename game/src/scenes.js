@@ -13,7 +13,9 @@ class InputTestScene {
       ["ab3", "Z / A"],
       ["ab4", "X / B"],
       ["discardSelf", "Q"],
+      ["swap", "D"],
       ["discardCard", "C"],
+      ["back", "Esc"],
       ["start", "Enter / Start"],
     ];
     this.flash = {};
@@ -90,7 +92,7 @@ function drawMenu(ctx, title, items, sel, footer) {
   ctx.textAlign = "left";
 }
 
-// Title screen: level 1 sky and hills, the five characters walking along the bottom, and the menu.
+// Title screen: level 1 sky and hills, the four characters walking along the bottom, and the menu.
 function drawTitle(ctx, scene) {
   const theme = World.THEMES.field;
   ctx.fillStyle = theme.sky;
@@ -100,7 +102,7 @@ function drawTitle(ctx, scene) {
   drawHills(ctx, drift * 0.5, theme.near, 190, 0.02, 20);
 
   // Walkers, left to right, looping. Each uses its own walk frames.
-  const cast = ["knight", "ranger", "mage", "rat", "weaver"];
+  const cast = ["knight", "ranger", "mage", "weaver"];
   cast.forEach((id, i) => {
     const span = Engine.W + 120;
     const x = ((scene.t * 40 + i * 96) % span) - 60;
@@ -123,7 +125,7 @@ function drawTitle(ctx, scene) {
   });
   ctx.font = "10px GameFont, system-ui, sans-serif";
   ctx.fillStyle = "#e8e4d8";
-  drawText(ctx, "Arrows move   Up jump   A S Z X powers   Enter pause", Engine.W / 2, Engine.H - 8);
+  drawText(ctx, "Arrows move   Up jump   Down drop   A S Z X powers   D cards   Enter pause", Engine.W / 2, Engine.H - 8);
   ctx.textAlign = "left";
 }
 
@@ -229,7 +231,7 @@ class EndingScene {
     if (menuConfirm()) Engine.setScene(new CreditsScene());
   }
 
-  // P1: the intro's title card at dawn. The throne stands empty and the five faces fly out
+  // P1: the intro's title card at dawn. The throne stands empty and the four faces fly out
   // of it into the sky, trailing light. Then the words and the stats.
   draw(ctx) {
     const t = this.t;
@@ -258,7 +260,7 @@ class EndingScene {
     ctx.fill();
     ctx.fillRect(cx - 34, 84, 8, 48);
     ctx.fillRect(cx + 26, 84, 8, 48);
-    const faces = ["knight", "ranger", "mage", "rat", "weaver"];
+    const faces = ["knight", "ranger", "mage", "weaver"];
     faces.forEach((id, i) => {
       const k = Math.min(1, Math.max(0, (t - i * 0.25) / 2.2));
       const e = 1 - Math.pow(1 - k, 3);
@@ -350,7 +352,7 @@ class IntroScene {
     const sheet = IMG.lpc_warlord;
     if (sheet) ctx.drawImage(Effects.tinted(sheet, 0, 0, "#05040a"), 0, 0, 64, 64, cx - 48, 32, 96, 96);
     // Stolen faces orbit the throne.
-    const faces = ["knight", "ranger", "mage", "rat", "weaver"];
+    const faces = ["knight", "ranger", "mage", "weaver"];
     faces.forEach((id, i) => {
       const a = this.t * 0.6 + (i * Math.PI * 2) / faces.length;
       const fx = Math.round(cx + Math.cos(a) * 92);
@@ -480,22 +482,17 @@ class PlayScene {
     this.reason = "";
     this.sel = 0;
     this.deathPos = { x: 0, y: 0 };
-    this.downActive = false;
-    this.downTime = 0;
-    this.downFired = false;
     this.dashT = 0;
     this.dashGraceT = 0;
     this.lungeT = 0;
     this.hp = MAX_HP;
     this.hpInvT = 0;
     this.floatT = 0;
-    this.scurryT = 0;
     this.ghostT = 0;
     this.hurtShowT = 0;
     this.sparkleT = 0;
     this.pauseSel = 0;
-    // C5 face swap: cooldown left, and a short safety window after a swap.
-    this.swapCd = 0;
+    // Face change from the card menu: a short safety window after it.
     this.swapT = 0;
     this.flashT = 0;
     this.secretsFound = 0;
@@ -510,6 +507,8 @@ class PlayScene {
   newBody(x, y) {
     return {
       x, y, w: 18, h: 30, vx: 0, vy: 0, grounded: false, facing: 1, jumping: false, hopUsed: false,
+      // Ladders: the player stands on ladder tops; climbing is the ladder held, dropT drops through ledges.
+      ladderable: true, climbing: null, dropT: 0,
       // Animation: time in the current action, the action name, distance walked, and landing time left.
       animT: 0, action: "", walkDist: 0, landT: 0, prevGrounded: false,
     };
@@ -546,21 +545,17 @@ class PlayScene {
       dt *= 0.3;
     }
     if (Input.pressed("debug")) Attacks.debug.on = !Attacks.debug.on;
-    this.handleDiscardKeys(dt);
+    this.handleDiscardKeys();
     if (this.mode !== "play") return;
-    if (this.swapCd > 0) this.swapCd -= dt;
     if (this.swapT > 0) this.swapT -= dt;
-    if (Input.pressed("swap")) this.swapFace();
 
     const p = this.player;
     const move = (Input.down("right") ? 1 : 0) - (Input.down("left") ? 1 : 0);
 
     if (move !== 0) p.facing = move;
-    // Rat scurry: faster walking for a short time.
-    if (this.scurryT > 0) this.scurryT -= dt;
     // F1: ease toward the target speed. Turning or stopping uses the stronger decel; air control is softer.
     const R = TUNING.run;
-    const target = move * (this.scurryT > 0 ? R.scurryMax : R.max);
+    const target = move * R.max;
     const speeding = move !== 0 && Math.sign(p.vx) !== -move && Math.abs(target) >= Math.abs(p.vx);
     const rate = p.grounded ? (speeding ? R.groundAccel : R.groundDecel) : (speeding ? R.airAccel : R.airDecel);
     if (p.vx < target) p.vx = Math.min(target, p.vx + rate * dt);
@@ -576,6 +571,39 @@ class PlayScene {
       p.vx = p.facing * 210;
     }
 
+    // Down: on a ladder top, climb down; on a one-way ledge or a made platform, drop through it.
+    // Solid ground does not drop. Up on a ladder climbs it (instead of jumping).
+    if (p.dropT > 0) p.dropT -= dt;
+    if (!p.climbing) {
+      const lad = World.ladderAt(p);
+      const under = p.grounded ? World.standingOn(p) : null;
+      if (lad && Input.down("up") && p.y + p.h > lad.top + 1) this.startClimb(p, lad);
+      else if (lad && under === "ladder" && Input.pressed("down")) {
+        this.startClimb(p, lad);
+        p.y += 2;
+      } else if (Input.pressed("down") && (under === "oneway" || under === "ladder")) {
+        p.dropT = 0.25;
+        p.grounded = false;
+        p.y += 1;
+        p.vy = Math.max(p.vy, 40);
+      }
+    }
+    if (p.climbing) {
+      // Left or Right steps off the ladder; Up/Down climb at 120 px/s.
+      if (!World.ladders.includes(p.climbing) || move !== 0) {
+        p.climbing = null;
+      } else {
+        const lad = p.climbing;
+        p.vx = 0;
+        p.x = lad.x + lad.w / 2 - p.w / 2;
+        p.vy = ((Input.down("down") ? 1 : 0) - (Input.down("up") ? 1 : 0)) * 120;
+        p.jumpBufT = 0;
+        p.jumping = false;
+        p.hopUsed = false;
+        p.floatUsed = false;
+        this.floatT = 0;
+      }
+    }
     if (p.grounded) {
       p.hopUsed = false;
       p.floatUsed = false;
@@ -586,7 +614,7 @@ class PlayScene {
     // Coyote time and the jump buffer: a jump pressed just before landing, or just after leaving a ledge, still counts.
     if (Input.pressed("up")) p.jumpBufT = TUNING.jump.buffer;
     if (p.jumpBufT > 0) p.jumpBufT -= dt;
-    if (p.jumpBufT > 0 && (p.grounded || p.coyoteT > 0)) {
+    if (p.jumpBufT > 0 && (p.grounded || p.coyoteT > 0) && !p.climbing) {
       p.vy = TUNING.jump.vy;
       // Take-off stretch (drawn in drawBody) and a puff of dust.
       p.stretchT = 0.12;
@@ -618,8 +646,10 @@ class PlayScene {
     }
 
     // Float: hold Up to climb at 120 px/s for the first 0.7 s (about 4.5 rows with the jump before it),
-    // then hover: the fall is slowed. Rat leap stays the highest climb (5 rows), so rat gates hold.
-    if (this.floatT > 0) {
+    // then hover: the fall is slowed. Five-row shafts stay ranger-ladder secrets.
+    if (p.climbing) {
+      // On a ladder: no gravity, the climb speed set above.
+    } else if (this.floatT > 0) {
       this.floatT -= dt;
       // The hover starts from rest, so leftover climb speed does not carry the body higher.
       p.vy = Input.down("up") && this.floatT > 0.5 ? -120 : Math.min(Math.max(p.vy, 0) + 200 * dt, 40);
@@ -643,6 +673,21 @@ class PlayScene {
     if (this.dashT > 0) World.breakCracked(p.facing > 0 ? p.x + p.w : p.x - 6, p.y, 6, p.h);
     const fallSpeed = p.vy;
     World.moveBody(p, dt);
+    if (p.climbing) {
+      const lad = p.climbing;
+      if (p.y + p.h <= lad.top) {
+        // Off the top: stand on it.
+        p.y = lad.top - p.h;
+        p.vy = 0;
+        p.grounded = true;
+        p.climbing = null;
+      } else if (p.vy > 0 && (p.grounded || p.y + p.h > lad.bottom + 2)) {
+        // Down at the bottom: back on the floor, or off a hanging ladder's end.
+        p.climbing = null;
+      } else {
+        p.grounded = false;
+      }
+    }
     // A hard landing shows the land frame for a moment.
     if (p.grounded && !p.prevGrounded && fallSpeed > 250) {
       p.landT = 0.08;
@@ -802,30 +847,20 @@ class PlayScene {
     }
   }
 
-  // Hold Down for 0.5 s to discard the current character.
-  // A quick Down tap, or C, opens discard-card mode. The press edge starts
-  // the timer, so a tap shorter than one step still counts.
-  handleDiscardKeys(dt) {
-    if (Input.pressed("down")) {
-      this.downActive = true;
-      this.downTime = 0;
-      this.downFired = false;
+  startClimb(p, lad) {
+    p.climbing = lad;
+    p.vx = 0;
+    p.vy = 0;
+    p.grounded = false;
+    p.jumpBufT = 0;
+    p.action = "";
+  }
+
+  // D (or C) opens the card menu when a card is held. Q discards the current character.
+  handleDiscardKeys() {
+    if (Input.pressed("swap") || Input.pressed("discardCard")) {
+      if (Hand.slots().some((c) => c !== null)) this.openDiscardCard();
     }
-    if (this.downActive) {
-      if (Input.down("down")) {
-        this.downTime += dt;
-        if (!this.downFired && this.downTime >= 0.5) {
-          this.downFired = true;
-          this.downActive = false;
-          this.beginSelection("discarded");
-          return;
-        }
-      } else {
-        if (!this.downFired) this.openDiscardCard();
-        this.downActive = false;
-      }
-    }
-    if (Input.pressed("discardCard")) this.openDiscardCard();
     if (Input.pressed("discardSelf")) {
       this.beginSelection("discarded");
       return;
@@ -860,20 +895,18 @@ class PlayScene {
     }
   }
 
-  // C5: swap to the leftmost hand card on purpose. The old face goes to the back of the hand.
-  // HP carries over (no free heal), cooldowns reset, timed powers end. 2 s cooldown, 0.3 s safety.
-  swapFace() {
-    if (this.swapCd > 0 || Hand.slots().every((c) => c === null)) return;
-    const next = Hand.swapIn(this.active);
+  // Card menu, D on a card: that card is used up and the player becomes its character. The old
+  // face goes to the back of the hand. HP carries over (no free heal), cooldowns reset, timed
+  // powers end, 0.3 s of safety.
+  swapFace(slot) {
+    const next = Hand.useCard(slot, this.active);
     if (!next) return;
     this.active = next;
-    this.swapCd = 2.0;
     this.swapT = 0.3;
     PlayScene.swapUsed = true;
     this.cooldowns = [0, 0, 0, 0];
     this.abBuf = [0, 0, 0, 0];
     this.floatT = 0;
-    this.scurryT = 0;
     this.ghostT = 0;
     this.dashT = 0;
     this.lungeT = 0;
@@ -951,14 +984,21 @@ class PlayScene {
   updateDiscardCard() {
     const dir = (Input.pressed("right") ? 1 : 0) - (Input.pressed("left") ? 1 : 0);
     if (dir) this.sel = this.nextOccupied(this.sel, dir);
-    if (Input.pressed("discardCard") || Input.pressed("down")) {
-      if (Hand.get(this.sel)) {
-        Hand.discard(this.sel);
-        this.mode = "play";
-        this.sel = this.firstOccupied();
-      }
+    // D: become the highlighted card. C: throw it away. Escape or X/B: close.
+    if (Input.pressed("swap") && Hand.get(this.sel)) {
+      this.mode = "play";
+      this.swapFace(this.sel);
+      this.sel = this.firstOccupied();
+      return;
     }
-    if (Input.pressed("ab4")) this.mode = "play";
+    if (Input.pressed("discardCard") && Hand.get(this.sel)) {
+      Hand.discard(this.sel);
+      Sfx.play("hurt");
+      if (Hand.slots().every((c) => c === null)) this.mode = "play";
+      else this.sel = Hand.get(this.sel) ? this.sel : this.firstOccupied();
+      return;
+    }
+    if (Input.pressed("ab4") || Input.pressed("back")) this.mode = "play";
   }
 
   respawn(cardId) {
@@ -971,7 +1011,6 @@ class PlayScene {
     this.hp = MAX_HP;
     this.hpInvT = 0;
     this.floatT = 0;
-    this.scurryT = 0;
     this.ghostT = 0;
     this.hurtShowT = 0;
     this.sparkleT = 0;
@@ -1091,7 +1130,11 @@ class PlayScene {
       ctx.textAlign = "left";
     } else if (this.mode === "discardCard") {
       HUD.draw(ctx, this.sel);
-      this.drawBanner(ctx, "Discard: Left/Right to choose. C or Down to discard. X or B to cancel.");
+      // Under the hand, so the cards stay visible; it names the highlighted card.
+      const id = Hand.get(this.sel);
+      const text = (id ? CARD_DEFS[id].name + ": D to become it, C to throw it away." : "") + "  Left/Right: choose.  Esc or X: close.";
+      ctx.font = "11px GameFont, system-ui, sans-serif";
+      this.drawBanner(ctx, text, Math.round((Engine.W - ctx.measureText(text).width - 12) / 2), 52);
     } else if (this.mode === "select") {
       HUD.draw(ctx, -1);
       this.drawSelect(ctx);
@@ -1292,13 +1335,13 @@ class PlayScene {
     ctx.textAlign = "left";
   }
 
-  drawBanner(ctx, text) {
+  drawBanner(ctx, text, x = 8, y = 8) {
     ctx.font = "11px GameFont, system-ui, sans-serif";
     const w = Math.ceil(ctx.measureText(text).width) + 12;
     ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-    ctx.fillRect(8, 8, w, 22);
+    ctx.fillRect(x, y, w, 22);
     ctx.fillStyle = "#e8e4d8";
-    drawText(ctx, text, 14, 22);
+    drawText(ctx, text, x + 6, y + 14);
   }
 
   drawSelect(ctx) {
@@ -1567,23 +1610,18 @@ const HUD = (() => {
     drawSecrets(ctx, scene);
   }
 
-  // C5: a "D" key badge with a swap arrow. It fills back up over the 2 s cooldown.
-  // Until the player has swapped once, a bobbing "D: swap face" hint points at it when a card is held.
+  // A "D" key badge with a swap arrow: D opens the card menu. Until the player has changed face
+  // once, a bobbing "D: cards" hint points at it when a card is held.
   function drawSwap(ctx, scene) {
     const r = swapRect();
     const has = Hand.slots().some((c) => c !== null);
-    const ready = has && scene.swapCd <= 0;
+    const ready = has;
     roundRect(ctx, r.x, r.y, r.w, r.h, 3);
     ctx.fillStyle = ready ? "rgba(217, 164, 65, 0.85)" : "rgba(10, 12, 18, 0.6)";
     ctx.fill();
     ctx.strokeStyle = ready ? "#f4efe2" : "#6a7686";
     ctx.lineWidth = 1;
     ctx.stroke();
-    if (has && scene.swapCd > 0) {
-      const k = Math.min(1, scene.swapCd / 2.0);
-      ctx.fillStyle = "rgba(217, 164, 65, 0.45)";
-      ctx.fillRect(r.x + 1, r.y + 1 + (r.h - 2) * k, r.w - 2, (r.h - 2) * (1 - k));
-    }
     ctx.fillStyle = ready ? "#1a1420" : "#9fb0c0";
     ctx.font = "bold 11px GameFont, system-ui, sans-serif";
     ctx.textAlign = "center";
@@ -1597,9 +1635,9 @@ const HUD = (() => {
       const bob = Math.round(Math.sin(scene.time * 6) * 2);
       ctx.font = "10px GameFont, system-ui, sans-serif";
       ctx.fillStyle = "rgba(10, 12, 18, 0.75)";
-      ctx.fillRect(r.x + r.w / 2 - 38, r.y + r.h + 4 + bob, 76, 14);
+      ctx.fillRect(r.x + r.w / 2 - 30, r.y + r.h + 4 + bob, 60, 14);
       ctx.fillStyle = "#f2d04a";
-      drawText(ctx, "D: swap face", r.x + r.w / 2, r.y + r.h + 14 + bob);
+      drawText(ctx, "D: cards", r.x + r.w / 2, r.y + r.h + 14 + bob);
     }
     ctx.textAlign = "left";
   }

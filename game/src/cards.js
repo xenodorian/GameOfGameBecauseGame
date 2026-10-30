@@ -3,7 +3,6 @@ const CARD_DEFS = {
   knight: { name: "Knight", color: "#8fa6c0" },
   ranger: { name: "Ranger", color: "#6f9c5a" },
   mage: { name: "Mage", color: "#9b7fd1" },
-  rat: { name: "Rat", color: "#a0826d" },
   weaver: { name: "Bone Weaver", color: "#d8d2c0" },
 };
 
@@ -40,15 +39,22 @@ const Hand = (() => {
     return cardId;
   }
 
-  // C5 face swap: the leftmost card becomes the active face; the old face goes to the end of the
-  // filled slots, so pressing swap again and again cycles through every face you hold.
-  function swapIn(current) {
+  // Card menu: the card in slot becomes the active face and leaves the hand; the old face goes
+  // to the end of the filled slots.
+  function useCard(slot, current) {
+    const next = hand[slot];
+    if (!next) return null;
+    hand[slot] = null;
     const cards = hand.filter((c) => c !== null);
-    if (cards.length === 0) return null;
-    const next = cards.shift();
     cards.push(current);
     for (let i = 0; i < SLOTS; i++) hand[i] = cards[i] || null;
     return next;
+  }
+
+  // The leftmost card becomes the active face (kept for tests and tools).
+  function swapIn(current) {
+    const i = hand.findIndex((c) => c !== null);
+    return i === -1 ? null : useCard(i, current);
   }
 
   // Empties the hand and the deck. Called when a new game starts.
@@ -73,6 +79,7 @@ const Hand = (() => {
     collect,
     discard,
     swapIn,
+    useCard,
     reset,
     serialize,
     restore,

@@ -44,6 +44,8 @@ const World = (() => {
   let flagOpen = true;
   // Temporary one-way platforms made in play (arrow anchor rope). Each has a life in seconds.
   const platforms = [];
+  // Ranger ladders (Up + bridge): { x, w, top, bottom, life }. One at a time. The top is a ledge.
+  const ladders = [];
   const enemySpawns = [];
   const pickupSpawns = [];
   const signs = [];
@@ -61,6 +63,7 @@ const World = (() => {
     spawn = { x: 0, y: 0 };
     exit = null;
     platforms.length = 0;
+    ladders.length = 0;
     enemySpawns.length = 0;
     pickupSpawns.length = 0;
     signs.length = 0;
@@ -227,13 +230,17 @@ const World = (() => {
           e.y = (c.ty + 1) * TILE;
           e.vy = 0;
         }
-      } else if (isOneWay(c.ch) && e.vy >= 0 && prevBottom <= c.ty * TILE + 0.5) {
+      } else if (isOneWay(c.ch) && !(e.dropT > 0) && e.vy >= 0 && prevBottom <= c.ty * TILE + 0.5) {
         e.y = c.ty * TILE - e.h;
         e.vy = 0;
         e.grounded = true;
       }
     }
-    for (const pl of platforms) {
+    // Made platforms and ladder tops are one-way too. Down drops through them (dropT), and a
+    // climbing body passes its ladder's top. Only the player (ladderable) stands on ladder tops.
+    if (e.dropT > 0 || e.climbing) return;
+    const tops = e.ladderable ? platforms.concat(ladders.map((l) => ({ x: l.x, y: l.top, w: l.w }))) : platforms;
+    for (const pl of tops) {
       const overlapX = e.x + e.w > pl.x && e.x < pl.x + pl.w;
       if (overlapX && e.vy >= 0 && prevBottom <= pl.y + 0.5 && e.y + e.h >= pl.y) {
         e.y = pl.y - e.h;
@@ -243,8 +250,63 @@ const World = (() => {
     }
   }
 
+  // What the body stands on: "solid" (cannot drop), "oneway" (Down drops through), "ladder"
+  // (the top of a ladder: Down climbs down), or null in the air.
+  function standingOn(e) {
+    const y = e.y + e.h + 1;
+    const ty = Math.floor(y / TILE);
+    const x0 = Math.floor((e.x + 1) / TILE);
+    const x1 = Math.floor((e.x + e.w - 1) / TILE);
+    let kind = null;
+    for (let tx = x0; tx <= x1; tx++) {
+      const ch = at(tx, ty);
+      if (isSolid(ch)) return "solid";
+      if (isOneWay(ch) && Math.abs(ty * TILE - (e.y + e.h)) < 2) kind = "oneway";
+    }
+    const over = (pl) => e.x + e.w > pl.x && e.x < pl.x + pl.w && Math.abs(pl.y - (e.y + e.h)) < 2;
+    if (!kind && platforms.some(over)) kind = "oneway";
+    if (ladders.some((l) => over({ x: l.x, y: l.top, w: l.w }))) kind = kind || "ladder";
+    return kind;
+  }
+
+  // Ranger bridges: at most two at once, a third replaces the oldest. Other made platforms
+  // (bone bridge) replace everything, as before.
   function addPlatform(pl) {
+    if (pl.kind === "rope") {
+      const ropes = platforms.filter((q) => q.kind === "rope");
+      if (ropes.length >= 2) platforms.splice(platforms.indexOf(ropes[0]), 1);
+    } else {
+      platforms.length = 0;
+    }
     platforms.push(pl);
+  }
+
+  // A ladder in tile column col, standing on the first floor at or below row fromRow (up to 4
+  // rows down; never in mid-air or on spikes), up to n tiles tall, stopped by solid tiles.
+  // Returns { x, w, top, bottom } or null when there is no room for a tile.
+  function ladderIn(col, fromRow, n) {
+    if (col < 0 || col >= cols) return null;
+    let base = -1;
+    for (let r = fromRow; r <= fromRow + 4 && r < rows - 1; r++) {
+      if (isSolid(at(col, r))) break;
+      if (isSolid(at(col, r + 1)) || isOneWay(at(col, r + 1))) { base = r; break; }
+    }
+    if (base < 0 || at(col, base) === "^") return null;
+    let h = 0;
+    while (h < n && base - h >= 0 && !isSolid(at(col, base - h))) h++;
+    if (h === 0) return null;
+    return { x: col * TILE + 4, w: TILE - 8, top: (base - h + 1) * TILE, bottom: (base + 1) * TILE };
+  }
+
+  function addLadder(l) {
+    ladders.length = 0;
+    ladders.push(l);
+  }
+
+  // The ladder the body's centre is on (x inside it, body overlapping its height), or null.
+  function ladderAt(e) {
+    const cx = e.x + e.w / 2;
+    return ladders.find((l) => cx >= l.x - 4 && cx <= l.x + l.w + 4 && e.y < l.bottom && e.y + e.h > l.top - 1) || null;
   }
 
   function updatePlatforms(dt) {
@@ -252,10 +314,42 @@ const World = (() => {
       platforms[i].life -= dt;
       if (platforms[i].life <= 0) platforms.splice(i, 1);
     }
+    for (let i = ladders.length - 1; i >= 0; i--) {
+      ladders[i].life -= dt;
+      if (ladders[i].life <= 0) ladders.splice(i, 1);
+    }
+  }
+
+  // Ladder: two rails and a rung every 8 px, rope-coloured like the bridge plank. Fades at the end.
+  function drawLadders(ctx, camX, camY) {
+    for (const l of ladders) {
+      const x = Math.round(l.x - camX);
+      const y = Math.round(l.top - camY);
+      const h = l.bottom - l.top;
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, l.life / 1.5);
+      ctx.fillStyle = "#4a2e18";
+      ctx.fillRect(x - 1, y - 2, 5, h + 2);
+      ctx.fillRect(x + l.w - 4, y - 2, 5, h + 2);
+      ctx.fillStyle = "#8a5a32";
+      ctx.fillRect(x, y - 2, 3, h + 2);
+      ctx.fillRect(x + l.w - 3, y - 2, 3, h + 2);
+      for (let ry = 6; ry < h; ry += 8) {
+        ctx.fillStyle = "#4a2e18";
+        ctx.fillRect(x + 3, y + ry + 1, l.w - 6, 1);
+        ctx.fillStyle = "#c9955a";
+        ctx.fillRect(x + 3, y + ry, l.w - 6, 1);
+      }
+      // The top rung is a small ledge you can stand on.
+      ctx.fillStyle = "#c9955a";
+      ctx.fillRect(x - 1, y - 2, l.w + 2, 1);
+      ctx.restore();
+    }
   }
 
   // Only the drawing changes; collision stays a flat platform.
   function drawPlatforms(ctx, camX, camY) {
+    drawLadders(ctx, camX, camY);
     for (const pl of platforms) {
       const x = Math.round(pl.x - camX);
       const y = Math.round(pl.y - camY);
@@ -907,6 +1001,11 @@ const World = (() => {
     moveBody,
     closestSafeSpace,
     addPlatform,
+    addLadder,
+    ladderIn,
+    ladderAt,
+    standingOn,
+    ladders,
     updatePlatforms,
     drawPlatforms,
     platforms,

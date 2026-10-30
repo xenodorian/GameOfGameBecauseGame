@@ -18,8 +18,13 @@ Assumptions, taken from game/src/world.js and game/src/scenes.js:
   - Blink (mage) adds 3 columns to a jump.
   - Hop (ranger) adds 1 row to a jump (3 rows; measured with game/tests/probe.js).
   - Float (mage) climbs 4 rows (jump, then float), then drifts up to 3 columns while hovering.
-  - Rope (ranger) makes three tiles one row above the body, in front of it.
-    Ropes are kept for the whole search. The game keeps them for 6 s.
+  - Bridge (ranger) makes three tiles in front of the body, 80 px above the feet (modelled
+    as one row above the body, so the ranger stands 2 rows up on it). Two exist at once in the
+    game, so a bridge can be cast from another bridge (stairs). Either direction.
+  - Ladder (ranger, Up + bridge) is a column of up to 5 tiles in front of the body or in its own
+    column, standing on the floor below and stopped by ceilings. Every rung is standable.
+  - Bone bridge (weaver) makes five tiles at the feet, from real ground, to the right.
+    Made tiles are kept for the whole search. The game keeps them for 6 to 8 s.
 
 Run from any directory:  python3 game/tools/validate_gates.py
 Exit code 0 means every check passed.
@@ -36,9 +41,8 @@ GAME = pathlib.Path(__file__).resolve().parent.parent
 ABILITY_SETS = {
     "basic": set(),
     "knight": {"charge", "bash"},
-    "ranger": {"hop", "rope"},
+    "ranger": {"hop", "rope", "ladder"},
     "mage": {"float", "blink"},
-    "rat": {"leap"},
     "weaver": {"bridge"},
 }
 
@@ -51,10 +55,10 @@ SPIKE_MIN = {1: 0, 2: 4, 3: 0, 4: 6, 5: 2, 6: 8, 7: 6, 8: 0}
 CRACK_MIN = {1: 0, 2: 0, 3: 0, 4: 4, 5: 4, 6: 4, 7: 4, 8: 0}
 ENEMY_CHARS = "gmjaW"
 # Characters whose exclusive secrets the game-wide check looks for.
-# Ranger is not here: with the measured heights (hop = 3 rows) the rat, mage and weaver reach every
-# spot the ranger reaches, so a ranger-only secret cannot exist. Ranger secrets are checked below
-# as "the ranger reaches it and the knight does not" (session 3 director decision, see PROGRESS.md).
-EXCLUSIVE_CHARS = ["knight", "rat", "weaver"]
+# Ranger is not here: ranger secrets are checked below as "the ranger reaches it and the knight
+# does not" (session 3 director decision, see PROGRESS.md). The playable rat was removed in
+# session 7; its 5-row shafts (L2, L5) are ranger ladder secrets now.
+EXCLUSIVE_CHARS = ["knight"]
 
 
 def load_levels():
@@ -131,7 +135,6 @@ def explore(rows, abilities, start, ropes):
     """
     grid = Grid(rows, ropes, breakable="bash" in abilities)
     hop = "hop" in abilities
-    leap = "leap" in abilities
     blink = "blink" in abilities
     charge = "charge" in abilities
     floatable = "float" in abilities
@@ -152,7 +155,7 @@ def explore(rows, abilities, start, ropes):
             seen.add(state)
             queue.append(state)
 
-    max_up = 5 if leap else (3 if hop else 2)
+    max_up = 3 if hop else 2
     max_across = 6 if blink else (5 if charge else 3)
 
     while queue:
@@ -184,6 +187,10 @@ def explore(rows, abilities, start, ropes):
                 if head_clear and arc_clear:
                     push((tx, grid.settle(tx, ty)))
 
+        # Down drops through a one-way tile or a made tile under the body.
+        if y + 1 < grid.h and ((x, y + 1) in grid.ropes or rows[y + 1][x] == "_"):
+            push((x, grid.settle(x, y + 1)))
+
         # Walk off a ledge into a horizontal run of up to 3 columns.
         for dx in (-3, -2, -1, 1, 2, 3):
             tx = x + dx
@@ -204,11 +211,53 @@ def explore(rows, abilities, start, ropes):
                     if all(grid.air(x + step * i, y - h) for i in range(0, abs(dxh) + 1)):
                         push((x + dxh, grid.settle(x + dxh, y - h)))
 
-        # A rope is anchored from real ground, not from another rope.
-        if can_rope and standing_on_ground(grid, x, y) and all(grid.air(x + i, y - 1) for i in range(1, rope_len + 1)):
+        # A bone bridge is anchored from real ground. Ranger bridges and ladders can be made
+        # from anywhere the ranger stands (two bridges exist at once).
+        if "bridge" in abilities and standing_on_ground(grid, x, y) and all(grid.air(x + i, y - 1) for i in range(1, rope_len + 1)):
+            rope_sources.add((x, y))
+        if "rope" in abilities or "ladder" in abilities:
             rope_sources.add((x, y))
 
     return set(seen), rope_sources
+
+
+def made_cells(grid, rows, abilities, x, y):
+    """Support cells a character can make while standing at (x, y)."""
+    out = set()
+    # A bridge is blocked by the first solid tile in its path (Expansion_Plan.md, R3).
+    runs = []
+    if "bridge" in abilities:
+        runs.append((1, 5))
+    if "rope" in abilities:
+        runs += [(1, 3), (-1, 3)]
+    for step, n in runs:
+        for i in range(1, n + 1):
+            cell = (x + step * i, y - 1)
+            if not grid.air(*cell):
+                break
+            out.add(cell)
+    if "ladder" in abilities:
+        for col in (x - 1, x, x + 1):
+            if not grid.air(col, y):
+                continue
+            # Rest on the first real floor up to 4 rows down (not spikes, not made tiles).
+            base = None
+            for r in range(y, min(y + 5, grid.h - 1)):
+                if not grid.air(col, r):
+                    break
+                below = rows[r + 1][col] if 0 <= col < grid.w else "."
+                if grid.is_solid(col, r + 1) or below == "_":
+                    base = r
+                    break
+            if base is None or rows[base][col] == "^":
+                continue
+            h = 0
+            while h < 5 and base - h >= 0 and grid.air(col, base - h):
+                h += 1
+            # Rungs from one row up: the body can stand 2 to h rows above the floor.
+            for k in range(1, h):
+                out.add((col, base - k))
+    return out
 
 
 def reachable(rows, abilities, start):
@@ -218,15 +267,9 @@ def reachable(rows, abilities, start):
         reached, sources = explore(rows, abilities, start, frozenset(ropes))
         grid = Grid(rows, frozenset(ropes), breakable="bash" in abilities)
         new = set()
-        rope_len = 5 if "bridge" in abilities else 3
         for x, y in sources:
-            # A rope is blocked by the first solid tile in its path (Expansion_Plan.md, R3).
-            for i in range(1, rope_len + 1):
-                cell = (x + i, y - 1)
-                if not grid.air(*cell):
-                    break
-                if cell not in ropes:
-                    new.add(cell)
+            new |= made_cells(grid, rows, abilities, x, y)
+        new -= ropes
         if not new:
             return reached
         ropes |= new
@@ -354,6 +397,12 @@ def main():
     print(f"  ranger  {'OK' if ranger_own else 'FAIL'}  " + ("; ".join(f"level {n} {lbl}" for n, lbl in ranger_own) or "no secret the ranger reaches and the knight does not"))
     if not ranger_own:
         failures.append("no secret the ranger reaches and the knight does not")
+    # Session 7: the ranger's two bridges and ladder reach every open-air spot, so the weaver's
+    # check is the mage's: a secret the weaver reaches with at most one other face.
+    weaver_alone = [(n, lbl) for n, lbl, by in secret_log if "weaver" in by and len(by) <= 2]
+    print(f"  weaver  {'OK' if weaver_alone else 'FAIL'}  " + ("; ".join(f"level {n} {lbl}" for n, lbl in weaver_alone) or "no secret with weaver and at most one other"))
+    if not weaver_alone:
+        failures.append("no secret reachable by weaver with at most one other character")
     mage_alone = [(n, lbl) for n, lbl, by in secret_log if "mage" in by and len(by) <= 2]
     ok = bool(mage_alone)
     print(f"  mage    {'OK' if ok else 'FAIL'}  " + ("; ".join(f"level {n} {lbl}" for n, lbl in mage_alone) or "no secret with mage and at most one other"))

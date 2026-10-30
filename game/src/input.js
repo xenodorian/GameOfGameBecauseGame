@@ -16,6 +16,7 @@ const Input = (() => {
     Enter: "start",
     Backquote: "debug",
     KeyD: "swap",
+    Escape: "back",
   };
 
   // Standard gamepad mapping. Ability order follows the design doc:
@@ -26,6 +27,7 @@ const Input = (() => {
     2: "ab1",
     3: "ab2",
     4: "swap",
+    5: "discardCard",
     8: "swap",
     9: "start",
     12: "up",

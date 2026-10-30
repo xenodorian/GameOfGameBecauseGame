@@ -30,7 +30,7 @@ const OUT = path.join(__dirname, 'shots');
     await shot(`l${i + 1}_mid`);
   }
   // Each character in level 1, mid-attack (ability 3, then ability 1).
-  for (const who of ['knight', 'ranger', 'mage', 'rat', 'weaver']) {
+  for (const who of ['knight', 'ranger', 'mage', 'weaver']) {
     await page.evaluate((w) => { window.__s = new PlayScene(0, w); Engine.setScene(__s); __s.bannerT = 0; }, who);
     await page.waitForTimeout(300);
     await page.keyboard.press('KeyZ'); await page.waitForTimeout(50);

@@ -2,7 +2,7 @@
 // Units: px, seconds, px/s, px/s^2.
 const TUNING = {
   // Running. The body eases to top speed instead of snapping to it.
-  run: { max: 140, scurryMax: 220, groundAccel: 1600, groundDecel: 2000, airAccel: 1100, airDecel: 600 },
+  run: { max: 140, groundAccel: 1600, groundDecel: 2000, airAccel: 1100, airDecel: 600 },
   // Jumping. Apex stays near 2 tiles (64 to 76 px) so level gates do not change.
   jump: {
     vy: -350, riseGravity: 900, fallGravity: 1400,

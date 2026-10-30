@@ -141,23 +141,99 @@ check('selection: death opens the card choice; Right then Z respawns as the chos
   await page.close();
 });
 
-check('discard: hold Down, tap Down then C, X cancels, C discards, Q discards self', async (browser) => {
+check('cards: D opens the menu, Right moves, D becomes the card, C throws one away, Esc and X close, Q discards self', async (browser) => {
   const page = await newPage(browser);
-  await startPlay(page, { hand: ['ranger', 'knight'] });
-  await page.keyboard.down('ArrowDown'); await wait(page, 650); await page.keyboard.up('ArrowDown');
+  await startPlay(page, { hand: ['ranger', 'mage'], active: 'knight' });
+  await placeAt(page, 200, 418);
   await wait(page, 60);
-  assert.equal(await page.evaluate(() => __scene.reason), 'discarded');
-  await page.keyboard.press('KeyZ'); await wait(page, 60);
+  // Down no longer opens the menu (it drops through ledges).
   await page.keyboard.press('ArrowDown'); await wait(page, 60);
+  assert.equal(await page.evaluate(() => __scene.mode), 'play');
+  await page.keyboard.press('KeyD'); await wait(page, 60);
   assert.equal(await page.evaluate(() => __scene.mode), 'discardCard');
+  assert.equal(await page.evaluate(() => __scene.sel), 0);
+  await page.keyboard.press('Escape'); await wait(page, 60);
+  assert.equal(await page.evaluate(() => __scene.mode), 'play');
+  await page.keyboard.press('KeyD'); await wait(page, 60);
   await page.keyboard.press('KeyX'); await wait(page, 60);
   assert.equal(await page.evaluate(() => __scene.mode), 'play');
+  // D, Right, D: become the mage. The mage card is used up; the knight goes back into the hand. HP carries over.
+  await page.evaluate(() => { __scene.hp = 6; });
+  await page.keyboard.press('KeyD'); await wait(page, 60);
+  await page.keyboard.press('ArrowRight'); await wait(page, 60);
+  assert.equal(await page.evaluate(() => __scene.sel), 1);
+  await page.keyboard.press('KeyD'); await wait(page, 100);
+  assert.equal(await page.evaluate(() => __scene.mode), 'play');
+  assert.equal(await page.evaluate(() => __scene.active), 'mage');
+  assert.deepEqual(await page.evaluate(() => Hand.slots()), ['ranger', 'knight', null]);
+  assert.equal(await page.evaluate(() => __scene.hp), 6);
+  // D, C: throw the highlighted card away; the menu stays open while cards remain.
+  await page.keyboard.press('KeyD'); await wait(page, 60);
   await page.keyboard.press('KeyC'); await wait(page, 60);
+  // Thrown-away cards leave a gap, like a discard after a death.
+  assert.deepEqual(await page.evaluate(() => Hand.slots()), [null, 'knight', null]);
+  assert.equal(await page.evaluate(() => __scene.mode), 'discardCard');
   await page.keyboard.press('KeyC'); await wait(page, 60);
   assert.equal(await page.evaluate(() => Hand.slots().filter(Boolean).length), 0);
-  await page.evaluate(() => Hand.collect('mage'));
+  assert.equal(await page.evaluate(() => __scene.mode), 'play');
+  // With an empty hand D does nothing.
+  await page.keyboard.press('KeyD'); await wait(page, 60);
+  assert.equal(await page.evaluate(() => __scene.mode), 'play');
+  await page.evaluate(() => Hand.collect('ranger'));
   await page.keyboard.press('KeyQ'); await wait(page, 60);
   assert.equal(await page.evaluate(() => __scene.mode), 'select');
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('down: drops through a one-way ledge, not through solid ground', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [], active: 'knight' });
+  // Solid ground: Down does nothing.
+  await placeAt(page, 200, 418);
+  await wait(page, 200);
+  const y0 = await page.evaluate(() => __scene.player.y);
+  await page.keyboard.press('ArrowDown'); await wait(page, 300);
+  assert.equal(await page.evaluate(() => __scene.player.y), y0);
+  // Level 3 walkway (row 16 is one-way at col 57): Down drops below it.
+  await page.evaluate(() => {
+    window.__scene = new PlayScene(2, 'knight'); Engine.setScene(__scene);
+    Enemies.list().forEach((e) => { e.x = -9999; e.def = { ...e.def, speed: 0, chaseSpeed: 0, sight: 0 }; });
+    const p = __scene.player; p.x = 57 * 32 + 7; p.y = 16 * 32 - p.h; p.vx = 0; p.vy = 0;
+  });
+  await wait(page, 300);
+  assert.equal(await page.evaluate(() => World.standingOn(__scene.player)), 'oneway');
+  await page.keyboard.press('ArrowDown'); await wait(page, 500);
+  assert.ok(await page.evaluate(() => __scene.player.y > 16 * 32), 'fell below the ledge');
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+check('ladder: Up + S builds a ladder; Up climbs it, Down climbs down', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: [], active: 'ranger' });
+  await placeAt(page, 200, 418);
+  await wait(page, 200);
+  await page.keyboard.down('ArrowUp');
+  await page.keyboard.press('KeyS');
+  await wait(page, 60);
+  const lad = await page.evaluate(() => World.ladders[0] && { x: World.ladders[0].x, top: World.ladders[0].top, bottom: World.ladders[0].bottom });
+  assert.ok(lad, 'a ladder was built');
+  assert.equal(lad.bottom - lad.top, 5 * 32);
+  await page.keyboard.up('ArrowUp');
+  await wait(page, 600);
+  // Walk into it and climb to the top.
+  await page.evaluate((l) => { const p = __scene.player; p.x = l.x + 2; p.y = l.bottom - p.h; p.vx = 0; p.vy = 0; }, lad);
+  await wait(page, 100);
+  await page.keyboard.down('ArrowUp'); await wait(page, 2000); await page.keyboard.up('ArrowUp');
+  await wait(page, 100);
+  const top = await page.evaluate(() => ({ feet: __scene.player.y + __scene.player.h, g: __scene.player.grounded, c: !!__scene.player.climbing }));
+  assert.ok(Math.abs(top.feet - lad.top) < 2 && top.g && !top.c, 'standing on top ' + JSON.stringify(top));
+  // Down climbs back down.
+  await page.keyboard.down('ArrowDown'); await wait(page, 400);
+  assert.equal(await page.evaluate(() => !!__scene.player.climbing), true);
+  await page.keyboard.up('ArrowDown');
+  assert.deepEqual(page.errors, []);
   await page.close();
 });
 
@@ -261,9 +337,9 @@ const abilities = [
     check: (p) => p.evaluate(() => __g.dead), want: true,
   },
   {
-    name: 'ranger arrow anchor (S) makes a platform', who: 'ranger', key: 'KeyS', wait: 30,
-    setup: (p) => placeAt(p, 200, 160),
-    check: (p) => p.evaluate(() => World.platforms.length), want: 1,
+    name: 'ranger bridge (S) makes a platform 80 px above the feet', who: 'ranger', key: 'KeyS', wait: 30,
+    setup: async (p) => { await placeAt(p, 200, 418); await p.waitForTimeout(300); },
+    check: (p) => p.evaluate(() => World.platforms.length === 1 && Math.round(__scene.player.y + __scene.player.h - World.platforms[0].y)), want: 80,
   },
   {
     name: 'ranger hop (X) gives upward speed in air', who: 'ranger', key: 'KeyX', wait: 20,
@@ -339,27 +415,6 @@ const abilities = [
     check: (p) => p.evaluate(() => __scene.player.vy), want: -120,
   },
   {
-    name: 'rat leap (A) jumps higher than a plain jump', who: 'rat', key: 'KeyA', wait: 20,
-    setup: (p) => placeAt(p, 200, 418),
-    check: (p) => p.evaluate(() => __scene.player.vy), want: 'leap',
-  },
-  {
-    // A grunt with 3 hp: only three bites in a row beat it.
-    name: 'rat gnaw (Z) beats a 3 hp grunt in reach with three bites', who: 'rat', key: 'KeyZ', wait: 500,
-    setup: (p) => p.evaluate(() => {
-      const g = new Enemy('grunt', 300 + 24, 418);
-      g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 }; g.hp = 3;
-      Enemies.list().push(g); window.__g = g;
-      __scene.player.x = 300; __scene.player.y = 418; __scene.player.facing = 1;
-    }),
-    check: (p) => p.evaluate(() => __g.dead), want: true,
-  },
-  {
-    name: 'rat scurry (S) walks faster', who: 'rat', key: 'KeyS', hold: 'ArrowRight', wait: 200,
-    setup: (p) => placeAt(p, 200, 418),
-    check: (p) => p.evaluate(() => __scene.player.vx), want: 220,
-  },
-  {
     name: 'weaver bone bridge (S) makes a 5 tile platform', who: 'weaver', key: 'KeyS', wait: 30,
     setup: (p) => placeAt(p, 200, 160),
     check: (p) => p.evaluate(() => World.platforms[0] && World.platforms[0].w), want: 160,
@@ -389,13 +444,12 @@ for (const a of abilities) {
     } else {
       // The game clock runs slower than wall time in headless Chromium, so wait for the charge to set its speed.
       // Shots and beams release on a game-time frame (0.1 s and 0.3 s in), so those wait on the game clock too.
-      const gameWait = a.name.includes('charge') ? 0.08 : /ranger shoot|ranger volley|mage beam|mage nova|rat gnaw|mage spell bolt|weaver bone toss/.test(a.name) ? 0.6 : null;
+      const gameWait = a.name.includes('charge') ? 0.08 : /ranger shoot|ranger volley|mage beam|mage nova|mage spell bolt|weaver bone toss/.test(a.name) ? 0.6 : null;
       const t0 = gameWait !== null ? await page.evaluate(() => __scene.time) : null;
       await page.keyboard.press(a.key); await wait(page, a.wait);
       if (t0 !== null) await page.waitForFunction((t) => __scene.time >= t, t0 + gameWait);
       const got = await a.check(page);
       if (a.want === 'upward') assert.ok(got < -250 && got > -320, 'vy ' + got);
-      else if (a.want === 'leap') assert.ok(got < -500 && got > -560, 'vy ' + got);
       else assert.equal(got, a.want);
     }
     assert.deepEqual(page.errors, []);
@@ -982,7 +1036,7 @@ check('boss: warlord takes 8 hits, then the exit opens', async (browser) => {
 // Session 5 feel audit: a shockwave seen late (jump pressed 350 ms after it appears, about 110 px
 // away) can still be jumped by every face with a plain jump.
 check('boss: every face can jump a shockwave with a human reaction time', async (browser) => {
-  for (const face of ['knight', 'ranger', 'rat', 'weaver', 'mage']) {
+  for (const face of ['knight', 'ranger', 'weaver', 'mage']) {
     const page = await newPage(browser);
     await startPlay(page, { active: face });
     await placeAt(page, 300, 13 * 32 + 2);
@@ -1066,37 +1120,20 @@ check('ability: weaver ghost (X) survives touching a grunt', async (browser) => 
   await page.close();
 });
 
-check('rope: placing a second rope removes the first', async (browser) => {
+check('bridges: two at once, a third replaces the oldest', async (browser) => {
   const page = await newPage(browser);
   await startPlay(page, { hand: [], active: 'ranger' });
-  await placeAt(page, 200, 418);
-  await wait(page, 60);
-  await page.keyboard.press('KeyS'); await wait(page, 40);
-  await placeAt(page, 400, 418);
-  await wait(page, 60);
-  await page.keyboard.press('KeyS'); await wait(page, 40);
-  assert.equal(await page.evaluate(() => World.platforms.length), 1);
-  assert.deepEqual(page.errors, []);
-  await page.close();
-});
-
-check('swap: D cycles faces through the hand, keeps HP, waits 2 s between swaps', async (browser) => {
-  const page = await newPage(browser);
-  await startPlay(page, { hand: ['ranger', 'mage'], active: 'knight' });
-  await placeAt(page, 200, 418);
-  await page.evaluate(() => { __scene.hp = 6; });
-  await wait(page, 60);
-  await page.keyboard.press('KeyD'); await wait(page, 100);
-  assert.equal(await page.evaluate(() => __scene.active), 'ranger');
-  assert.deepEqual(await page.evaluate(() => Hand.slots()), ['mage', 'knight', null]);
-  assert.equal(await page.evaluate(() => __scene.hp), 6);
-  // A second press inside the cooldown does nothing.
-  await page.keyboard.press('KeyD'); await wait(page, 100);
-  assert.equal(await page.evaluate(() => __scene.active), 'ranger');
-  await page.evaluate(() => { __scene.swapCd = 0; });
-  await page.keyboard.press('KeyD'); await wait(page, 100);
-  assert.equal(await page.evaluate(() => __scene.active), 'mage');
-  assert.deepEqual(await page.evaluate(() => Hand.slots()), ['knight', 'ranger', null]);
+  const xs = [];
+  for (const x of [200, 500, 700]) {
+    await placeAt(page, x, 418);
+    await wait(page, 200);
+    await page.waitForFunction(() => __scene.cooldowns[1] <= 0, null, { timeout: 5000 });
+    await page.keyboard.press('KeyS'); await wait(page, 60);
+    xs.push(await page.evaluate(() => World.platforms.map((p) => Math.round(p.x))));
+  }
+  assert.equal(xs[1].length, 2);
+  assert.equal(xs[2].length, 2);
+  assert.ok(!xs[2].includes(xs[0][0]), 'oldest bridge removed');
   assert.deepEqual(page.errors, []);
   await page.close();
 });

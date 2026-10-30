@@ -33,7 +33,7 @@ const ENEMY_DEFS = {
     speed: 35,
     chaseSpeed: 60,
     sight: 160,
-    card: "rat",
+    card: "knight",
     jumpVy: -330,
     jumpEvery: 1.4,
     // E2: crouches 0.3 s before each hop.
