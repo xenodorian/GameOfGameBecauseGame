@@ -2,6 +2,15 @@
 
 Read `research.md` first (pillars in section 2, task list in section 9). Newest entry on top. Use the handoff format in research.md section 7 item 9.
 
+## 2026-10-29 Director session 2 (Grok Bot, took over after Claude ran out of usage)
+Claude's in-flight workers (C4, F0 to F4 in .claude/worktrees) never landed on main; redone from scratch here.
+Done and on main:
+- C4 weaver bone toss (7e41378). F0 to F3 tuning.js, debug hitboxes, accel movement, variable jump, apex hang, corner correction, look-ahead camera (bfa6dba). F4 hit feedback (4e2ae6b). C5 face swap on D (8fc65b6).
+- Tools: `game/tests/playtest.js` (20 s smoke playtest), `game/tests/capture_gif.js` (GIF plus strip), `SUITE_ONLY=regex` for suite subsets.
+- Fixed the stale stomp suite check (it was never a load flake: since HP, one contact is not lethal and the hand ran empty).
+Playwright on this box: `/workspace/GameOfGameBecauseGame-tools/node_modules` (use as NODE_PATH if `npm root -g` has none).
+Next: Round 4 (E1 to E5), V1, V5, C6, L1, Z1.
+
 ## 2026-10-30 Director, session 1 (checkpoint)
 Done and on main (each commit body has its evidence):
 - Research: research/notes_design.md, notes_ai.md, notes_tools.md, notes_audit.md; research.md plan.
