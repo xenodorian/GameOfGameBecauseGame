@@ -230,11 +230,8 @@ class CardPickup {
       sy = this.y - camY;
     }
     // Unrolled cards (cardId "random") are drawn grey until they are collected.
-    const def = this.power ? { color: "#e0b84a" } : CARD_DEFS[this.cardId] || { color: "#b8b8b8" };
-    ctx.fillStyle = def.color;
-    ctx.fillRect(Math.round(sx), Math.round(sy), this.w, this.h);
-    ctx.strokeStyle = "#111418";
-    ctx.strokeRect(Math.round(sx) + 0.5, Math.round(sy) + 0.5, this.w - 1, this.h - 1);
+    const def = CARD_DEFS[this.cardId];
+    World.drawCardIcon(ctx, sx, sy, this.w, this.h, def && def.color, this.power, this.state === "ground");
   }
 }
 

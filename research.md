@@ -230,9 +230,9 @@ Each line is a brief seed. The director or the worker expands it with the templa
 
 ### Round 6: look
 - [ ] V1 HUD hearts, swap cooldown ring.
-- [ ] V2 Terrain dressing: top edge highlight, one-way plank, exit door, card pickup as a card with a face, coloured spikes.
-- [ ] V3 Two parallax layers per theme in code.
-- [ ] V4 Level 4 marsh look (palette, water strip, fog).
+- [x] V2 Terrain dressing: top edge highlight, one-way plank, exit door, card pickup as a card with a face, coloured spikes.
+- [x] V3 Two parallax layers per theme in code.
+- [x] V4 Level 4 marsh look (palette, water strip, fog).
 - [ ] V5 Scene fades and a title-card intro.
 
 ### Round 7: levels

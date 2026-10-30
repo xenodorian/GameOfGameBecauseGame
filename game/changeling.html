@@ -1342,19 +1342,69 @@ const World = (() => {
     flagOpen = open;
   }
 
-  // Flag pole and pennant on the exit tile.
-  function drawFlag(ctx, px, py) {
-    ctx.globalAlpha = flagOpen ? 1 : 0.3;
-    ctx.fillStyle = "#5b4a3a";
-    ctx.fillRect(px + 14, py - 24, 3, 56);
-    ctx.fillStyle = "#e0b84a";
+  // Exit door on the F tile. Field: wooden arched door. Dungeon: iron portcullis.
+  // Shut while a boss keeps the exit closed (flagOpen false); open otherwise.
+  function drawFlag(ctx, px, py, dungeon) {
+    const x = px + 2;
+    const w = 28;
+    const top = py - 20;
+    const bot = py + TILE;
+    const r = w / 2;
+    // Door opening path: rectangle with a round top.
+    const opening = () => {
+      ctx.beginPath();
+      ctx.moveTo(x, bot);
+      ctx.lineTo(x, top + r);
+      ctx.arc(x + r, top + r, r, Math.PI, 0);
+      ctx.lineTo(x + w, bot);
+      ctx.closePath();
+    };
+    // Stone frame.
+    ctx.fillStyle = dungeon ? "#6d667a" : "#8c8a84";
+    ctx.fillRect(x - 2, top + r - 1, w + 4, bot - top - r + 1);
     ctx.beginPath();
-    ctx.moveTo(px + 17, py - 24);
-    ctx.lineTo(px + 30, py - 18);
-    ctx.lineTo(px + 17, py - 12);
-    ctx.closePath();
+    ctx.arc(x + r, top + r, r + 2, Math.PI, 0);
     ctx.fill();
-    ctx.globalAlpha = 1;
+    // Dark inside.
+    ctx.fillStyle = "#14101a";
+    opening();
+    ctx.fill();
+    if (flagOpen) {
+      // Warm light inside the open doorway.
+      ctx.fillStyle = "#e8c070";
+      ctx.fillRect(x + 8, top + r + 2, w - 16, bot - top - r - 2);
+    }
+    ctx.save();
+    opening();
+    ctx.clip();
+    if (dungeon) {
+      // Portcullis: raised to the top when open, down when shut.
+      const drop = flagOpen ? 0.22 : 1;
+      const gateBot = top + (bot - top) * drop;
+      ctx.fillStyle = "#8a909a";
+      for (let gx = x + 3; gx < x + w; gx += 6) ctx.fillRect(gx, top, 2, gateBot - top);
+      ctx.fillRect(x, top + 10, w, 2);
+      if (!flagOpen) ctx.fillRect(x, top + 30, w, 2);
+      ctx.fillStyle = "#c8ced6";
+      for (let gx = x + 3; gx < x + w; gx += 6) ctx.fillRect(gx, top, 1, gateBot - top);
+      ctx.fillStyle = "#4a4f58";
+      for (let gx = x + 3; gx < x + w; gx += 6) ctx.fillRect(gx, gateBot - 3, 2, 3);
+    } else {
+      // Wooden door. Open: a thin leaf on the hinge side. Shut: fills the arch.
+      const leaf = flagOpen ? 7 : w;
+      ctx.fillStyle = "#7a4e2a";
+      ctx.fillRect(x, top, leaf, bot - top);
+      ctx.fillStyle = "#4a2e18";
+      for (let gx = x + 7; gx < x + leaf; gx += 7) ctx.fillRect(gx, top, 1, bot - top);
+      ctx.fillStyle = "#3a3d44";
+      ctx.fillRect(x, top + 16, leaf, 3);
+      ctx.fillRect(x, top + 36, leaf, 3);
+      if (!flagOpen) {
+        ctx.fillStyle = "#e0b84a";
+        ctx.fillRect(x + w - 8, top + 28, 3, 3);
+      }
+    }
+    ctx.restore();
   }
 
   // Sets one tile (used by tests and by the sign and spike code).
@@ -1582,20 +1632,290 @@ const World = (() => {
     ctx.drawImage(img, px + TILE / 2 - size / 2, baseY - size, size, size);
   }
 
-  // Three grey spikes standing on the bottom edge of the tile.
+  // Four metal spikes on a dark base, with a pale tip and a shaded right side.
   function drawSpikes(ctx, px, py) {
-    ctx.fillStyle = "#9aa0a8";
-    ctx.strokeStyle = "#5b6068";
-    for (let i = 0; i < 3; i++) {
-      const x0 = px + 1 + i * 10;
-      const base = py + TILE;
+    ctx.fillStyle = "#2e3138";
+    ctx.fillRect(px, py + TILE - 4, TILE, 4);
+    for (let i = 0; i < 4; i++) {
+      const x0 = px + i * 8;
+      const base = py + TILE - 4;
+      ctx.fillStyle = "#a4abb6";
       ctx.beginPath();
-      ctx.moveTo(x0, base);
-      ctx.lineTo(x0 + 5, base - 12);
-      ctx.lineTo(x0 + 10, base);
+      ctx.moveTo(x0 + 1, base);
+      ctx.lineTo(x0 + 4, base - 15);
+      ctx.lineTo(x0 + 7, base);
       ctx.closePath();
       ctx.fill();
+      ctx.fillStyle = "#626874";
+      ctx.beginPath();
+      ctx.moveTo(x0 + 4, base - 15);
+      ctx.lineTo(x0 + 7, base);
+      ctx.lineTo(x0 + 4, base);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#f4f7fa";
+      ctx.fillRect(x0 + 3, base - 15, 2, 3);
+    }
+  }
+
+  // One-way platform: a thin wooden plank with nail dots.
+  function drawPlank(ctx, px, py) {
+    ctx.fillStyle = "#8a5a32";
+    ctx.fillRect(px, py, TILE, 7);
+    ctx.fillStyle = "#c9955a";
+    ctx.fillRect(px, py, TILE, 1);
+    ctx.fillStyle = "#4a2e18";
+    ctx.fillRect(px, py + 6, TILE, 1);
+    ctx.fillStyle = "#2a1a0e";
+    ctx.fillRect(px + 3, py + 3, 2, 2);
+    ctx.fillRect(px + TILE - 5, py + 3, 2, 2);
+  }
+
+  // Card pickup: a small card with a white border and a coloured back (gold if the character
+  // is not known yet). A power-up is a glowing gem. Bobs while it rests on the ground.
+  function drawCardIcon(ctx, sx, sy, w, h, color, power, bob) {
+    const now = performance.now() / 1000;
+    const dy = bob ? Math.round(Math.sin(now * 3) * 1.5) - 1 : 0;
+    const x = Math.round(sx);
+    const y = Math.round(sy) + dy;
+    if (power) {
+      const cx = x + w / 2;
+      const cy = y + h / 2;
+      const g = ctx.createRadialGradient(cx, cy, 1, cx, cy, 13);
+      const a = 0.35 + 0.15 * Math.sin(now * 4);
+      g.addColorStop(0, "rgba(255, 240, 160, " + a + ")");
+      g.addColorStop(1, "rgba(255, 240, 160, 0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(cx - 13, cy - 13, 26, 26);
+      ctx.fillStyle = "#e0b84a";
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 8);
+      ctx.lineTo(cx + 6, cy);
+      ctx.lineTo(cx, cy + 8);
+      ctx.lineTo(cx - 6, cy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#fff3b0";
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 8);
+      ctx.lineTo(cx - 6, cy);
+      ctx.lineTo(cx, cy - 1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#7a5a14";
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 8);
+      ctx.lineTo(cx + 6, cy);
+      ctx.lineTo(cx, cy + 8);
+      ctx.lineTo(cx - 6, cy);
+      ctx.closePath();
       ctx.stroke();
+      return;
+    }
+    ctx.fillStyle = "#f4f1e8";
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = color || "#e0b84a";
+    ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.beginPath();
+    ctx.moveTo(x + w / 2, y + 5);
+    ctx.lineTo(x + w - 5, y + h / 2);
+    ctx.lineTo(x + w / 2, y + h - 5);
+    ctx.lineTo(x + 5, y + h / 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#111418";
+    ctx.fillRect(x, y + h, w, 1);
+  }
+
+  // Which look the current level uses. Level 4 is the marsh; game rules still read the theme.
+  function visual() {
+    return index === 3 ? "marsh" : LEVELS[index].theme;
+  }
+
+  // ---- Parallax: code-drawn layers, built once per look on offscreen canvases. ----
+  const PERIOD = 640;
+  const VIEW_H = 270;
+  const layerCache = {};
+  function makeCanvas(w, h) {
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    return c;
+  }
+  function seeded(seed) {
+    let n = seed;
+    return () => {
+      n = (n * 1664525 + 1013904223) % 4294967296;
+      return n / 4294967296;
+    };
+  }
+  // A wavy hill silhouette whose waves repeat across PERIOD, so the layer tiles.
+  function hillsLayer(color, base, a1, a2) {
+    const c = makeCanvas(PERIOD, VIEW_H);
+    const g = c.getContext("2d");
+    g.fillStyle = color;
+    g.beginPath();
+    g.moveTo(0, VIEW_H);
+    for (let x = 0; x <= PERIOD; x += 4) {
+      const y = base - Math.sin((x / PERIOD) * Math.PI * 4) * a1 - Math.sin((x / PERIOD) * Math.PI * 10 + 1) * a2;
+      g.lineTo(x, y);
+    }
+    g.lineTo(PERIOD, VIEW_H);
+    g.closePath();
+    g.fill();
+    return c;
+  }
+  function blobsLayer(color, base, seed) {
+    const c = makeCanvas(PERIOD, VIEW_H);
+    const g = c.getContext("2d");
+    const rnd = seeded(seed);
+    g.fillStyle = color;
+    g.fillRect(0, base, PERIOD, VIEW_H - base);
+    for (let x = 0; x < PERIOD; x += 18 + rnd() * 10) {
+      const r = 10 + rnd() * 9;
+      for (const ox of [0, PERIOD, -PERIOD]) {
+        g.beginPath();
+        g.arc(x + ox, base, r, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+    return c;
+  }
+  function archesLayer(wall) {
+    const c = makeCanvas(PERIOD, VIEW_H);
+    const g = c.getContext("2d");
+    g.fillStyle = wall;
+    g.fillRect(0, 50, PERIOD, VIEW_H - 50);
+    g.globalCompositeOperation = "destination-out";
+    for (let x = 0; x < PERIOD; x += 128) {
+      g.beginPath();
+      g.moveTo(x + 28, VIEW_H);
+      g.lineTo(x + 28, 120);
+      g.arc(x + 64, 120, 36, Math.PI, 0);
+      g.lineTo(x + 100, VIEW_H);
+      g.closePath();
+      g.fill();
+    }
+    return c;
+  }
+  function pillarsLayer(color, edge) {
+    const c = makeCanvas(PERIOD, VIEW_H);
+    const g = c.getContext("2d");
+    for (let x = 60; x < PERIOD; x += 160) {
+      g.fillStyle = color;
+      g.fillRect(x, 0, 16, VIEW_H);
+      g.fillRect(x - 4, 0, 24, 8);
+      g.fillRect(x - 4, VIEW_H - 10, 24, 10);
+      g.fillStyle = edge;
+      g.fillRect(x + 12, 0, 4, VIEW_H);
+    }
+    return c;
+  }
+  function deadTreesLayer(color) {
+    const c = makeCanvas(PERIOD, VIEW_H);
+    const g = c.getContext("2d");
+    const rnd = seeded(7);
+    g.fillStyle = color;
+    g.strokeStyle = color;
+    g.lineWidth = 2;
+    for (let x = 30; x < PERIOD - 30; x += 70 + rnd() * 50) {
+      const h = 60 + rnd() * 50;
+      g.fillRect(x, 238 - h, 4, h + 40);
+      g.beginPath();
+      g.moveTo(x + 2, 238 - h * 0.6);
+      g.lineTo(x + 14, 238 - h * 0.85);
+      g.moveTo(x + 2, 238 - h * 0.8);
+      g.lineTo(x - 10, 238 - h);
+      g.stroke();
+    }
+    g.fillRect(0, 238, PERIOD, VIEW_H - 238);
+    return c;
+  }
+  function fogLayer() {
+    const c = makeCanvas(PERIOD, VIEW_H);
+    const g = c.getContext("2d");
+    const rnd = seeded(11);
+    g.fillStyle = "rgba(170, 182, 140, 0.07)";
+    for (let i = 0; i < 14; i++) {
+      const x = rnd() * PERIOD;
+      const y = 130 + rnd() * 110;
+      const rx = 50 + rnd() * 70;
+      for (const ox of [0, PERIOD, -PERIOD]) {
+        g.beginPath();
+        g.ellipse(x + ox, y, rx, 9 + rnd() * 8, 0, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+    return c;
+  }
+  function layersFor(v) {
+    if (layerCache[v]) return layerCache[v];
+    let set;
+    if (v === "dungeon") {
+      set = [{ c: archesLayer("#221d2d"), f: 0.15 }, { c: pillarsLayer("#2b2536", "#241f2e"), f: 0.35 }];
+    } else if (v === "marsh") {
+      set = [{ c: hillsLayer("#3a4530", 165, 14, 6), f: 0.15 }, { c: deadTreesLayer("#2c3522"), f: 0.35 }];
+      set.fog = fogLayer();
+    } else {
+      set = [{ c: hillsLayer("#92b8d3", 170, 16, 7), f: 0.15 }, { c: blobsLayer("#6b97a8", 214, 3), f: 0.35 }];
+    }
+    layerCache[v] = set;
+    return set;
+  }
+  function blitLayer(ctx, c, scroll) {
+    const o = -Math.round(((scroll % PERIOD) + PERIOD) % PERIOD);
+    ctx.drawImage(c, o, 0);
+    ctx.drawImage(c, o + PERIOD, 0);
+  }
+  // Called after the sky and the old hills, before the tiles.
+  function drawParallax(ctx, camX) {
+    const v = visual();
+    if (v === "marsh") {
+      ctx.fillStyle = "rgba(48, 56, 30, 0.7)";
+      ctx.fillRect(0, 0, 480, VIEW_H);
+    }
+    const set = layersFor(v);
+    for (const l of set) blitLayer(ctx, l.c, camX * l.f);
+    if (set.fog) blitLayer(ctx, set.fog, camX * 0.5 + (performance.now() / 1000) * 8);
+  }
+
+  // True when this tile is open air with no solid tile below it down to the map bottom.
+  function pitBelow(tx, ty) {
+    for (let y = ty; y < rows; y++) if (isSolid(at(tx, y)) || isOneWay(at(tx, y))) return false;
+    return true;
+  }
+
+  // Bright top edge where a solid tile meets air above, dark edge where it meets air below or beside.
+  // Marsh tiles get a murky green-brown tint.
+  function drawEdges(ctx, tx, ty, px, py, marsh) {
+    if (marsh) {
+      ctx.fillStyle = "rgba(40, 50, 15, 0.5)";
+      ctx.fillRect(px, py, TILE, TILE);
+    }
+    if (!isSolid(at(tx, ty - 1))) {
+      ctx.fillStyle = "rgba(255, 255, 235, 0.35)";
+      ctx.fillRect(px, py, TILE, 1);
+      ctx.fillStyle = "rgba(255, 255, 235, 0.15)";
+      ctx.fillRect(px, py + 1, TILE, 1);
+    }
+    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+    if (!isSolid(at(tx, ty + 1))) ctx.fillRect(px, py + TILE - 1, TILE, 1);
+    if (!isSolid(at(tx - 1, ty))) ctx.fillRect(px, py, 1, TILE);
+    if (!isSolid(at(tx + 1, ty))) ctx.fillRect(px + TILE - 1, py, 1, TILE);
+  }
+
+  // Murky pit water with a 1 px surface line that waves over time.
+  function drawWater(ctx, tx, ty, px, py) {
+    const top = ty === rows - 4 ? 10 : 0;
+    ctx.fillStyle = "rgba(38, 52, 28, 0.78)";
+    ctx.fillRect(px, py + top, TILE, TILE - top);
+    if (top) {
+      const t = performance.now() / 1000;
+      ctx.fillStyle = "#9bb07a";
+      for (let x = 0; x < TILE; x += 2) {
+        ctx.fillRect(px + x, py + top + Math.round(Math.sin(t * 2.2 + (tx * TILE + x) * 0.18)), 2, 1);
+      }
     }
   }
 
@@ -1605,6 +1925,7 @@ const World = (() => {
     const tx1 = Math.min(cols - 1, Math.floor((camX + viewW) / TILE));
     const ty1 = Math.min(rows - 1, Math.floor((camY + viewH) / TILE));
 
+    const marsh = visual() === "marsh";
     for (let ty = ty0; ty <= ty1; ty++) {
       for (let tx = tx0; tx <= tx1; tx++) {
         const ch = at(tx, ty);
@@ -1626,14 +1947,16 @@ const World = (() => {
           ctx.drawImage(images.dirt, px, py, TILE, TILE);
           ctx.drawImage(images.grass, px, py, TILE, TILE);
         } else if (ch === "_") {
-          ctx.drawImage(images.grass, px, py, TILE, TILE);
+          drawPlank(ctx, px, py);
         } else if (ch === "T" && LEVELS[index].theme !== "dungeon") {
           drawTree(ctx, images.tree, tx, ty, px, py);
         } else if (ch === "^") {
           drawSpikes(ctx, px, py);
         } else if (ch === "F") {
-          drawFlag(ctx, px, py);
+          drawFlag(ctx, px, py, LEVELS[index].theme === "dungeon");
         }
+        if (isSolid(ch)) drawEdges(ctx, tx, ty, px, py, marsh);
+        else if (marsh && ty >= rows - 4 && (ch === "." || ch === "^") && pitBelow(tx, ty)) drawWater(ctx, tx, ty, px, py);
       }
     }
   }
@@ -1664,6 +1987,9 @@ const World = (() => {
     drawPlatforms,
     platforms,
     draw,
+    drawParallax,
+    drawCardIcon,
+    visual,
     drawSigns,
     setFlagOpen,
     // Secrets (c and p markers) in level i.
@@ -2115,11 +2441,8 @@ class CardPickup {
       sy = this.y - camY;
     }
     // Unrolled cards (cardId "random") are drawn grey until they are collected.
-    const def = this.power ? { color: "#e0b84a" } : CARD_DEFS[this.cardId] || { color: "#b8b8b8" };
-    ctx.fillStyle = def.color;
-    ctx.fillRect(Math.round(sx), Math.round(sy), this.w, this.h);
-    ctx.strokeStyle = "#111418";
-    ctx.strokeRect(Math.round(sx) + 0.5, Math.round(sy) + 0.5, this.w - 1, this.h - 1);
+    const def = CARD_DEFS[this.cardId];
+    World.drawCardIcon(ctx, sx, sy, this.w, this.h, def && def.color, this.power, this.state === "ground");
   }
 }
 
@@ -3912,6 +4235,7 @@ class PlayScene {
     const cy = Math.round(this.cam.y);
     drawHills(ctx, cx * 0.25, theme.far, 150, 0.012, 14);
     drawHills(ctx, cx * 0.5, theme.near, 190, 0.02, 20);
+    World.drawParallax(ctx, cx);
     World.draw(ctx, this.images, cx, cy, Engine.W, Engine.H);
     // Screen shake after a warlord hit (the engine resets the transform each frame).
     if (Effects.shakeT > 0) ctx.translate(Effects.shakeX, Effects.shakeY);

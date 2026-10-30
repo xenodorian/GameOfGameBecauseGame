@@ -796,6 +796,7 @@ class PlayScene {
     const cy = Math.round(this.cam.y);
     drawHills(ctx, cx * 0.25, theme.far, 150, 0.012, 14);
     drawHills(ctx, cx * 0.5, theme.near, 190, 0.02, 20);
+    World.drawParallax(ctx, cx);
     World.draw(ctx, this.images, cx, cy, Engine.W, Engine.H);
     // Screen shake after a warlord hit (the engine resets the transform each frame).
     if (Effects.shakeT > 0) ctx.translate(Effects.shakeX, Effects.shakeY);
