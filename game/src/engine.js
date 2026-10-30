@@ -9,6 +9,9 @@ const Engine = (() => {
   let scene = null;
   let last = 0;
   let acc = 0;
+  // V5: every scene change fades in from black over FADE seconds.
+  const FADE = 0.3;
+  let fadeT = 0;
   // Backing-store scale: whole device pixels per logical pixel, so text and sprites stay sharp.
   let S = 1;
 
@@ -38,10 +41,16 @@ const Engine = (() => {
     ctx.setTransform(S, 0, 0, S, 0, 0);
     ctx.imageSmoothingEnabled = false;
     scene.draw(ctx);
+    if (fadeT > 0) {
+      fadeT = Math.max(0, fadeT - dt);
+      ctx.fillStyle = "rgba(0, 0, 0, " + (fadeT / FADE).toFixed(3) + ")";
+      ctx.fillRect(0, 0, W, H);
+    }
     requestAnimationFrame(frame);
   }
 
   function setScene(next) {
+    if (scene) fadeT = FADE;
     scene = next;
     if (scene.enter) scene.enter();
   }

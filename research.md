@@ -229,11 +229,11 @@ Each line is a brief seed. The director or the worker expands it with the templa
 - [x] A3 ZzFX per-action SFX with a timbre per character; replace the shared "ability" sound.
 
 ### Round 6: look
-- [ ] V1 HUD hearts, swap cooldown ring.
+- [x] V1 HUD hearts, swap cooldown ring (swap badge landed with C5).
 - [x] V2 Terrain dressing: top edge highlight, one-way plank, exit door, card pickup as a card with a face, coloured spikes.
 - [x] V3 Two parallax layers per theme in code.
 - [x] V4 Level 4 marsh look (palette, water strip, fog).
-- [ ] V5 Scene fades and a title-card intro.
+- [x] V5 Scene fades and a title-card intro.
 
 ### Round 7: levels
 - [ ] L1 Level 1 first 30 seconds (5.9) and enemy introduction order across levels 1 to 4 (move or swap enemy spawns only).

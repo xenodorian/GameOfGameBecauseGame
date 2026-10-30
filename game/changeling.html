@@ -196,6 +196,9 @@ const Engine = (() => {
   let scene = null;
   let last = 0;
   let acc = 0;
+  // V5: every scene change fades in from black over FADE seconds.
+  const FADE = 0.3;
+  let fadeT = 0;
   // Backing-store scale: whole device pixels per logical pixel, so text and sprites stay sharp.
   let S = 1;
 
@@ -225,10 +228,16 @@ const Engine = (() => {
     ctx.setTransform(S, 0, 0, S, 0, 0);
     ctx.imageSmoothingEnabled = false;
     scene.draw(ctx);
+    if (fadeT > 0) {
+      fadeT = Math.max(0, fadeT - dt);
+      ctx.fillStyle = "rgba(0, 0, 0, " + (fadeT / FADE).toFixed(3) + ")";
+      ctx.fillRect(0, 0, W, H);
+    }
     requestAnimationFrame(frame);
   }
 
   function setScene(next) {
+    if (scene) fadeT = FADE;
     scene = next;
     if (scene.enter) scene.enter();
   }
@@ -4294,18 +4303,69 @@ class IntroScene {
     }
   }
 
+  // V5 title card: a dusk sky, the warlord as a black silhouette on his hill, and the stolen faces
+  // circling him as dark cards with coloured rims. The three lines fade in underneath.
   draw(ctx) {
-    ctx.fillStyle = "#000000";
+    const g = ctx.createLinearGradient(0, 0, 0, Engine.H);
+    g.addColorStop(0, "#120e1e");
+    g.addColorStop(0.6, "#3a2440");
+    g.addColorStop(1, "#6a3a3a");
+    ctx.fillStyle = g;
     ctx.fillRect(0, 0, Engine.W, Engine.H);
-    ctx.fillStyle = "#ffffff";
+    // Hill and throne silhouette.
+    ctx.fillStyle = "#0a0810";
+    ctx.beginPath();
+    ctx.moveTo(0, 170);
+    ctx.quadraticCurveTo(Engine.W / 2, 108, Engine.W, 170);
+    ctx.lineTo(Engine.W, Engine.H);
+    ctx.lineTo(0, Engine.H);
+    ctx.fill();
+    const cx = Engine.W / 2;
+    // A red backlight so the black warlord reads against the throne.
+    const glow = ctx.createRadialGradient(cx, 80, 4, cx, 80, 70);
+    glow.addColorStop(0, "rgba(220, 70, 50, 0.55)");
+    glow.addColorStop(1, "rgba(220, 70, 50, 0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(cx - 80, 10, 160, 140);
+    // Throne: a tall pointed back and two posts, a shade lighter than the hill.
+    ctx.fillStyle = "#2a1e36";
+    ctx.beginPath();
+    ctx.moveTo(cx - 26, 132); ctx.lineTo(cx - 26, 52); ctx.lineTo(cx, 30); ctx.lineTo(cx + 26, 52); ctx.lineTo(cx + 26, 132);
+    ctx.fill();
+    ctx.fillRect(cx - 34, 84, 8, 48);
+    ctx.fillRect(cx + 26, 84, 8, 48);
+    const sheet = IMG.lpc_warlord;
+    if (sheet) ctx.drawImage(Effects.tinted(sheet, 0, 0, "#05040a"), 0, 0, 64, 64, cx - 48, 32, 96, 96);
+    // Stolen faces orbit the throne.
+    const faces = ["knight", "ranger", "mage", "rat", "weaver"];
+    faces.forEach((id, i) => {
+      const a = this.t * 0.6 + (i * Math.PI * 2) / faces.length;
+      const fx = Math.round(cx + Math.cos(a) * 92);
+      const fy = Math.round(78 + Math.sin(a) * 22);
+      const front = Math.sin(a) > 0;
+      ctx.globalAlpha = front ? 1 : 0.55;
+      ctx.fillStyle = "#0d0b14";
+      ctx.fillRect(fx - 9, fy - 12, 18, 24);
+      ctx.strokeStyle = CARD_DEFS[id].color;
+      ctx.strokeRect(fx - 8.5, fy - 11.5, 17, 23);
+      const sh = IMG[LPC_KEY[id]];
+      if (sh) ctx.drawImage(Effects.tinted(sh, 0, 0, CARD_DEFS[id].color), 22, 10, 20, 26, fx - 7, fy - 10, 14, 18);
+      ctx.globalAlpha = 1;
+    });
     ctx.textAlign = "center";
     ctx.font = "13px GameFont, system-ui, sans-serif";
     this.lines.forEach((line, i) => {
-      if (this.t >= i * 1.5 + 0.5) drawText(ctx, line, Engine.W / 2, 90 + i * 34);
+      const k = Math.max(0, Math.min(1, (this.t - (i * 1.5 + 0.5)) / 0.5));
+      if (k <= 0) return;
+      ctx.globalAlpha = k;
+      ctx.fillStyle = "#f4efe2";
+      drawText(ctx, line, Engine.W / 2, 184 + i * 22);
     });
+    ctx.globalAlpha = 1;
     if (this.t >= this.lines.length * 1.5) {
       ctx.font = "11px GameFont, system-ui, sans-serif";
-      drawText(ctx, "Enter: begin", Engine.W / 2, 220);
+      ctx.fillStyle = Math.floor(this.t * 2) % 2 ? "#d9a441" : "#f2d04a";
+      drawText(ctx, "Enter: begin", Engine.W / 2, 258);
     }
     ctx.textAlign = "left";
   }
@@ -5094,13 +5154,24 @@ class PlayScene {
     ctx.restore();
   }
 
-  // HP as ten small pips under the character name.
+  // V1: HP as five pixel hearts under the character name, each heart 2 HP (half hearts for odd HP).
+  // While the hit safety lasts, the hearts shake a little.
   drawHp(ctx) {
     const x0 = 52;
-    const y = 26;
-    for (let i = 0; i < MAX_HP; i++) {
-      ctx.fillStyle = i < this.hp ? "#e0493c" : "rgba(40, 30, 30, 0.6)";
-      ctx.fillRect(x0 + i * 6, y, 4, 6);
+    const y = 28;
+    const HEART = ["0110110", "1111111", "1111111", "0111110", "0011100", "0001000"];
+    const jig = this.hpInvT > 0.7 ? Math.round(Math.sin(this.time * 60)) : 0;
+    for (let h = 0; h < MAX_HP / 2; h++) {
+      const fill = Math.max(0, Math.min(2, this.hp - h * 2));
+      const hx = x0 + h * 10 + jig;
+      for (let r = 0; r < HEART.length; r++) {
+        for (let c = 0; c < 7; c++) {
+          if (HEART[r][c] !== "1") continue;
+          const lit = fill === 2 || (fill === 1 && c < 4);
+          ctx.fillStyle = lit ? (r === 1 && c < 3 ? "#ff9a8a" : "#e0493c") : "rgba(40, 30, 30, 0.7)";
+          ctx.fillRect(hx + c, y + r, 1, 1);
+        }
+      }
     }
   }
 
