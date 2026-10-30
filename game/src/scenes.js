@@ -388,6 +388,9 @@ class PlayScene {
     this.hurtShowT = 0;
     this.sparkleT = 0;
     this.pauseSel = 0;
+    // C5 face swap: cooldown left, and a short safety window after a swap.
+    this.swapCd = 0;
+    this.swapT = 0;
     this.flashT = 0;
     this.secretsFound = 0;
     this.secretsTotal = World.countSecrets(World.index);
@@ -434,6 +437,9 @@ class PlayScene {
     if (Input.pressed("debug")) Attacks.debug.on = !Attacks.debug.on;
     this.handleDiscardKeys(dt);
     if (this.mode !== "play") return;
+    if (this.swapCd > 0) this.swapCd -= dt;
+    if (this.swapT > 0) this.swapT -= dt;
+    if (Input.pressed("swap")) this.swapFace();
 
     const p = this.player;
     const move = (Input.down("right") ? 1 : 0) - (Input.down("left") ? 1 : 0);
@@ -729,9 +735,41 @@ class PlayScene {
     }
   }
 
+  // C5: swap to the leftmost hand card on purpose. The old face goes to the back of the hand.
+  // HP carries over (no free heal), cooldowns reset, timed powers end. 2 s cooldown, 0.3 s safety.
+  swapFace() {
+    if (this.swapCd > 0 || Hand.slots().every((c) => c === null)) return;
+    const next = Hand.swapIn(this.active);
+    if (!next) return;
+    this.active = next;
+    this.swapCd = 2.0;
+    this.swapT = 0.3;
+    PlayScene.swapUsed = true;
+    this.cooldowns = [0, 0, 0, 0];
+    this.abBuf = [0, 0, 0, 0];
+    this.floatT = 0;
+    this.scurryT = 0;
+    this.ghostT = 0;
+    this.dashT = 0;
+    this.lungeT = 0;
+    const p = this.player;
+    p.action = "";
+    p.holdPose = false;
+    p.stretchT = 0.12;
+    const color = CARD_DEFS[next].color;
+    const x = p.x + p.w / 2;
+    const y = p.y + p.h / 2;
+    Effects.ring(x, y, color);
+    Effects.ring(x, y - 6, "#ffffff");
+    Effects.burst(x, y, color);
+    Effects.dust(x, p.y + p.h, color, 6, 2, 0.35, -60);
+    this.hitstopT = 0.04;
+    Sfx.play("swap");
+  }
+
   // A hit takes HP and gives a second of safety with a short knockback. At 0 HP the character is lost.
   takeDamage(amount) {
-    if (this.hpInvT > 0 || this.flashT > 0 || this.mode !== "play") return;
+    if (this.hpInvT > 0 || this.flashT > 0 || this.swapT > 0 || this.mode !== "play") return;
     this.hp = Math.max(0, this.hp - amount);
     this.hpInvT = 1.0;
     this.player.vy = -200;
@@ -1157,6 +1195,12 @@ const HUD = (() => {
     return { x: X0 + i * (SLOT_W + SLOT_GAP), y: Y, w: SLOT_W, h: SLOT_H };
   }
 
+  // C5: the swap badge right of the deck.
+  function swapRect() {
+    const d = deckRect();
+    return { x: d.x + d.w + 12, y: Y + 6, w: 20, h: 28 };
+  }
+
   function deckRect() {
     return { x: X0 + Hand.SLOTS * (SLOT_W + SLOT_GAP) + 6, y: Y + 8, w: 18, h: 24 };
   }
@@ -1326,7 +1370,45 @@ const HUD = (() => {
     drawPanel(ctx, scene);
     drawHand(ctx, highlight);
     drawDeck(ctx);
+    if (scene.mode === "play") drawSwap(ctx, scene);
     drawSecrets(ctx, scene);
+  }
+
+  // C5: a "D" key badge with a swap arrow. It fills back up over the 2 s cooldown.
+  // Until the player has swapped once, a bobbing "D: swap face" hint points at it when a card is held.
+  function drawSwap(ctx, scene) {
+    const r = swapRect();
+    const has = Hand.slots().some((c) => c !== null);
+    const ready = has && scene.swapCd <= 0;
+    roundRect(ctx, r.x, r.y, r.w, r.h, 3);
+    ctx.fillStyle = ready ? "rgba(217, 164, 65, 0.85)" : "rgba(10, 12, 18, 0.6)";
+    ctx.fill();
+    ctx.strokeStyle = ready ? "#f4efe2" : "#6a7686";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    if (has && scene.swapCd > 0) {
+      const k = Math.min(1, scene.swapCd / 2.0);
+      ctx.fillStyle = "rgba(217, 164, 65, 0.45)";
+      ctx.fillRect(r.x + 1, r.y + 1 + (r.h - 2) * k, r.w - 2, (r.h - 2) * (1 - k));
+    }
+    ctx.fillStyle = ready ? "#1a1420" : "#9fb0c0";
+    ctx.font = "bold 11px GameFont, system-ui, sans-serif";
+    ctx.textAlign = "center";
+    drawText(ctx, "D", r.x + r.w / 2, r.y + 13);
+    // Two small arrows chasing each other: swap.
+    const cx = r.x + r.w / 2;
+    const cy = r.y + 21;
+    ctx.fillRect(cx - 5, cy - 2, 7, 1); ctx.fillRect(cx + 1, cy - 3, 1, 3);
+    ctx.fillRect(cx - 2, cy + 2, 7, 1); ctx.fillRect(cx - 2, cy + 1, 1, 3);
+    if (has && !PlayScene.swapUsed) {
+      const bob = Math.round(Math.sin(scene.time * 6) * 2);
+      ctx.font = "10px GameFont, system-ui, sans-serif";
+      ctx.fillStyle = "rgba(10, 12, 18, 0.75)";
+      ctx.fillRect(r.x + r.w / 2 - 38, r.y + r.h + 4 + bob, 76, 14);
+      ctx.fillStyle = "#f2d04a";
+      drawText(ctx, "D: swap face", r.x + r.w / 2, r.y + r.h + 14 + bob);
+    }
+    ctx.textAlign = "left";
   }
 
   return { slotRect, deckRect, draw, drawAbilities, abilityLift };

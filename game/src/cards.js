@@ -40,6 +40,17 @@ const Hand = (() => {
     return cardId;
   }
 
+  // C5 face swap: the leftmost card becomes the active face; the old face goes to the end of the
+  // filled slots, so pressing swap again and again cycles through every face you hold.
+  function swapIn(current) {
+    const cards = hand.filter((c) => c !== null);
+    if (cards.length === 0) return null;
+    const next = cards.shift();
+    cards.push(current);
+    for (let i = 0; i < SLOTS; i++) hand[i] = cards[i] || null;
+    return next;
+  }
+
   // Empties the hand and the deck. Called when a new game starts.
   function reset() {
     hand.fill(null);
@@ -61,6 +72,7 @@ const Hand = (() => {
     SLOTS,
     collect,
     discard,
+    swapIn,
     reset,
     serialize,
     restore,

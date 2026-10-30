@@ -2,7 +2,7 @@
 
 This is the only notes file. It replaces README.md, Claude_Notes.md, and the finished Action_Plan.md (all merged here on 2026-10-29). The rescue plan is `research.md` (pillars in section 2, task list in section 9). Progress and handoff notes are in `PROGRESS.md`. Older plans (`Action_Plan_v2.md`, `Action_Plan_v3.md`) are finished history.
 
-Playable build: [game/changeling.html](game/changeling.html). Open it in a browser. Controls: arrow keys move and jump, A S Z X are your four powers, C drops a card from your hand, Q drops your face, Enter confirms and pauses.
+Playable build: [game/changeling.html](game/changeling.html). Open it in a browser. Controls: arrow keys move and jump, A S Z X are your four powers, D swaps to the next face in your hand, C drops a card from your hand, Q drops your face, Enter confirms and pauses. Backquote shows hitboxes.
 
 ## 1. Rules for agents
 
@@ -58,6 +58,7 @@ On a network error retry after 2 s, 4 s, 8 s, 16 s. If rejected because `main` m
 - Kirby-like. Beating an enemy drops a card. A card is a character. Collecting it adds that character to the hand.
 - Hand: 3 slots, filled left to right. Extra cards go to a hidden deck (only the count shows). A freed slot refills from the top of the deck.
 - Death: the player picks one of the 3 hand cards and respawns as that character at the closest safe space. The dead character is lost. Empty hand returns the Knight. Deaths are unlimited. No game over.
+- Face swap (C5): D (gamepad LB or Select, touch D) makes the leftmost hand card the active face; the old face goes to the back of the hand, so repeated presses cycle every face held. HP carries over, cooldowns reset, 2 s cooldown, 0.3 s safety. HUD badge right of the deck; a 'D: swap face' hint shows until the first swap (`PlayScene.swapUsed`, not saved).
 - Discard: C opens hand-card discard mode (Left and Right pick, C confirms, X or B cancels). Q (or hold Down 0.5 s on a gamepad) discards the current character and opens the selection.
 - Closest safe space: nearest grounded tile with a clear 2 by 3 tile area, no enemy or hazard within 3 tiles, search out to 20 tiles. A spot is unsafe if a `^` is within 3 columns on its row.
 - Abilities: 4 per character on A, S, Z, X (gamepad X, Y, A, B). Every character must be able to finish the main route of every level. Secrets (`c` cards, `p` power-ups) need a specific character.

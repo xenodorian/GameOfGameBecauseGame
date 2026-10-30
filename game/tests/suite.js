@@ -1035,6 +1035,27 @@ check('rope: placing a second rope removes the first', async (browser) => {
   await page.close();
 });
 
+check('swap: D cycles faces through the hand, keeps HP, waits 2 s between swaps', async (browser) => {
+  const page = await newPage(browser);
+  await startPlay(page, { hand: ['ranger', 'mage'], active: 'knight' });
+  await placeAt(page, 200, 418);
+  await page.evaluate(() => { __scene.hp = 6; });
+  await wait(page, 60);
+  await page.keyboard.press('KeyD'); await wait(page, 100);
+  assert.equal(await page.evaluate(() => __scene.active), 'ranger');
+  assert.deepEqual(await page.evaluate(() => Hand.slots()), ['mage', 'knight', null]);
+  assert.equal(await page.evaluate(() => __scene.hp), 6);
+  // A second press inside the cooldown does nothing.
+  await page.keyboard.press('KeyD'); await wait(page, 100);
+  assert.equal(await page.evaluate(() => __scene.active), 'ranger');
+  await page.evaluate(() => { __scene.swapCd = 0; });
+  await page.keyboard.press('KeyD'); await wait(page, 100);
+  assert.equal(await page.evaluate(() => __scene.active), 'mage');
+  assert.deepEqual(await page.evaluate(() => Hand.slots()), ['knight', 'ranger', null]);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 check('gates: validate_gates.py exits 0', async () => {
   execFileSync('python3', [path.join(GAME, 'tools', 'validate_gates.py')], { stdio: 'pipe' });
 });
