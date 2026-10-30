@@ -245,7 +245,7 @@ Each line is a brief seed. The director or the worker expands it with the templa
 
 ### Round 9: after the first rescue pass (session 2 proposals, same pillars)
 - [ ] H1 Human feel check: play levels 1, 3, 5, 8 with sound on; log what felt wrong in PROGRESS.md (movement numbers, tell lengths, music volume).
-- [ ] P1 Ending on a peak: replace the flat ending text with a title card like the intro (faces fly back out of the throne), plus the stats.
+- [x] P1 Ending on a peak: replace the flat ending text with a title card like the intro (faces fly back out of the throne), plus the stats.
 - [ ] L3 (above) with `capture_gif.js` style recordings of levels 6 and 7.
 - [ ] L4 One real optional face route per priority level (a short side path, not just a secret), signposted with the L2 badge.
 - [ ] Q1 Heart pickups: a defeated enemy sometimes drops a heart (2 HP). Only if H1 says damage feels punishing without a way back.
