@@ -576,6 +576,7 @@ class PlayScene {
 
     if (p.grounded) {
       p.hopUsed = false;
+      p.floatUsed = false;
       p.coyoteT = TUNING.jump.coyote;
     } else if (p.coyoteT > 0) {
       p.coyoteT -= dt;
@@ -614,10 +615,12 @@ class PlayScene {
       }
     }
 
-    // Float: hold Up to climb at 120 px/s. Without Up, the fall is slowed.
+    // Float: hold Up to climb at 120 px/s for the first 0.7 s (about 4.5 rows with the jump before it),
+    // then hover: the fall is slowed. Rat leap stays the highest climb (5 rows), so rat gates hold.
     if (this.floatT > 0) {
       this.floatT -= dt;
-      p.vy = Input.down("up") ? -120 : Math.min(p.vy + 200 * dt, 40);
+      // The hover starts from rest, so leftover climb speed does not carry the body higher.
+      p.vy = Input.down("up") && this.floatT > 0.5 ? -120 : Math.min(Math.max(p.vy, 0) + 200 * dt, 40);
       // Float sparkles: two purple motes under the feet every 0.05 s.
       this.sparkleT += dt;
       if (this.sparkleT >= 0.05) {

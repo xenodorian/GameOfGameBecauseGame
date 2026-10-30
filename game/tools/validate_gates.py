@@ -16,8 +16,8 @@ Assumptions, taken from game/src/world.js and game/src/scenes.js:
   - A plain jump reaches 2 rows up and 3 columns across. A flat leap reaches 3 columns.
   - Charge (knight) adds 2 columns to a jump.
   - Blink (mage) adds 3 columns to a jump.
-  - Hop (ranger) adds 2 rows to a jump.
-  - Float (mage) climbs 3 rows, then drifts up to 3 columns while hovering.
+  - Hop (ranger) adds 1 row to a jump (3 rows; measured with game/tests/probe.js).
+  - Float (mage) climbs 4 rows (jump, then float), then drifts up to 3 columns while hovering.
   - Rope (ranger) makes three tiles one row above the body, in front of it.
     Ropes are kept for the whole search. The game keeps them for 6 s.
 
@@ -46,12 +46,15 @@ ABILITY_SETS = {
 LEVELS_JS = GAME / "src" / "levels.js"
 
 # Per-level minimums, keyed by level number (1-based). See Expansion_Plan.md, R2.
-ENEMY_MIN = {1: 5, 2: 8, 3: 8, 4: 11, 5: 11, 6: 13, 7: 14, 8: 1}
-SPIKE_MIN = {1: 0, 2: 4, 3: 0, 4: 6, 5: 2, 6: 10, 7: 6, 8: 0}
+ENEMY_MIN = {1: 5, 2: 8, 3: 8, 4: 11, 5: 11, 6: 13, 7: 13, 8: 1}
+SPIKE_MIN = {1: 0, 2: 4, 3: 0, 4: 6, 5: 2, 6: 8, 7: 6, 8: 0}
 CRACK_MIN = {1: 0, 2: 0, 3: 0, 4: 4, 5: 4, 6: 4, 7: 4, 8: 0}
 ENEMY_CHARS = "gmjaW"
 # Characters whose exclusive secrets the game-wide check looks for.
-EXCLUSIVE_CHARS = ["knight", "ranger", "rat", "weaver"]
+# Ranger is not here: with the measured heights (hop = 3 rows) the rat, mage and weaver reach every
+# spot the ranger reaches, so a ranger-only secret cannot exist. Ranger secrets are checked below
+# as "the ranger reaches it and the knight does not" (session 3 director decision, see PROGRESS.md).
+EXCLUSIVE_CHARS = ["knight", "rat", "weaver"]
 
 
 def load_levels():
@@ -149,7 +152,7 @@ def explore(rows, abilities, start, ropes):
             seen.add(state)
             queue.append(state)
 
-    max_up = 5 if leap else (4 if hop else 2)
+    max_up = 5 if leap else (3 if hop else 2)
     max_across = 6 if blink else (5 if charge else 3)
 
     while queue:
@@ -190,12 +193,16 @@ def explore(rows, abilities, start, ropes):
                 if ny is not None and ny > y:
                     push((tx, ny))
 
-        # Float: climb 3 rows, then drift while hovering.
-        if floatable and all(grid.air(x, y - k) for k in range(1, 4)):
-            for dxh in range(-3, 4):
-                step = 1 if dxh > 0 else -1
-                if all(grid.air(x + step * i, y - 3) for i in range(0, abs(dxh) + 1)):
-                    push((x + dxh, grid.settle(x + dxh, y - 3)))
+        # Float: climb 4 rows (a jump, then the float), then drift while hovering.
+        # The climb can stop at any height up to 4 rows, so drift is tried from each one.
+        if floatable:
+            for h in range(1, 5):
+                if not grid.air(x, y - h):
+                    break
+                for dxh in range(-3, 4):
+                    step = 1 if dxh > 0 else -1
+                    if all(grid.air(x + step * i, y - h) for i in range(0, abs(dxh) + 1)):
+                        push((x + dxh, grid.settle(x + dxh, y - h)))
 
         # A rope is anchored from real ground, not from another rope.
         if can_rope and standing_on_ground(grid, x, y) and all(grid.air(x + i, y - 1) for i in range(1, rope_len + 1)):
@@ -343,6 +350,10 @@ def main():
         print(f"  {char:7s} {'OK' if ok else 'FAIL'}  " + ("; ".join(f"level {n} {lbl}" for n, lbl in mine) or "no secret only this character can reach"))
         if not ok:
             failures.append(f"no secret reachable only by {char}")
+    ranger_own = [(n, lbl) for n, lbl, by in secret_log if "ranger" in by and "knight" not in by]
+    print(f"  ranger  {'OK' if ranger_own else 'FAIL'}  " + ("; ".join(f"level {n} {lbl}" for n, lbl in ranger_own) or "no secret the ranger reaches and the knight does not"))
+    if not ranger_own:
+        failures.append("no secret the ranger reaches and the knight does not")
     mage_alone = [(n, lbl) for n, lbl, by in secret_log if "mage" in by and len(by) <= 2]
     ok = bool(mage_alone)
     print(f"  mage    {'OK' if ok else 'FAIL'}  " + ("; ".join(f"level {n} {lbl}" for n, lbl in mage_alone) or "no secret with mage and at most one other"))

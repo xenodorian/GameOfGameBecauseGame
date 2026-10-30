@@ -168,7 +168,11 @@ const Attacks = (() => {
         scene.ghostT = 1.5;
         break;
       case "float":
-        scene.floatT = 1.2;
+        // One float per airtime, like the ranger's hop. Re-pressing used to stack floats into free flight over every gate.
+        if (!p.floatUsed) {
+          scene.floatT = 1.2;
+          p.floatUsed = true;
+        }
         break;
       case "blink":
         blink(p);
