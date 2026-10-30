@@ -3,13 +3,23 @@
 Read `research.md` first (pillars in section 2, task list in section 9). Newest entry on top. Use the handoff format in research.md section 7 item 9.
 
 ## 2026-10-29 Director session 2 (Grok Bot, took over after Claude ran out of usage)
-Claude's in-flight workers (C4, F0 to F4 in .claude/worktrees) never landed on main; redone from scratch here.
-Done and on main:
-- C4 weaver bone toss (7e41378). F0 to F3 tuning.js, debug hitboxes, accel movement, variable jump, apex hang, corner correction, look-ahead camera (bfa6dba). F4 hit feedback (4e2ae6b). C5 face swap on D (8fc65b6).
-- Tools: `game/tests/playtest.js` (20 s smoke playtest), `game/tests/capture_gif.js` (GIF plus strip), `SUITE_ONLY=regex` for suite subsets.
-- Fixed the stale stomp suite check (it was never a load flake: since HP, one contact is not lethal and the hand ran empty).
-Playwright on this box: `/workspace/GameOfGameBecauseGame-tools/node_modules` (use as NODE_PATH if `npm root -g` has none).
-Next: Round 4 (E1 to E5), V1, V5, C6, L1, Z1.
+Where Claude stopped: research and plan done; Rounds 1, 5, most of 6 and C1 to C3 on main. C4 and F0 to F4 were in worktrees that never reached main; redone here.
+Done and on main (evidence in each commit body):
+- C4 weaver bone toss (7e41378).
+- F0 to F3: tuning.js, backquote hitboxes, accel movement, variable jump, apex hang, corner correction, look-ahead camera, squash and stretch (bfa6dba).
+- F4 hit feedback: kill freeze, death tumble, white hit flash, red hurt edges (4e2ae6b). capture_gif.js added.
+- C5 face swap on D with HUD badge and first-time hint (8fc65b6).
+- V2b tree tile shadow blob removed (8896547).
+- E1 to E4 enemy tells: grunt wind-up lunge, rat king crouch, archer aim line, revenant mud lob (ade87d3).
+- E5 warlord three phases: sword swing, charge and stun, jump slam shockwaves, final-blow slow motion (ab0daf7).
+- V1 heart HP; V5 scene fades and title-card intro (3bfcd81).
+- L1 level 1 enemy order and signs (cda4983). C6 selection cards show role and keyed powers (f04df00).
+- L2 face badges over face-gated secrets in levels 1, 3, 5 (8b79197). V6 banner and sign text moved off the player (d146e51).
+- Tests: stale stomp check fixed; checks updated where behaviour changed on purpose (each named in its commit). Full suite 63 passed, 0 failed on d146e51.
+Tools: `game/tests/playtest.js` (20 s smoke playtest), `game/tests/capture_gif.js <kill|beam|jump|hurt|grunt|rat|archer|revenant|boss1|boss2|boss3>`, `SUITE_ONLY=regex` for suite subsets. Playwright here: NODE_PATH=/workspace/GameOfGameBecauseGame-tools/node_modules.
+Deviations (director calls): C5 is an instant cycle (leftmost card in, old face to the back), not the slowed-time picker. L2 is badges on existing secrets, not new routes. Level 1 keeps one mud revenant (drops the Mage early).
+Needs human check: movement feel (F1 numbers), tell lengths, warlord difficulty, music and SFX by ear, touch and gamepad swap.
+Next (research.md section 9, Round 9): H1 human feel check, P1 ending title card, L3 levels 6 and 7 trims from a recording, L4 one real optional face route per priority level, Q1 heart pickups only if H1 asks, Q2 real device check.
 
 ## 2026-10-30 Director, session 1 (checkpoint)
 Done and on main (each commit body has its evidence):

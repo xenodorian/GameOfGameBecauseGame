@@ -112,7 +112,8 @@ Where it is used:
 
 ## 6. Current state
 
-- Last finished plan: `Action_Plan.md` T0 to T12, all done (history in section 7). Effects pass done after it (section 5).
+- Current plan: `research.md` section 9. Rounds 1 to 8 done except L3 (levels 6 and 7 trims, not judged). Round 9 lists the next proposals. Session log in `PROGRESS.md`.
+- Earlier: `Action_Plan.md` T0 to T12, all done (history in section 7). Effects pass done after it (section 5).
 - Exclusive secrets (gate output): knight L4 col 64 row 15; ranger L3 col 66 row 17, L6 col 91 row 9, L7 col 61 row 9; rat L2 col 96 row 8, L5 col 104 row 8; weaver L7 col 29 row 7; mage L3 col 76 row 8.
 - Accepted spec deviations: weaver-only secret is in level 7, not levels 2 or 6. Exit zone is 4 tiles tall. The level 2 keyboard-bot check was dropped.
 
@@ -146,6 +147,8 @@ Open work:
 | 2026-10-29 | effects pass | exit 0 | 51 passed, 1 failed | mage beam, banded slash, thrust, bash, hits, flares, shake, flash. Screenshots checked: beam charge, sustain, fade; knight slash, thrust, bash; ranger shot. No page errors. Failed: `stomp defeats a grunt...; side contact respawns safely` (mode was play, not select, after the side contact). Not investigated or rerun: the user stopped test runs. UNVERIFIED cause: wall-clock waits in that check vs heavier effect drawing |
 | 2026-10-29 | X1 to X10 (Action Plan v3) | exit 0 | 51 passed, 2 failed | stomp side-contact timeout (also failed in effects pass); ranger hop vy -195 (timing). Not rerun. |
 | 2026-10-29 | 17dc508 (feedback pass, bridges) | exit 0 | 53 passed, 0 failed | full suite run on the committed build |
+| 2026-10-29 | f04df00 (session 2) | exit 0 | 61 passed, 2 failed | both failures were checks tied to level 1's old enemy layout; fixed in 95580ce |
+| 2026-10-29 | d146e51 (session 2 close) | exit 0 | 63 passed, 0 failed | full suite; playtest.js 4 passed (apex 65.8 px, beam kills grounded grunt, no errors) |
 
 ## 9. Decisions log (append one line per decision)
 
@@ -181,6 +184,8 @@ Open work:
 - Bridges: the arrow anchor and bone bridge sit at foot level, so the plank top is at the feet and they cross the gap in front of the caster. The rope plank is drawn as a plank with joints and ropes at the ends, and it fades over its last 1.5 s.
 
 ## 10. Environment and licenses
+
+- Session 2 box: Playwright and Chromium installed in `/workspace/GameOfGameBecauseGame-tools/node_modules` (use it as NODE_PATH when `npm root -g` has no playwright). ffmpeg at /usr/bin. No ImageMagick montage; use Pillow for contact sheets.
 
 - Sandbox network: PyPI, npm, GitHub reachable. `huggingface.co`, `kenney.nl`, `opengameart.org`, itch.io, Wikimedia, Archive.org, jsDelivr, unpkg blocked.
 - Python 3 with Pillow, Node 22, Playwright with Chromium (`NODE_PATH=$(npm root -g)`).

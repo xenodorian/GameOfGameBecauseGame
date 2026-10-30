@@ -238,10 +238,18 @@ Each line is a brief seed. The director or the worker expands it with the templa
 ### Round 7: levels
 - [x] L1 Level 1 first 30 seconds (5.9) and enemy introduction order across levels 1 to 4 (move or swap enemy spawns only). Done for level 1 only: grunts plus one mud revenant at the end (it drops the Mage, so the beam shows up early). Levels 2 to 4 unchanged (rat kings and archers already arrive there).
 - [x] L2 Optional face routes in levels 1, 3, 5 (5.5) with face-icon signs. Done as face badges over existing face-gated secrets (no new routes): L1 col 47 row 8 ranger, L3 col 66 row 17 ranger and col 76 row 8 mage, L5 col 104 row 8 rat. Badge glows gold while you wear that face. New routes are a possible follow-up.
-- [ ] L3 Trim dead stretches in levels 6 and 7 if the round GIF shows them dragging. Otherwise skip and log.
+- [ ] L3 Trim dead stretches in levels 6 and 7 if the round GIF shows them dragging. Otherwise skip and log. (Not judged yet: needs a recorded run through levels 6 and 7.)
 
 ### Round 8: close out
-- [ ] Z1 Full suite once, record in CLAUDE.md section 8. Screenshot contact sheet of every level. Update CLAUDE.md sections 3 to 6 to match the game.
+- [x] Z1 Full suite once, record in CLAUDE.md section 8. Screenshot contact sheet of every level. Update CLAUDE.md sections 3 to 6 to match the game. (Session 2: 63 passed, 0 failed.)
+
+### Round 9: after the first rescue pass (session 2 proposals, same pillars)
+- [ ] H1 Human feel check: play levels 1, 3, 5, 8 with sound on; log what felt wrong in PROGRESS.md (movement numbers, tell lengths, music volume).
+- [ ] P1 Ending on a peak: replace the flat ending text with a title card like the intro (faces fly back out of the throne), plus the stats.
+- [ ] L3 (above) with `capture_gif.js` style recordings of levels 6 and 7.
+- [ ] L4 One real optional face route per priority level (a short side path, not just a secret), signposted with the L2 badge.
+- [ ] Q1 Heart pickups: a defeated enemy sometimes drops a heart (2 HP). Only if H1 says damage feels punishing without a way back.
+- [ ] Q2 Touch and gamepad check for D swap on a real device.
 
 ## 10. Not doing (and why)
 - New levels, enemies, or characters: scope (pillar 5).
