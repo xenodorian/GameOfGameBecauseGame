@@ -1013,7 +1013,7 @@ class PlayScene {
   }
 
   draw(ctx) {
-    const theme = THEMES[World.level.theme];
+    const theme = THEMES[World.visual()] || THEMES[World.level.theme];
     ctx.fillStyle = theme.sky;
     ctx.fillRect(0, 0, Engine.W, Engine.H);
 
@@ -1184,8 +1184,12 @@ class PlayScene {
       const q = Enemies.pickups().find((c) => c.state === "ground" && c.secret && Math.abs(c.x - hx) < T && c.y >= hy - T);
       if (!q) continue;
       const x = Math.round(q.x + q.w / 2 - cx);
-      const y = Math.round(q.y - 16 - cy + Math.sin(this.time * 3 + h.col) * 2);
-      if (x < -20 || x > Engine.W + 20 || y < -30 || y > Engine.H + 10) continue;
+      let y = Math.round(q.y - 16 - cy + Math.sin(this.time * 3 + h.col) * 2);
+      if (x < -20 || x > Engine.W + 20 || y < -200 || y > Engine.H + 10) continue;
+      // A secret up to about 6 rows overhead is hidden behind the HUD: pin the badge just under it,
+      // pointing up, so the player knows something is up there.
+      const above = y < 72;
+      if (above) y = 72;
       const wearing = this.active === h.face;
       if (wearing) Glow.light(ctx, x, y, 18, "#f2d04a", 0.35);
       ctx.fillStyle = "rgba(10, 12, 18, 0.8)";
@@ -1193,10 +1197,15 @@ class PlayScene {
       ctx.strokeStyle = wearing ? "#f2d04a" : CARD_DEFS[h.face].color;
       ctx.strokeRect(x - 7.5, y - 9.5, 15, 19);
       ctx.drawImage(IMG[LPC_KEY[h.face]], 22, 10, 20, 26, x - 6, y - 8, 12, 16);
-      // A small pointer down at the secret.
+      // A small pointer at the secret: down when it is in view, up when it is overhead.
       ctx.fillStyle = ctx.strokeStyle;
-      ctx.fillRect(x - 1, y + 11, 3, 1);
-      ctx.fillRect(x, y + 12, 1, 1);
+      if (above) {
+        ctx.fillRect(x - 1, y - 11, 3, 1);
+        ctx.fillRect(x, y - 12, 1, 1);
+      } else {
+        ctx.fillRect(x - 1, y + 11, 3, 1);
+        ctx.fillRect(x, y + 12, 1, 1);
+      }
     }
   }
 

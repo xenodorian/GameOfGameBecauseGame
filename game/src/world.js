@@ -5,7 +5,12 @@ const TILE = 32;
 const THEMES = {
   field: { sky: "#7fb6e0", far: "#a8cde8", near: "#6f9fbf" },
   dungeon: { sky: "#17141f", far: "#2a2533", near: "#3a3242" },
+  // Looks (a level's optional "look" field): visual only, game rules still read the theme.
+  crypt: { sky: "#0c171d", far: "#14242b", near: "#1b2f37" },
+  hall: { sky: "#1c1012", far: "#2c181a", near: "#3a2021" },
 };
+// Tint laid over solid tiles per look.
+const LOOK_TINT = { marsh: "rgba(40, 50, 15, 0.5)", crypt: "rgba(15, 60, 95, 0.5)", hall: "rgba(120, 50, 25, 0.22)" };
 
 // Legend:
 //   #  solid brick wall
@@ -314,10 +319,11 @@ const World = (() => {
 
         const sx = tx * TILE + (TILE - w) / 2;
         const sy = ty * TILE - h;
+        // The warlord needs more room: 3 tiles put a respawn between it and the arena wall, pinned again.
         const near = enemies.some(
           (e) =>
             !e.dead &&
-            Math.hypot(sx + w / 2 - (e.x + e.w / 2), sy + h / 2 - (e.y + e.h / 2)) < 3 * TILE
+            Math.hypot(sx + w / 2 - (e.x + e.w / 2), sy + h / 2 - (e.y + e.h / 2)) < (e.kind === "warlord" ? 7 : 3) * TILE
         );
         if (near) continue;
 
@@ -467,6 +473,7 @@ const World = (() => {
 
   // Which look the current level uses. Level 4 is the marsh; game rules still read the theme.
   function visual() {
+    if (LEVELS[index].look) return LEVELS[index].look;
     return index === 3 ? "marsh" : LEVELS[index].theme;
   }
 
@@ -586,11 +593,107 @@ const World = (() => {
     }
     return c;
   }
+  // Crypt: a catacomb wall of bone niches (a pale skull in some), then cold pillars.
+  function nichesLayer(wall, hole, bone) {
+    const c = makeCanvas(PERIOD, VIEW_H);
+    const g = c.getContext("2d");
+    const rnd = seeded(5);
+    g.fillStyle = wall;
+    g.fillRect(0, 40, PERIOD, VIEW_H - 40);
+    for (let y = 70; y < VIEW_H - 20; y += 34) {
+      for (let x = 8 + ((y / 34) % 2) * 20; x < PERIOD - 30; x += 40) {
+        g.fillStyle = hole;
+        g.fillRect(x, y, 24, 14);
+        g.beginPath();
+        g.arc(x + 12, y, 12, Math.PI, 0);
+        g.fill();
+        if (rnd() < 0.45) {
+          g.fillStyle = bone;
+          g.fillRect(x + 8, y + 2, 8, 7);
+          g.fillRect(x + 9, y + 9, 6, 3);
+          g.fillStyle = hole;
+          g.fillRect(x + 9, y + 4, 2, 2);
+          g.fillRect(x + 13, y + 4, 2, 2);
+        }
+      }
+    }
+    return c;
+  }
+  function dripLayer() {
+    const c = makeCanvas(PERIOD, VIEW_H);
+    const g = c.getContext("2d");
+    const rnd = seeded(13);
+    g.fillStyle = "rgba(120, 190, 200, 0.06)";
+    for (let i = 0; i < 12; i++) {
+      const x = rnd() * PERIOD;
+      const y = 150 + rnd() * 100;
+      for (const ox of [0, PERIOD, -PERIOD]) {
+        g.beginPath();
+        g.ellipse(x + ox, y, 40 + rnd() * 60, 8 + rnd() * 6, 0, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+    return c;
+  }
+  // Hall: tall lit windows behind, then red banners with a gold face mask between pillars.
+  function windowsLayer(wall, glow) {
+    const c = makeCanvas(PERIOD, VIEW_H);
+    const g = c.getContext("2d");
+    g.fillStyle = wall;
+    g.fillRect(0, 30, PERIOD, VIEW_H - 30);
+    for (let x = 40; x < PERIOD; x += 160) {
+      g.fillStyle = glow;
+      g.fillRect(x, 90, 28, 90);
+      g.beginPath();
+      g.arc(x + 14, 90, 14, Math.PI, 0);
+      g.fill();
+      g.fillStyle = wall;
+      g.fillRect(x + 13, 76, 2, 104);
+      g.fillRect(x, 130, 28, 2);
+    }
+    return c;
+  }
+  function bannersLayer(pillar, cloth, trim) {
+    const c = makeCanvas(PERIOD, VIEW_H);
+    const g = c.getContext("2d");
+    for (let x = 0; x < PERIOD; x += 160) {
+      g.fillStyle = pillar;
+      g.fillRect(x, 0, 18, VIEW_H);
+      g.fillRect(x - 4, 0, 26, 10);
+      const bx = x + 64;
+      g.fillStyle = trim;
+      g.fillRect(bx - 2, 20, 36, 3);
+      g.fillStyle = cloth;
+      g.beginPath();
+      g.moveTo(bx, 23);
+      g.lineTo(bx + 32, 23);
+      g.lineTo(bx + 32, 110);
+      g.lineTo(bx + 16, 98);
+      g.lineTo(bx, 110);
+      g.closePath();
+      g.fill();
+      // A gold mask: the hall of faces.
+      g.fillStyle = trim;
+      g.beginPath();
+      g.ellipse(bx + 16, 55, 9, 11, 0, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = cloth;
+      g.fillRect(bx + 10, 51, 4, 3);
+      g.fillRect(bx + 18, 51, 4, 3);
+      g.fillRect(bx + 13, 60, 6, 2);
+    }
+    return c;
+  }
   function layersFor(v) {
     if (layerCache[v]) return layerCache[v];
     let set;
     if (v === "dungeon") {
       set = [{ c: archesLayer("#221d2d"), f: 0.15 }, { c: pillarsLayer("#2b2536", "#241f2e"), f: 0.35 }];
+    } else if (v === "crypt") {
+      set = [{ c: nichesLayer("#13232a", "#0a1418", "#8fa6a0"), f: 0.15 }, { c: pillarsLayer("#1a2f37", "#142630"), f: 0.35 }];
+      set.fog = dripLayer();
+    } else if (v === "hall") {
+      set = [{ c: windowsLayer("#2a1719", "#6b4426"), f: 0.15 }, { c: bannersLayer("#3d2326", "#7a1f2a", "#c99a3e"), f: 0.35 }];
     } else if (v === "marsh") {
       set = [{ c: hillsLayer("#3a4530", 165, 14, 6), f: 0.15 }, { c: deadTreesLayer("#2c3522"), f: 0.35 }];
       set.fog = fogLayer();
@@ -615,6 +718,25 @@ const World = (() => {
     const set = layersFor(v);
     for (const l of set) blitLayer(ctx, l.c, camX * l.f);
     if (set.fog) blitLayer(ctx, set.fog, camX * 0.5 + (performance.now() / 1000) * 8);
+    if (v === "hall") {
+      // Wall torches on the pillars, with a flickering warm glow.
+      const t = performance.now() / 1000;
+      const o = -(((camX * 0.35) % PERIOD) + PERIOD) % PERIOD;
+      for (let x = o; x < 480 + PERIOD; x += 160) {
+        const fx = x + 9;
+        const f = 0.8 + Math.sin(t * 9 + x) * 0.12 + Math.sin(t * 23 + x * 2) * 0.08;
+        ctx.fillStyle = `rgba(255, 170, 70, ${0.12 * f})`;
+        ctx.beginPath();
+        ctx.arc(fx, 128, 34 * f, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#4a2c1c";
+        ctx.fillRect(fx - 2, 128, 4, 12);
+        ctx.fillStyle = "#ffb347";
+        ctx.fillRect(fx - 3, 121 - f * 3, 6, 7 + f * 3);
+        ctx.fillStyle = "#fff0b0";
+        ctx.fillRect(fx - 1, 124, 2, 3);
+      }
+    }
   }
 
   // True when this tile is open air with no solid tile below it down to the map bottom.
@@ -625,9 +747,9 @@ const World = (() => {
 
   // Bright top edge where a solid tile meets air above, dark edge where it meets air below or beside.
   // Marsh tiles get a murky green-brown tint.
-  function drawEdges(ctx, tx, ty, px, py, marsh) {
-    if (marsh) {
-      ctx.fillStyle = "rgba(40, 50, 15, 0.5)";
+  function drawEdges(ctx, tx, ty, px, py, tint) {
+    if (tint) {
+      ctx.fillStyle = tint;
       ctx.fillRect(px, py, TILE, TILE);
     }
     if (!isSolid(at(tx, ty - 1))) {
@@ -662,7 +784,9 @@ const World = (() => {
     const tx1 = Math.min(cols - 1, Math.floor((camX + viewW) / TILE));
     const ty1 = Math.min(rows - 1, Math.floor((camY + viewH) / TILE));
 
-    const marsh = visual() === "marsh";
+    const look = visual();
+    const marsh = look === "marsh";
+    const tint = LOOK_TINT[look];
     for (let ty = ty0; ty <= ty1; ty++) {
       for (let tx = tx0; tx <= tx1; tx++) {
         const ch = at(tx, ty);
@@ -677,8 +801,16 @@ const World = (() => {
           ctx.fillRect(px, py, TILE, TILE);
           // A light top edge makes ledges readable against the dark sky.
           if (!isSolid(ty > 0 ? at(tx, ty - 1) : ".")) {
-            ctx.fillStyle = "#9c8fb0";
-            ctx.fillRect(px, py, TILE, 3);
+            if (look === "hall") {
+              // A red carpet with gold trim runs along the hall floor.
+              ctx.fillStyle = "#8a2230";
+              ctx.fillRect(px, py, TILE, 5);
+              ctx.fillStyle = "#d9a441";
+              ctx.fillRect(px, py + 5, TILE, 1);
+            } else {
+              ctx.fillStyle = look === "crypt" ? "#86b9bf" : "#9c8fb0";
+              ctx.fillRect(px, py, TILE, 3);
+            }
           }
         } else if (ch === "=") {
           ctx.drawImage(images.dirt, px, py, TILE, TILE);
@@ -692,7 +824,17 @@ const World = (() => {
         } else if (ch === "F") {
           drawFlag(ctx, px, py, LEVELS[index].theme === "dungeon");
         }
-        if (isSolid(ch)) drawEdges(ctx, tx, ty, px, py, marsh);
+        if (isSolid(ch)) {
+          drawEdges(ctx, tx, ty, px, py, tint);
+          // Depth shade: brick buried under more solid tiles is darker, so the ground reads as a
+          // mass with a lit top instead of a flat wall of brick.
+          let depth = 0;
+          while (depth < 3 && isSolid(at(tx, ty - depth - 1))) depth++;
+          if (depth > 0) {
+            ctx.fillStyle = `rgba(0, 0, 0, ${[0, 0.16, 0.3, 0.42][depth]})`;
+            ctx.fillRect(px, py, TILE, TILE);
+          }
+        }
         else if (marsh && ty >= rows - 4 && (ch === "." || ch === "^") && pitBelow(tx, ty)) drawWater(ctx, tx, ty, px, py);
       }
     }
