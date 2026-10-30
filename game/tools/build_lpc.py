@@ -69,9 +69,14 @@ CHARACTERS = {
         ("weapon/ranged/bow/normal/universal/background/{anim}/light.png", -1),
         ("weapon/ranged/bow/normal/universal/foreground/{anim}/light.png", 140),
     ],
+    # Session 7: the robe (torso/clothes/robe) only has walk, slash, spellcast and hurt, so idle, thrust,
+    # shoot and jump fell back to other poses and the body showed through. Long-sleeve top, pants and
+    # boots have every animation the game uses; they are recoloured to the old robe's blues.
     "mage": [
         ("body/bodies/female/{anim}.png", 10), ("head/heads/human/female/{anim}.png", 100),
-        ("torso/clothes/robe/female/{anim}/blue.png", 35), ("hat/magic/wizard/base/adult/{anim}/base_black.png", 130),
+        ("feet/boots/basic/thin/{anim}.png", 15, "boot"), ("legs/pants/thin/{anim}.png", 20, "navy"),
+        ("torso/clothes/longsleeve/longsleeve/female/{anim}.png", 35, "robe"),
+        ("hat/magic/wizard/base/adult/{anim}/base_black.png", 130),
         ("weapon/magic/wand/male/{anim}/wand.png", 140),
     ],
     "rat": [
@@ -107,6 +112,34 @@ CHARACTERS = {
         ("weapon/sword/longsword/universal_behind/{anim}/longsword.png", 9), ("weapon/sword/longsword/{anim}/longsword.png", 140),
     ],
 }
+
+
+# Recolour ramps (dark to light) for uncoloured base sheets. Pixels darker than OUTLINE_LUM keep a dark
+# outline; the rest map by brightness onto the ramp.
+RAMPS = {
+    "robe": [(8, 17, 35), (12, 25, 50), (16, 32, 65), (22, 44, 89), (32, 58, 112)],
+    "navy": [(7, 14, 30), (12, 24, 50), (18, 34, 68), (26, 46, 88)],
+    "boot": [(40, 26, 20), (62, 42, 30), (88, 60, 40), (116, 82, 54)],
+}
+OUTLINE_LUM = 60
+
+
+def recolor(img, ramp_name):
+    ramp = RAMPS[ramp_name]
+    px = img.load()
+    for y in range(img.size[1]):
+        for x in range(img.size[0]):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            lum = 0.299 * r + 0.587 * g + 0.114 * b
+            if lum < OUTLINE_LUM:
+                px[x, y] = (6, 10, 20, a)
+                continue
+            t = min(0.999, (lum - OUTLINE_LUM) / (255 - OUTLINE_LUM))
+            c = ramp[int(t * len(ramp))]
+            px[x, y] = (c[0], c[1], c[2], a)
+    return img
 
 
 def item_folder(pattern):
@@ -176,6 +209,8 @@ def compose(lpc, key, layers, zmap, report, weapons_only=False):
     ordered = sorted(layers, key=lambda L: L[1])
     if weapons_only:
         ordered = [L for L in ordered if "/weapon/" in f"/{L[0]}"]
+    tints = {L[0]: L[2] for L in layers if len(L) > 2}
+    ordered = [(L[0], L[1]) for L in ordered]
     for r, anim in enumerate(ANIMS):
         row = 0 if anim == "hurt" else RIGHT_ROW
         n = COUNT[anim]
@@ -197,6 +232,8 @@ def compose(lpc, key, layers, zmap, report, weapons_only=False):
             if layer_frames is None:
                 report.append(f"{key}: {folder} has no {anim}")
                 continue
+            if folder in tints:
+                layer_frames = [recolor(fr, tints[folder]) for fr in layer_frames]
             if frames is None:
                 frames = [Image.new("RGBA", (BIG, BIG), (0, 0, 0, 0)) for _ in layer_frames]
             if len(layer_frames) > len(frames):
@@ -246,19 +283,49 @@ def main():
     if len(sys.argv) < 2:
         raise SystemExit("usage: build_lpc.py <path to LPC generator checkout>")
     lpc = pathlib.Path(sys.argv[1])
+    # --only key1,key2 rebuilds just those characters and replaces only their CREDITS.txt sections.
+    only = None
+    if "--only" in sys.argv:
+        only = sys.argv[sys.argv.index("--only") + 1].split(",")
     defs = lpc / "sheet_definitions"
     zfound = scan_zpos(defs)
     zmap = {k: (v[0], v[1]) for k, v in zfound.items()}
     report = []
     all_credit_lines = []
     for key, layers in CHARACTERS.items():
+        if only and key not in only:
+            continue
         compose(lpc, key, layers, zmap, report)
         if key in BIG_KEYS:
             compose(lpc, key, layers, zmap, report, weapons_only=True)
-        folders = [f for f, _ in layers]
+        folders = [L[0] for L in layers]
         folders += [str(pathlib.Path(p).parent) for f in list(folders) if f in PATH_OVERRIDE for p in PATH_OVERRIDE[f].values()]
         all_credit_lines += [f"[{key}]"] + credits_for(defs, {k: v[1] for k, v in zfound.items()}, folders)
         print("wrote", OUT / f"{key}.png")
+    if only:
+        # Keep the other characters' sections; replace the rebuilt ones.
+        old = (OUT / "CREDITS.txt").read_text(encoding="utf-8").split("\n")
+        sections, cur = {}, None
+        order = []
+        for line in old:
+            if line.startswith("[") and line.endswith("]"):
+                cur = line[1:-1]
+                order.append(cur)
+                sections[cur] = []
+            elif cur:
+                sections[cur].append(line)
+        cur = None
+        for line in all_credit_lines:
+            if line.startswith("[") and line.endswith("]"):
+                cur = line[1:-1]
+                if cur not in sections:
+                    order.append(cur)
+                sections[cur] = []
+            else:
+                sections[cur].append(line)
+        all_credit_lines = []
+        for k in order:
+            all_credit_lines += [f"[{k}]"] + sections[k]
     (OUT / "CREDITS.txt").write_text("\n".join(all_credit_lines) + "\n", encoding="utf-8")
     print("wrote", OUT / "CREDITS.txt")
     if report:
