@@ -2,7 +2,7 @@
 
 This is the only notes file. It replaces README.md, Claude_Notes.md, and the finished Action_Plan.md (all merged here on 2026-10-29). The rescue plan is `research.md` (pillars in section 2, task list in section 9). Progress and handoff notes are in `PROGRESS.md`. Older plans (`Action_Plan_v2.md`, `Action_Plan_v3.md`) are finished history.
 
-Playable build: [game/changeling.html](game/changeling.html). Open it in a browser. Controls: arrow keys move and jump, A S Z X are your four powers, D swaps to the next face in your hand, C drops a card from your hand, Q drops your face, Enter confirms and pauses. Backquote shows hitboxes.
+Playable build: [game/changeling.html](game/changeling.html). Open it in a browser. Controls: arrow keys move and jump, A S Z X are your four powers, Down drops through one-way ledges and made platforms (not solid ground) and climbs down ladders, D opens the card menu (Left/Right pick, D becomes that card, C throws it away, Esc or X closes), Q drops your face, Enter confirms and pauses. Backquote shows hitboxes.
 
 ## 1. Rules for agents
 
@@ -58,10 +58,10 @@ On a network error retry after 2 s, 4 s, 8 s, 16 s. If rejected because `main` m
 - Kirby-like. Beating an enemy drops a card. A card is a character. Collecting it adds that character to the hand.
 - Hand: 3 slots, filled left to right. Extra cards go to a hidden deck (only the count shows). A freed slot refills from the top of the deck.
 - Death: the player picks one of the 3 hand cards and respawns as that character at the closest safe space. The dead character is lost. Empty hand returns the Knight. Deaths are unlimited. No game over.
-- Face swap (C5): D (gamepad LB or Select, touch D) makes the leftmost hand card the active face; the old face goes to the back of the hand, so repeated presses cycle every face held. HP carries over, cooldowns reset, 2 s cooldown, 0.3 s safety. HUD badge right of the deck; a 'D: swap face' hint shows until the first swap (`PlayScene.swapUsed`, not saved).
-- Discard: C opens hand-card discard mode (Left and Right pick, C confirms, X or B cancels). Q (or hold Down 0.5 s on a gamepad) discards the current character and opens the selection.
+- Card menu (session 7, replaces the C5 instant swap and the Down-tap menu): D (gamepad LB or Select, touch D) opens it when a card is held (mode `discardCard`, game paused). Left/Right move the highlight. D on a card: `Hand.useCard` removes it, the player becomes that face, the old face goes to the back of the hand; HP carries over, cooldowns reset, 0.3 s safety, no cooldown. C (gamepad RB, touch C) throws the highlighted card away; the menu stays open while cards remain. Esc, X or B closes. HUD badge right of the deck; a 'D: cards' hint shows until the first change (`PlayScene.swapUsed`, not saved).
+- Discard: C in play also opens the card menu. Q discards the current character and opens the selection. Down no longer touches cards: it drops through one-way tiles (`_`), ranger and weaver platforms and ladder tops (`p.dropT`, `World.standingOn`).
 - Closest safe space: nearest grounded tile with a clear 2 by 3 tile area, no enemy or hazard within 3 tiles, search out to 20 tiles. A spot is unsafe if a `^` is within 3 columns on its row.
-- Face badges (L2): a level's optional `hints: [{ col, row, face }]` draws a bobbing face card over the secret at that tile (it follows the live pickup, which falls) until it is taken; gold glow while you wear that face. Pick hint spots from `validate_gates.py --level N` (secrets reachable by one face). A badge up to about 6 rows overhead pins just under the HUD with an up pointer. Badges now: L1 45,7 ranger; L2 96,8 rat; L3 66,21 ranger, 96,11 mage; L4 64,15 knight; L5 104,8 rat.
+- Face badges (L2): a level's optional `hints: [{ col, row, face }]` draws a bobbing face card over the secret at that tile (it follows the live pickup, which falls) until it is taken; gold glow while you wear that face. Pick hint spots from `validate_gates.py --level N` (secrets reachable by one face). A badge up to about 6 rows overhead pins just under the HUD with an up pointer. Badges now: L1 45,7 ranger; L2 96,8 ranger (ladder shaft); L3 66,21 ranger, 96,11 mage; L4 64,15 knight; L5 104,8 ranger (ladder shaft).
 - Looks (V7): a level's optional `look` (L6 "crypt", L7 "hall"; L4 is "marsh" by index) picks sky colours, parallax layers, tile tint and ledge edge in `World.visual()` / `layersFor` / `LOOK_TINT` (world.js). Game rules still read `theme`. Buried solid tiles darken with depth (all looks).
 - Music per look (A4): `MUSIC_SONGS.crypt` and `.hall` in music.js; PlayScene plays the song named by `World.visual()` if one exists, else the theme's. A bar may carry a third value (layer) passed to `bar()`.
 - Runes (H2): a level's optional `runes: [{ col, row, len }]` draws faint blink-coloured motes across a blink-only gap (L3 cols 91 to 95), brighter while the mage is worn.
@@ -70,11 +70,10 @@ On a network error retry after 2 s, 4 s, 8 s, 16 s. If rejected because `main` m
 - 8 levels. 1 to 4 outdoors (theme `field`), 5 to 7 castle (theme `dungeon`), 8 the Warlord arena: 1 Greenwood Road, 2 Bramble Hollow, 3 Old Watchtower, 4 Rotting Marsh, 5 Castle Gate, 6 Undercroft, 7 Hall of Faces, 8 Warlord's Throne.
 - Characters and ability ids (A, S, Z, X):
   - Knight: shield_bash, charge, slash, thrust. Breaks cracked walls `x`.
-  - Ranger: shoot, arrow_anchor (3 tile rope), volley (3 arrows fanned up-forward, 1 s cooldown), hop.
+  - Ranger: shoot, arrow_anchor (shown as "Bridge (Up: ladder)": a 3 tile plank in front, 80 px above the feet, just under jump plus hop; two at once, a third replaces the oldest; holding Up builds a ladder instead: up to 5 tiles in the front column, or the own column if that is taller (one-tile shafts), standing on a floor up to 4 rows below, never on spikes or in mid-air, stopped by ceilings, 8 s, one at a time; Up/Down climb at 120 px/s, Left/Right step off, the top is a ledge), volley (3 arrows fanned up-forward, 1 s cooldown), hop.
   - Mage: spell_bolt (shown as "Beam", see section 5), float, nova (ring burst, radius 40 px, pushes survivors, 1.2 s cooldown), blink.
-  - Rat: leap (5 tiles up), scurry, gnaw (3 bites in 0.3 s, 16 px reach, each bite ignores hit flash), thrust.
   - Bone Weaver: shoot, bone_bridge (5 tile platform, 8 s), bone_toss (arcing bone, vx 160, vy -260, gravity 900, 0.6 s cooldown; hits below ledges and behind low walls), ghost.
-- Drops: grunt gives Ranger, mud revenant Mage, rat king Rat, archer Bone Weaver, warlord Knight. `c`, `p`, `k` cards can be any of the 5.
+- Drops: grunt gives Ranger, mud revenant Mage, rat king Knight (session 7; the playable rat was removed), archer Bone Weaver, warlord Knight. `c`, `p`, `k` cards can be any of the 4.
 - Enemies (Round 4 tells; every tell blinks the sprite warm white): grunt winds up 0.4 s (crouch, growl) within 64 px on its row, lunges 0.2 s at 240 px/s, then stands 0.5 s (punish window), 1.2 s between lunges. Rat king crouches 0.3 s before each hop. Archer (and warlord) shows the shoot pose and a growing red dotted aim line for 0.4 s before each arrow. Mud revenant stops and bubbles 0.5 s, then lobs a mud blob (vy -260, gravity 700) timed to land on the player, first lob 1.2 s after it sees you, then every 3 s. Warlord (E5, `updateBoss`, numbers in `ENEMY_DEFS.warlord.boss`): 8 hp, three phases by hp. Phase 1 (8 to 6): walks, shoots arrows at range (aim tell), and inside 70 px raises its sword 0.5 s (blink) then swings an ember arc (hostile 'swing' box, 56 px) and recovers 0.55 s. Phase 2 (5 to 3) adds a 0.6 s stamp then a 270 px/s charge that stuns it 1.4 s at the arena edge (punish window). Phase 3 (2 to 1) adds a jump slam with floor shockwaves both ways (jump over them); tells shorten to 0.4 s (sword raise was 0.35 s until session 5). Each phase change: 0.6 s roar, flash, shake. Final blow: 0.4 s freeze, big flash, 0.5 s slow motion (`slowT`, dt x 0.3). The exit stays shut until it dies.
 - Tiles: `#` wall, `=` ground, `_` one-way, `^` spikes, `x` cracked wall, `k` main-route card, `c` secret card, `p` secret power-up, `i` sign, `T` tree, `S` spawn, `F` exit, `g m j a W` enemy spawns. Tiles are 32 px. View is 480 by 270 logical px.
 - V1 and V5: HP shows as 5 pixel hearts (2 HP each, half hearts), shaking for 0.3 s after a hit. Every scene change fades in from black over 0.3 s (`Engine.setScene`). The intro is a title card: dusk sky, the warlord's black silhouette on a throne with a red backlight, the five stolen faces orbiting as cards, lines fading in.
@@ -88,7 +87,7 @@ On a network error retry after 2 s, 4 s, 8 s, 16 s. If rejected because `main` m
 - `tools/build_single_html.py`: builds `changeling.html` (inlines JS, CSS, base64 images and fonts). Script load order is its `SCRIPTS` list. A new JS file must be added there.
 - `tools/validate_gates.py`: tile-level reachability model (heights match probe.js measurements; check a new gate in the game with probe.js too). Options `--level N`, `--show N`, `--map N NAME`. Enforces level rules (enemy spacing, minimum enemy, spike and cracked wall counts, gated secrets, game-wide exclusive secrets).
 - `tools/build_lpc.py`: composes LPC sheets into `assets/lpc/<key>.png` (13 columns by 8 rows of 64 px: idle, walk, slash, thrust, spellcast, shoot, hurt, jump). Sheets face right; `drawFrame` flips when facing < 0.
-- `tests/suite.js`: Playwright plus Chromium (`SUITE_ONLY=regex` runs a subset). `tests/screenshots.js` writes PNGs to `tests/shots/`. `tests/playtest.js [outDir]`: 20 s real-key smoke test (apex, beam kill, all 20 abilities, console errors) with shots. `tests/capture_gif.js <kill|beam|jump|hurt|grunt|rat|archer|revenant|boss1|boss2|boss3> [outDir]`: GIF plus 12-frame strip of a scripted moment (needs ffmpeg). `tests/probe.js <level> <face> <col> <row> "<macro>" [shot]`: can this face really make this move (prints tiles and peak row). `tests/tour.js [levels] [face] [outDir]`: bot run per level, 12-frame contact sheet plus hit, death and stuck columns (slow: up to 75 s per level).
+- `tests/suite.js`: Playwright plus Chromium (`SUITE_ONLY=regex` runs a subset). `tests/screenshots.js` writes PNGs to `tests/shots/`. `tests/playtest.js [outDir]`: 20 s real-key smoke test (apex, beam kill, all 16 abilities, console errors) with shots. `tests/capture_gif.js <kill|beam|jump|hurt|grunt|rat (the rat king enemy)|archer|revenant|boss1|boss2|boss3> [outDir]`: GIF plus 12-frame strip of a scripted moment (needs ffmpeg). `tests/probe.js <level> <face> <col> <row> "<macro>" [shot]`: can this face really make this move (prints tiles and peak row). `tests/tour.js [levels] [face] [outDir]`: bot run per level, 12-frame contact sheet plus hit, death and stuck columns (slow: up to 75 s per level).
 - Assets: `assets/lpc/` (sprites plus `CREDITS.txt`), `assets/tiles/` (DCSS tiles plus license), `assets/fonts/` (Pixelify Sans, OFL).
 - Other folders: `method_1_huggingface/` to `method_5_lpc_walk/` are early art experiments. Finished or dead. The game does not use them. Do not edit them.
 
@@ -118,9 +117,9 @@ Where it is used:
 
 - Current plan: `research.md` section 9. Rounds 1 to 8 done except L3 (levels 6 and 7 trims, not judged). Round 9 lists the next proposals. Session log in `PROGRESS.md`.
 - Earlier: `Action_Plan.md` T0 to T12, all done (history in section 7). Effects pass done after it (section 5).
-- Exclusive secrets (gate output, session 3): knight L4 col 64 row 15; rat L2 col 96 row 8, L5 col 104 row 8 and 116 row 8; weaver L7 col 29 row 7; mage L3 col 76 row 8, 93 row 8, 96 row 11. Ranger secrets (ranger yes, knight no): L1 col 45 and 48 row 7, L3 col 66 row 21, L6 col 91 row 12, L7 col 61 row 12. A ranger-only secret cannot exist with real heights.
-- Real climb heights (measured with `tests/probe.js`, the validator uses these): knight and weaver jump 2 rows; ranger jump plus hop 3; mage jump plus float 4 (about 4.5; one float per airtime, climb only in the first 0.7 s); rat leap 5 (just: 160 px needs the full leap). Ranger and weaver can also cast the plank mid-jump and stand on it 2 rows up. Mage blink teleports 3 tiles through walls if the landing spot is clear.
-- Face side paths (L4): L1 ranger sky route (ground, hop to the 38,10 platform, hop to the ledge at row 8 cols 42 to 49); L3 mage room (blink the walkway gap, float up the 1-wide shaft at col 98, hatch `_` at col 94 row 6 beside the flag); L5 rat corridor (shaft at col 103, corridor row 8 to col 119, drop at col 120 past the archers).
+- Secret checks (gate output, session 7): knight-only L4 col 64 row 15. Weaver with at most one other: L5 79,9, L6 41,11, L7 29,7. Mage with at most one other: L3 93,8 and 96,11. Ranger (ranger yes, knight no): most sky secrets; with two bridges (stairs) and a ladder the ranger reaches every open-air spot, which is why the weaver rule is now 'at most one other' like the mage's. L2 96,8 and L5 104,8 / 116,8 (the old rat shafts) are ranger ladder secrets. Session 7 also made L3 col 94 row 6 (mage room hatch) solid and L3 row 16 cols 62 to 70 solid, since Down now drops through one-way tiles.
+- Real climb heights (measured with `tests/probe.js`, the validator uses these): knight and weaver jump 2 rows; ranger jump plus hop 3; mage jump plus float 4 (about 4.5; one float per airtime, climb only in the first 0.7 s); ranger bridge stands 2.5 rows up (validator models 2) and chains; ranger ladder 5 rows. The weaver can cast the bone bridge mid-jump at its feet. Mage blink teleports 3 tiles through walls if the landing spot is clear.
+- Face side paths (L4): L1 ranger sky route (ground, hop to the 38,10 platform, hop to the ledge at row 8 cols 42 to 49); L3 mage room (blink the walkway gap, float up the 1-wide shaft at col 98, leave the way you came; the old hatch at col 94 row 6 is solid since session 7); L5 ladder corridor (ranger ladder up the shaft at col 103, corridor row 8 to col 119, drop at col 120 past the archers).
 - Accepted spec deviations: weaver-only secret is in level 7, not levels 2 or 6. Exit zone is 4 tiles tall. The level 2 keyboard-bot check was dropped.
 
 Open work:
@@ -159,6 +158,7 @@ Open work:
 | 2026-10-29 | a38b354 (session 4) | exit 0 | 63 passed, 0 failed | full suite; tour.js L1 to L5 unchanged times; respawn spot check (death col 38 to col 28) |
 | 2026-10-29 | 47f6154 (session 5) | exit 0 | 64 passed, 0 failed | full suite incl. new shockwave check; L4 tour done, no deaths; crypt and hall music play in browser |
 | 2026-10-30 | 1f24cdc (session 6, fresh clone) | exit 0 | 65 passed, 0 failed | playtest.js 4 passed (also via npm install); live Pages build plays |
+| 2026-10-30 | 403fcfb (session 7, fresh clone) | exit 0 | 63 passed, 0 failed | playtest.js 4 passed; rat, swap, rope and Down-discard checks replaced by card menu, Down drop, ladder, two-bridge checks; Pages serves 403fcfb byte-identical |
 
 ## 9. Decisions log (append one line per decision)
 
@@ -168,7 +168,7 @@ Open work:
 - Docs cleanup 2: all notes in CLAUDE.md, because Claude Code loads that file on its own.
 - T10 and T11 committed together (sheets changed in T11; HTML needed a rebuild). T7 and T8 together; T3 to T6 together; T1 and T2 together. Deviations from one task per commit.
 - Weapon layers never use the attack fallback; a weapon with no frame for an animation is hidden there.
-- Weapons on idle and jump reuse their walk frames (`build_lpc.py` compose), so a held weapon stays in hand while standing. Rat now has a dagger (LPC dagger, 64 px frames) and the bone weaver has the normal bow (shoot and hurt only; hidden elsewhere).
+- Weapons on idle and jump reuse their walk frames (`build_lpc.py` compose), so a held weapon stays in hand while standing. The bone weaver has the normal bow (shoot and hurt only; hidden elsewhere).
 - Knight attack sword still missing on slash and thrust. The LPC arming sword has no such frames; the longsword slash is 128 px on another grid, which the 64 px builder cannot place yet.
 - Selection card is 140 px tall, not 108, to fit the idle frame and four ability names.
 - Spec deviations accepted: see section 6.
@@ -180,7 +180,7 @@ Open work:
 
 - Action Plan v3 (X11) suite, not rerun: `stomp defeats a grunt and drops a card; side contact respawns safely` failed with `page.waitForFunction: Timeout 5000ms exceeded.` (same check as the effects pass; cause not verified). `ability: ranger hop (X) gives upward speed in air` failed with `vy -195` (expects -250 to -320). Hop code is unchanged; the sample looks taken about 0.04 s late under load (cause not verified). Neither is arrow or shoot timing, so no rerun.
 
-- Attack visuals pass: knight and rat melee trails come from the weapon-only sheets (`<key>_weapon_big.png`), tinted, so they stay on the blade. The arc is the fallback when a weapon has no frame on that row.
+- Attack visuals pass: knight melee trails come from the weapon-only sheets (`<key>_weapon_big.png`), tinted, so they stay on the blade. The arc is the fallback when a weapon has no frame on that row.
 - Ranger arrow leaves the bowstring on the release frame (0.1 s into the shoot action), 4 px in front of the body centre, on the string span. A 0.25 s follow-through holds the shoot pose.
 - Mage beam: the staff swing uses the wand's slash frames from the LPC library (`magic/wand/male/slash`), since the library has no staff swing. The beam starts at the wand tip on the swing and holds the final swing frame while the beam lasts.
 - Suite: ranger shoot and mage beam checks now start on the ground and wait on the game clock, because the shot and beam release later in game time.
@@ -191,7 +191,7 @@ Open work:
 - Feedback pass: sprites stand on the grass. The player is drawn 3 px lower, and enemies use the same offset in their own scale.
 - Feedback pass: trees draw at 3x their tile (96 px) and stand on the first solid tile below them.
 - Feedback pass: the knight's stab lunges forward 0.16 s at 210 px/s, and the stab no longer leaves an afterimage (it read as repeated stabs). Only slashes do.
-- Bridges: the arrow anchor and bone bridge sit at foot level, so the plank top is at the feet and they cross the gap in front of the caster. The rope plank is drawn as a plank with joints and ropes at the ends, and it fades over its last 1.5 s.
+- Bridges: the bone bridge sits at foot level, so the plank top is at the feet and it crosses the gap in front of the caster. The ranger bridge sits 80 px above the feet since session 7 (see the Ranger line in section 4). The rope plank is drawn as a plank with joints and ropes at the ends, and it fades over its last 1.5 s.
 
 ## 10. Environment and licenses
 

@@ -2,6 +2,8 @@
 
 Any AI agent (Claude, Grok Bot, Codex, others) working on this repo: read `CLAUDE.md` (rules, check routine, code map), then `research.md` (pillars in section 2, task list in section 9), then the newest entry in `PROGRESS.md`. Work on `main`, push to `main`, one task per commit, task id first in the message. Leave a handoff entry in `PROGRESS.md` before you stop.
 
+Faces and controls (session 7): knight, ranger, mage, bone weaver (no playable rat; the rat king is only an enemy). Down drops through thin ledges, D opens the card menu, the ranger builds two bridges or (Up + S) a ladder. Details in CLAUDE.md section 4.
+
 Before you change a level: run `python3 game/tools/validate_gates.py` and check any new jump or gate in the real game with `game/tests/probe.js` (the validator is a tile model). `game/tests/tour.js` gives a quick bot run of every level.
 
 Play it live: https://xenodorian.github.io/GameOfGameBecauseGame/ (GitHub Pages from `main`, root; `index.html` redirects to `game/changeling.html`, so rebuild and commit `game/changeling.html` with any `game/src` change or the live game goes stale).
