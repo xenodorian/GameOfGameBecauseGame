@@ -15,11 +15,12 @@ Done and on main (evidence in each commit body):
 - V1 heart HP; V5 scene fades and title-card intro (3bfcd81).
 - L1 level 1 enemy order and signs (cda4983). C6 selection cards show role and keyed powers (f04df00).
 - L2 face badges over face-gated secrets in levels 1, 3, 5 (8b79197). V6 banner and sign text moved off the player (d146e51).
+- P1 ending title card at dawn: empty throne, faces fly home, stats fade in (739e3a4).
 - Tests: stale stomp check fixed; checks updated where behaviour changed on purpose (each named in its commit). Full suite 63 passed, 0 failed on d146e51.
 Tools: `game/tests/playtest.js` (20 s smoke playtest), `game/tests/capture_gif.js <kill|beam|jump|hurt|grunt|rat|archer|revenant|boss1|boss2|boss3>`, `SUITE_ONLY=regex` for suite subsets. Playwright here: NODE_PATH=/workspace/GameOfGameBecauseGame-tools/node_modules.
 Deviations (director calls): C5 is an instant cycle (leftmost card in, old face to the back), not the slowed-time picker. L2 is badges on existing secrets, not new routes. Level 1 keeps one mud revenant (drops the Mage early).
 Needs human check: movement feel (F1 numbers), tell lengths, warlord difficulty, music and SFX by ear, touch and gamepad swap.
-Next (research.md section 9, Round 9): H1 human feel check, P1 ending title card, L3 levels 6 and 7 trims from a recording, L4 one real optional face route per priority level, Q1 heart pickups only if H1 asks, Q2 real device check.
+Next (research.md section 9, Round 9): H1 human feel check, L3 levels 6 and 7 trims from a recording, L4 one real optional face route per priority level, Q1 heart pickups only if H1 asks, Q2 real device check.
 
 ## 2026-10-30 Director, session 1 (checkpoint)
 Done and on main (each commit body has its evidence):
