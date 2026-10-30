@@ -58,6 +58,7 @@ check('menus: title, play, pause, back, credits', async (browser) => {
   await page.keyboard.press('Enter'); await wait(page, 80);
   await page.keyboard.press('ArrowDown'); await wait(page, 80);
   await page.keyboard.press('ArrowDown'); await wait(page, 80);
+  await page.keyboard.press('ArrowDown'); await wait(page, 80); // pause menu has a Music item since A1
   await page.keyboard.press('Enter'); await wait(page, 80);
   assert.equal(await name(), 'TitleScene');
   await page.keyboard.press('ArrowDown'); await wait(page, 80);

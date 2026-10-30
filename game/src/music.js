@@ -196,12 +196,23 @@ function musicBuild(name) {
 }
 
 // Renders a song to [left, right] arrays scaled so the peak is at most `peak`.
-function musicRender(name, peak) {
-  const out = zzfxM(...musicBuild(name));
+function musicRender(args, peak) {
+  const out = zzfxM(...args);
   let max = 0;
   for (const ch of out) for (let i = 0; i < ch.length; i++) max = Math.max(max, Math.abs(ch[i]));
   const k = max > 0 ? (peak || 0.85) / max : 1;
   return out.map((ch) => Float32Array.from(ch, (v) => v * k));
+}
+
+// Rendering a song takes up to a second, so it runs in a Web Worker made from a Blob (the game is one
+// HTML file). The worker gets the ZzFX source text and the song data, and returns the samples.
+function musicWorkerSource() {
+  return (
+    "var zzfxV=" + zzfxV + ",zzfxR=" + zzfxR + ";var zzfxG=" + zzfxG.toString() + ";var zzfxM=" + zzfxM.toString() + ";" +
+    musicRender.toString() +
+    ";onmessage=function(e){var d=e.data;var o=musicRender(d.args);" +
+    "postMessage({name:d.name,l:o[0],r:o[1]},[o[0].buffer,o[1].buffer]);};"
+  );
 }
 
 const Music = {
@@ -211,6 +222,9 @@ const Music = {
   current: null,
   master: null,
   buffers: {},
+  asked: {},
+  worker: null,
+  failed: false,
   VOLUME: 0.22,
   FADE: 0.8,
 
@@ -241,27 +255,49 @@ const Music = {
     return true;
   },
 
+  // Returns a finished buffer, or null while the song is still rendering (it plays when it is done).
   buffer(name) {
-    if (!this.buffers[name]) {
-      const [l, r] = musicRender(name);
-      const buf = Sfx.ctx.createBuffer(2, l.length, zzfxR);
-      buf.getChannelData(0).set(l);
-      buf.getChannelData(1).set(r);
-      this.buffers[name] = buf;
-    }
-    return this.buffers[name];
+    if (this.buffers[name]) return this.buffers[name];
+    this.request(name);
+    return null;
   },
 
-  // Renders the other songs one at a time, so a level change does not stall.
-  prewarm() {
-    const todo = Object.keys(MUSIC_SONGS).filter((n) => !this.buffers[n]);
-    if (!todo.length) return;
+  // Asks the worker to render a song. Safe to call many times. Without a worker there is no music.
+  request(name) {
+    if (this.asked[name] || this.failed) return;
     try {
-      this.buffer(todo[0]);
+      if (!this.worker) {
+        const url = URL.createObjectURL(new Blob([musicWorkerSource()], { type: "text/javascript" }));
+        this.worker = new Worker(url);
+        this.worker.onmessage = (e) => this.done(e.data);
+        this.worker.onerror = () => {
+          this.failed = true;
+        };
+      }
+      this.asked[name] = true;
+      this.worker.postMessage({ name, args: musicBuild(name) });
     } catch (e) {
-      return;
+      this.failed = true;
     }
-    setTimeout(() => this.prewarm(), 500);
+  },
+
+  // A song finished rendering: store it, then start whatever was waiting for it.
+  done(d) {
+    try {
+      const buf = Sfx.ctx.createBuffer(2, d.l.length, zzfxR);
+      buf.getChannelData(0).set(d.l);
+      buf.getChannelData(1).set(d.r);
+      this.buffers[d.name] = buf;
+      this.apply();
+    } catch (e) {
+      this.failed = true;
+    }
+  },
+
+  // Starts rendering every song, the one in use first.
+  prewarm() {
+    if (this.wanted) this.request(this.wanted);
+    Object.keys(MUSIC_SONGS).forEach((n) => this.request(n));
   },
 
   // First key press or tap.
@@ -272,7 +308,7 @@ const Music = {
       Sfx.resume();
       this.started = true;
       this.apply();
-      setTimeout(() => this.prewarm(), 3000);
+      this.prewarm();
     } catch (e) {
       this.started = false;
     }
@@ -289,6 +325,7 @@ const Music = {
     if (!this.started) return;
     const want = this.enabled ? this.wanted : null;
     if (want === this.current) return;
+    if (want && !this.buffer(want)) return; // still rendering; apply() runs again when it is ready
     try {
       const ctx = Sfx.ctx;
       const t = ctx.currentTime;
@@ -303,7 +340,7 @@ const Music = {
       this.current = want;
       if (!want) return;
       const src = ctx.createBufferSource();
-      src.buffer = this.buffer(want);
+      src.buffer = this.buffers[want];
       src.loop = true;
       const gain = ctx.createGain();
       gain.gain.setValueAtTime(0, t);
@@ -325,6 +362,7 @@ const Music = {
       const ctx = Sfx.ctx;
       const t = ctx.currentTime;
       const buf = this.buffer(name);
+      if (!buf) return false;
       const src = ctx.createBufferSource();
       src.buffer = buf;
       const gain = ctx.createGain();
