@@ -2,6 +2,20 @@
 
 Read `research.md` first (pillars in section 2, task list in section 9). Newest entry on top. Use the handoff format in research.md section 7 item 9.
 
+## 2026-10-29 Director session 3 (Grok Bot): levels 6 and 7, face side paths, fresh-player pass
+Done and on main (evidence in each commit body):
+- Tools: `game/tests/tour.js` (bot run per level, contact sheet plus hit, death and stuck columns) and `game/tests/probe.js` (can this face really make this move). 360fe89.
+- F5 fresh-player pass, biggest find: mage float could be re-pressed in the air for free flight over every gate. Now one float per airtime, climb only in the first 0.7 s (360fe89).
+- Validator heights now match probe.js measurements: hop 3 rows (was 4), float 4 (was 3). With real heights three "ranger-only" cards (L3 66,17 which had a ranger badge, L6 91,9, L7 61,9) were unreachable by anyone; lowered to hop height (5ab02e5).
+- L3 levels 6 and 7 (5ab02e5, f171abe): the drag was traps, not length. L7 pit in front of a 2-tall wall (12 bot deaths in a row) filled; walk-off pits after tall blocks filled (one sat under the L6 main card at col 70 after my first move, fixed in f171abe); spikes moved off landing edges; one grunt removed from the L7 opening block. Tour: L7 stuck at col 106 to done in 39.9 s; L6 done in 37.2 s.
+- L4 real face side paths, each checked in game with probe.js (5ab02e5): L1 ranger sky route (two hops, card and power-up); L3 mage room (blink the walkway gap, float the 1-wide shaft, card and power-up, hatch up beside the flag); L5 rat corridor (shaft to a hidden corridor, power-up, drop past both archers by the exit).
+- Validator minimums lowered on purpose: L6 spikes 10 to 8, L7 enemies 14 to 13. Ranger left the game-wide "only this face" rule (impossible with real heights); now "ranger reaches, knight does not".
+Suite 63 passed, 0 failed on f171abe; validator exit 0. Tour (knight bot, 2-tile jump fixed): L1 13 s, L2 28 s, L4 34 s, L5 31 s, L6 37 s, L7 40 s, L8 37 s; L3 is a vertical climb the bot cannot do.
+Heart pickups (Q1): skipped. Bot deaths come from piled-up hits by a bot that never dodges, not from a damage spike.
+Screens: /workspace/GameOfGameBecauseGame-shots/s3_l3_mage_room.png, s3_l5_rat_corridor.png, s3_l1_ranger_ledge.png, tour3/tour_L7.png (outside the repo, this box only).
+Needs human check: the new float (jump, then hold Up with S) and whether players find the blink gap in L3; warlord fight (bot took 15 hits, 3 deaths, mostly cornered at the arena right edge, col 38).
+Next: H1 human feel check; warlord corner pressure at col 38 (watch a human fight first); L2 rat card (96,8) and L4 knight card (64,15) badges if wanted; levels 6 and 7 still share one block template, so a light visual or layout difference would help them read as two places; Q2 device check.
+
 ## 2026-10-29 Director session 2 (Grok Bot, took over after Claude ran out of usage)
 Where Claude stopped: research and plan done; Rounds 1, 5, most of 6 and C1 to C3 on main. C4 and F0 to F4 were in worktrees that never reached main; redone here.
 Done and on main (evidence in each commit body):

@@ -82,9 +82,9 @@ On a network error retry after 2 s, 4 s, 8 s, 16 s. If rejected because `main` m
 
 - `src/`: `engine.js` (loop, scale), `tuning.js` (`TUNING`: movement, jump, corner, camera numbers), `input.js`, `world.js` (tiles, themes, collision, `load(i)`), `levels.js` (`LEVELS`), `cards.js` (`CARD_DEFS`, `Hand`), `glow.js` (`Glow`, banded effects, section 5), `enemies.js` (`ENEMY_DEFS`, `Enemy`, `Enemies`, `Effects`, `CardPickup`), `abilities.js` (`CHARACTERS`, `Attacks`, mage beam), `anim.js` (`ANIM_ROWS`, `drawFrame`, `LPC_KEY`), `scenes.js` (`PlayScene`, title, selection, ending, `Run`, `resetGame`), `sfx.js`, `ui.js`, `main.js`, `style.css`, `index.html`.
 - `tools/build_single_html.py`: builds `changeling.html` (inlines JS, CSS, base64 images and fonts). Script load order is its `SCRIPTS` list. A new JS file must be added there.
-- `tools/validate_gates.py`: tile-level reachability model. Options `--level N`, `--show N`, `--map N NAME`. Enforces level rules (enemy spacing, minimum enemy, spike and cracked wall counts, gated secrets, game-wide exclusive secrets).
+- `tools/validate_gates.py`: tile-level reachability model (heights match probe.js measurements; check a new gate in the game with probe.js too). Options `--level N`, `--show N`, `--map N NAME`. Enforces level rules (enemy spacing, minimum enemy, spike and cracked wall counts, gated secrets, game-wide exclusive secrets).
 - `tools/build_lpc.py`: composes LPC sheets into `assets/lpc/<key>.png` (13 columns by 8 rows of 64 px: idle, walk, slash, thrust, spellcast, shoot, hurt, jump). Sheets face right; `drawFrame` flips when facing < 0.
-- `tests/suite.js`: Playwright plus Chromium (`SUITE_ONLY=regex` runs a subset). `tests/screenshots.js` writes PNGs to `tests/shots/`. `tests/playtest.js [outDir]`: 20 s real-key smoke test (apex, beam kill, all 20 abilities, console errors) with shots. `tests/capture_gif.js <kill|beam|jump|hurt> [outDir]`: GIF plus 12-frame strip of a scripted moment (needs ffmpeg).
+- `tests/suite.js`: Playwright plus Chromium (`SUITE_ONLY=regex` runs a subset). `tests/screenshots.js` writes PNGs to `tests/shots/`. `tests/playtest.js [outDir]`: 20 s real-key smoke test (apex, beam kill, all 20 abilities, console errors) with shots. `tests/capture_gif.js <kill|beam|jump|hurt|grunt|rat|archer|revenant|boss1|boss2|boss3> [outDir]`: GIF plus 12-frame strip of a scripted moment (needs ffmpeg). `tests/probe.js <level> <face> <col> <row> "<macro>" [shot]`: can this face really make this move (prints tiles and peak row). `tests/tour.js [levels] [face] [outDir]`: bot run per level, 12-frame contact sheet plus hit, death and stuck columns (slow: up to 75 s per level).
 - Assets: `assets/lpc/` (sprites plus `CREDITS.txt`), `assets/tiles/` (DCSS tiles plus license), `assets/fonts/` (Pixelify Sans, OFL).
 - Other folders: `method_1_huggingface/` to `method_5_lpc_walk/` are early art experiments. Finished or dead. The game does not use them. Do not edit them.
 
@@ -114,7 +114,9 @@ Where it is used:
 
 - Current plan: `research.md` section 9. Rounds 1 to 8 done except L3 (levels 6 and 7 trims, not judged). Round 9 lists the next proposals. Session log in `PROGRESS.md`.
 - Earlier: `Action_Plan.md` T0 to T12, all done (history in section 7). Effects pass done after it (section 5).
-- Exclusive secrets (gate output): knight L4 col 64 row 15; ranger L3 col 66 row 17, L6 col 91 row 9, L7 col 61 row 9; rat L2 col 96 row 8, L5 col 104 row 8; weaver L7 col 29 row 7; mage L3 col 76 row 8.
+- Exclusive secrets (gate output, session 3): knight L4 col 64 row 15; rat L2 col 96 row 8, L5 col 104 row 8 and 116 row 8; weaver L7 col 29 row 7; mage L3 col 76 row 8, 93 row 8, 96 row 11. Ranger secrets (ranger yes, knight no): L1 col 45 and 48 row 7, L3 col 66 row 21, L6 col 91 row 12, L7 col 61 row 12. A ranger-only secret cannot exist with real heights.
+- Real climb heights (measured with `tests/probe.js`, the validator uses these): knight and weaver jump 2 rows; ranger jump plus hop 3; mage jump plus float 4 (about 4.5; one float per airtime, climb only in the first 0.7 s); rat leap 5 (just: 160 px needs the full leap). Ranger and weaver can also cast the plank mid-jump and stand on it 2 rows up. Mage blink teleports 3 tiles through walls if the landing spot is clear.
+- Face side paths (L4): L1 ranger sky route (ground, hop to the 38,10 platform, hop to the ledge at row 8 cols 42 to 49); L3 mage room (blink the walkway gap, float up the 1-wide shaft at col 98, hatch `_` at col 94 row 6 beside the flag); L5 rat corridor (shaft at col 103, corridor row 8 to col 119, drop at col 120 past the archers).
 - Accepted spec deviations: weaver-only secret is in level 7, not levels 2 or 6. Exit zone is 4 tiles tall. The level 2 keyboard-bot check was dropped.
 
 Open work:
@@ -149,6 +151,7 @@ Open work:
 | 2026-10-29 | 17dc508 (feedback pass, bridges) | exit 0 | 53 passed, 0 failed | full suite run on the committed build |
 | 2026-10-29 | f04df00 (session 2) | exit 0 | 61 passed, 2 failed | both failures were checks tied to level 1's old enemy layout; fixed in 95580ce |
 | 2026-10-29 | d146e51 (session 2 close) | exit 0 | 63 passed, 0 failed | full suite; playtest.js 4 passed (apex 65.8 px, beam kills grounded grunt, no errors) |
+| 2026-10-29 | f171abe (session 3) | exit 0 | 63 passed, 0 failed | full suite; tour.js L6 and L7 done (37.2 s, 39.9 s); probe.js checks of the L1, L3, L5 side paths |
 
 ## 9. Decisions log (append one line per decision)
 
