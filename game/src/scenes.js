@@ -554,7 +554,10 @@ class PlayScene {
       enemy.update(dt, p);
     }
     Attacks.update(dt);
-    if (Attacks.consumeHit()) this.hitstopT = 0.05;
+    // F4: a kill freezes longer than a plain hit and kicks the screen a little.
+    const landed = Attacks.consumeHit();
+    if (Enemies.consumeKill()) { this.hitstopT = 0.08; Effects.shake(0.1, 2); }
+    else if (landed) this.hitstopT = 0.05;
     World.updatePlatforms(dt);
     if (this.ghostT > 0) this.ghostT -= dt;
     if (this.bannerT > 0) this.bannerT -= dt;
@@ -734,7 +737,10 @@ class PlayScene {
     this.player.vy = -200;
     this.player.vx = -this.player.facing * 120;
     Sfx.play("hurt");
-    Effects.shake(0.1, 1);
+    // F4: getting hit should sting: a short freeze, a stronger shake, red screen edges.
+    this.hitstopT = 0.06;
+    Effects.shake(0.15, 2);
+    Effects.hurt(0.3);
     if (this.hp <= 0) this.beginSelection("slain");
   }
 

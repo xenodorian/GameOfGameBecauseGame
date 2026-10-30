@@ -2441,7 +2441,12 @@ class Enemy {
     if (this.hurtT > 0) frame = { row: ANIM_ROWS.hurt[0], col: 0 };
     else if (this.def.idle) frame = { row: ANIM_ROWS.idle[0], col: Math.floor(this.animT * 3) % ANIM_ROWS.idle[1] };
     else frame = { row: ANIM_ROWS.walk[0], col: 1 + Math.floor(this.animT * 6) % (ANIM_ROWS.walk[1] - 1) };
-    const sheet = IMG["lpc_" + this.kind];
+    let sheet = IMG["lpc_" + this.kind];
+    // F4: the first 0.1 s of a hit draws the frame pure white.
+    if (this.hurtT > (this.hurtMax || 0.6) - 0.1) {
+      sheet = Effects.tinted(sheet, frame.col, frame.row, "#ffffff");
+      frame = { row: 0, col: 0 };
+    }
     ctx.save();
     if (this.dir < 0) {
       ctx.translate(sx + dw, sy);
@@ -2523,7 +2528,13 @@ const Effects = {
   // Hot particles with a 1 px trail, and muzzle flares.
   bits: [],
   flares: [],
+  // F4: defeated enemies tumble away as a sprite (white for the first frames), then fade.
+  corpses: [],
+  // F4: red screen-edge flash when the player is hurt.
+  hurtT: 0,
   reset() {
+    this.corpses.length = 0;
+    this.hurtT = 0;
     this.shakeT = 0;
     this.shakeX = 0;
     this.shakeY = 0;
@@ -2543,6 +2554,29 @@ const Effects = {
   },
   flash(t) {
     this.flashT = Math.max(this.flashT, t);
+  },
+  hurt(t) {
+    this.hurtT = Math.max(this.hurtT, t);
+  },
+  // A 64 px frame of sheet filled with one colour (hit flash). Shared scratch canvas, so draw it at once.
+  tinted(sheet, col, row, color) {
+    if (!this.tintCanvas) { this.tintCanvas = document.createElement("canvas"); this.tintCanvas.width = 64; this.tintCanvas.height = 64; }
+    const g = this.tintCanvas.getContext("2d");
+    g.globalCompositeOperation = "source-over";
+    g.clearRect(0, 0, 64, 64);
+    g.drawImage(sheet, col * 64, row * 64, 64, 64, 0, 0, 64, 64);
+    g.globalCompositeOperation = "source-atop";
+    g.fillStyle = color;
+    g.fillRect(0, 0, 64, 64);
+    g.globalCompositeOperation = "source-over";
+    return this.tintCanvas;
+  },
+  corpse(enemy, fromX) {
+    const away = fromX === undefined ? -enemy.dir || 1 : (enemy.x + enemy.w / 2 >= fromX ? 1 : -1);
+    this.corpses.push({
+      kind: enemy.kind, dir: enemy.dir, dw: enemy.def.drawW || 64, dh: enemy.def.drawH || 64,
+      x: enemy.x + enemy.w / 2, y: enemy.y + enemy.h, vx: away * 150, vy: -210, rot: 0, vr: away * 9, t: 0,
+    });
   },
   // n hot bits thrown toward dir (1 right, -1 left), in a ramp from Glow.RAMPS.
   spray(x, y, dir, ramp = "ember", n = 4) {
@@ -2620,10 +2654,34 @@ const Effects = {
       q.y += q.vy * dt;
     }
     this.bits = this.bits.filter((q) => q.t < q.life);
+    for (const c of this.corpses) {
+      c.t += dt;
+      c.vy += 900 * dt;
+      c.x += c.vx * dt;
+      c.y += c.vy * dt;
+      c.rot += c.vr * dt;
+    }
+    this.corpses = this.corpses.filter((c) => c.t < 0.45);
+    if (this.hurtT > 0) this.hurtT -= dt;
     for (const f of this.flares) f.t += dt;
     this.flares = this.flares.filter((f) => f.t < 0.1);
   },
   draw(ctx, camX, camY) {
+    for (const c of this.corpses) {
+      const sheet = IMG["lpc_" + c.kind];
+      if (!sheet) continue;
+      const row = ANIM_ROWS.hurt[0];
+      const src = c.t < 0.07 ? this.tinted(sheet, 0, row, "#ffffff") : null;
+      ctx.save();
+      ctx.globalAlpha = c.t > 0.3 ? 1 - (c.t - 0.3) / 0.15 : 1;
+      // Pivot at the sprite's middle (feet sit at 59 of 64 rows).
+      ctx.translate(Math.round(c.x - camX), Math.round(c.y - camY - c.dh * 0.45));
+      ctx.rotate(c.rot);
+      if (c.dir < 0) ctx.scale(-1, 1);
+      if (src) ctx.drawImage(src, 0, 0, 64, 64, -c.dw / 2, -c.dh / 2, c.dw, c.dh);
+      else ctx.drawImage(sheet, 0, row * 64, 64, 64, -c.dw / 2, -c.dh / 2, c.dw, c.dh);
+      ctx.restore();
+    }
     for (const b of this.bursts) {
       ctx.globalAlpha = 1 - b.t / 0.4;
       ctx.fillStyle = b.color;
@@ -2684,6 +2742,18 @@ const Effects = {
       ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
       ctx.fillRect(-4, -4, Engine.W + 8, Engine.H + 8);
     }
+    if (this.hurtT > 0) {
+      // Red edges, strongest at the start, in 3 stepped bands so it reads as pixel art.
+      const a = Math.min(1, this.hurtT / 0.3);
+      for (let i = 0; i < 3; i++) {
+        ctx.fillStyle = "rgba(200, 30, 30, " + (0.4 * a * (1 - i / 3)).toFixed(3) + ")";
+        const m = 6 + i * 6;
+        ctx.fillRect(-4, -4, Engine.W + 8, m);
+        ctx.fillRect(-4, Engine.H - m + 4, Engine.W + 8, m);
+        ctx.fillRect(-4, -4, m, Engine.H + 8);
+        ctx.fillRect(Engine.W - m + 4, -4, m, Engine.H + 8);
+      }
+    }
   },
 };
 
@@ -2691,6 +2761,8 @@ const Effects = {
 const Enemies = (() => {
   let list = [];
   let pickups = [];
+  // Set when an enemy dies this step. The scene reads and clears it (heavier hit stop on kills).
+  let killed = false;
 
   function spawnFromLevel() {
     list = World.enemySpawns.map((s) => {
@@ -2725,6 +2797,8 @@ const Enemies = (() => {
       return;
     }
     enemy.dead = true;
+    killed = true;
+    Effects.corpse(enemy, fromX);
     Sfx.play(enemy.kind === "warlord" ? "bossdown" : "hit");
     Effects.burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, CARD_DEFS[ENEMY_DEFS[enemy.kind].card].color);
     dropCard(enemy);
@@ -2735,6 +2809,7 @@ const Enemies = (() => {
     dropCard,
     defeat,
     list: () => list,
+    consumeKill: () => { const k = killed; killed = false; return k; },
     pickups: () => pickups,
     cleanup: () => {
       list = list.filter((e) => !e.dead);
@@ -4216,7 +4291,10 @@ class PlayScene {
       enemy.update(dt, p);
     }
     Attacks.update(dt);
-    if (Attacks.consumeHit()) this.hitstopT = 0.05;
+    // F4: a kill freezes longer than a plain hit and kicks the screen a little.
+    const landed = Attacks.consumeHit();
+    if (Enemies.consumeKill()) { this.hitstopT = 0.08; Effects.shake(0.1, 2); }
+    else if (landed) this.hitstopT = 0.05;
     World.updatePlatforms(dt);
     if (this.ghostT > 0) this.ghostT -= dt;
     if (this.bannerT > 0) this.bannerT -= dt;
@@ -4396,7 +4474,10 @@ class PlayScene {
     this.player.vy = -200;
     this.player.vx = -this.player.facing * 120;
     Sfx.play("hurt");
-    Effects.shake(0.1, 1);
+    // F4: getting hit should sting: a short freeze, a stronger shake, red screen edges.
+    this.hitstopT = 0.06;
+    Effects.shake(0.15, 2);
+    Effects.hurt(0.3);
     if (this.hp <= 0) this.beginSelection("slain");
   }
 

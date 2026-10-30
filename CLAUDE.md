@@ -81,7 +81,7 @@ On a network error retry after 2 s, 4 s, 8 s, 16 s. If rejected because `main` m
 - `tools/build_single_html.py`: builds `changeling.html` (inlines JS, CSS, base64 images and fonts). Script load order is its `SCRIPTS` list. A new JS file must be added there.
 - `tools/validate_gates.py`: tile-level reachability model. Options `--level N`, `--show N`, `--map N NAME`. Enforces level rules (enemy spacing, minimum enemy, spike and cracked wall counts, gated secrets, game-wide exclusive secrets).
 - `tools/build_lpc.py`: composes LPC sheets into `assets/lpc/<key>.png` (13 columns by 8 rows of 64 px: idle, walk, slash, thrust, spellcast, shoot, hurt, jump). Sheets face right; `drawFrame` flips when facing < 0.
-- `tests/suite.js`: Playwright plus Chromium. `tests/screenshots.js` writes PNGs to `tests/shots/`.
+- `tests/suite.js`: Playwright plus Chromium (`SUITE_ONLY=regex` runs a subset). `tests/screenshots.js` writes PNGs to `tests/shots/`. `tests/playtest.js [outDir]`: 20 s real-key smoke test (apex, beam kill, all 20 abilities, console errors) with shots. `tests/capture_gif.js <kill|beam|jump|hurt> [outDir]`: GIF plus 12-frame strip of a scripted moment (needs ffmpeg).
 - Assets: `assets/lpc/` (sprites plus `CREDITS.txt`), `assets/tiles/` (DCSS tiles plus license), `assets/fonts/` (Pixelify Sans, OFL).
 - Other folders: `method_1_huggingface/` to `method_5_lpc_walk/` are early art experiments. Finished or dead. The game does not use them. Do not edit them.
 
@@ -101,6 +101,7 @@ Where it is used:
 - Mage `spell_bolt` is now a beam (`abilities.js`, `BEAM` constants): 0.1 s charge with motes spiralling into the staff tip, the head grows at 1400 px/s up to 224 px or the first wall, sustained to 0.42 s, then 0.14 s fade. It hits every enemy along it once (pierces). Cooldown 0.5 s. Per column: separate upper and lower widths with jitter, two sine wobbles, a travelling pulse, taper at the staff. Impact disc and rays at a wall. Sound `beam`.
 - Slash: banded smear crescent plus a glint on the leading tip. Thrust: banded streak plus tip glint. Shield bash: banded half ring plus light.
 - Arrows (ranger, weaver): release flare (`Effects.flare`).
+- F4 hit feedback: a kill freezes 0.08 s (plain hit 0.05 s) with a 2 px shake; the defeated enemy tumbles away as its hurt frame (white for 0.07 s) and fades over 0.45 s (`Effects.corpse`). A surviving enemy draws pure white for the first 0.1 s of a hit. Player hurt: 0.06 s freeze, 2 px shake, red stepped screen edges for 0.3 s (`Effects.hurt`).
 - Every hit (`Effects.spark(x, y, dir, ramp)`): banded flash, jagged rays, hot bits with 1 px trails thrown back toward the attacker (`Effects.spray`), light pool, 1 px shake for 0.06 s.
 - `Effects.shake(t, amp)` replaces setting `shakeT` directly (warlord hit uses 3 px). `Effects.flash(t)` draws a light white screen flash.
 - Blink rings cast a light pool. The `hit` sound has a low thud under it.

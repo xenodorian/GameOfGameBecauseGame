@@ -206,7 +206,7 @@ Each line is a brief seed. The director or the worker expands it with the templa
 - [x] F1 Movement targets from 5.7: accel, decel, variable jump, fall gravity, apex hang, fall cap, coyote 0.1. Record apex px. Gates exit 0.
 - [x] F2 Corner correction (head and ledge, 4 px).
 - [x] F3 Camera look-ahead and vertical deadzone (5.7).
-- [ ] F4 Hit feedback: per-attack hit stop (light 0.04 s, heavy 0.08 s, kill +0.03 s), enemy white flash, knockback on non-lethal hits, player i-frame flicker, red edge flash on damage.
+- [x] F4 Hit feedback: per-attack hit stop (light 0.04 s, heavy 0.08 s, kill +0.03 s), enemy white flash, knockback on non-lethal hits, player i-frame flicker, red edge flash on damage.
 
 ### Round 3: every face plays differently
 - [x] C1 Ranger `volley` on Z.
