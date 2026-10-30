@@ -66,7 +66,7 @@ On a network error retry after 2 s, 4 s, 8 s, 16 s. If rejected because `main` m
   - Knight: shield_bash, charge, slash, thrust. Breaks cracked walls `x`.
   - Ranger: shoot, arrow_anchor (3 tile rope), volley (3 arrows fanned up-forward, 1 s cooldown), hop.
   - Mage: spell_bolt (shown as "Beam", see section 5), float, nova (ring burst, radius 40 px, pushes survivors, 1.2 s cooldown), blink.
-  - Rat: leap (5 tiles up), scurry, slash, thrust.
+  - Rat: leap (5 tiles up), scurry, gnaw (3 bites in 0.3 s, 16 px reach, each bite ignores hit flash), thrust.
   - Bone Weaver: shoot, bone_bridge (5 tile platform, 8 s), slash, ghost.
 - Drops: grunt gives Ranger, mud revenant Mage, rat king Rat, archer Bone Weaver, warlord Knight. `c`, `p`, `k` cards can be any of the 5.
 - Enemies: grunt, mud revenant, rat king (jumps), archer (stands, fires arrows), warlord (8 hp, boss; the exit stays shut until it dies).

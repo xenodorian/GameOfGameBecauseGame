@@ -316,6 +316,17 @@ const abilities = [
     check: (p) => p.evaluate(() => __scene.player.vy), want: 'leap',
   },
   {
+    // A grunt with 3 hp: only three bites in a row beat it.
+    name: 'rat gnaw (Z) beats a 3 hp grunt in reach with three bites', who: 'rat', key: 'KeyZ', wait: 500,
+    setup: (p) => p.evaluate(() => {
+      const g = new Enemy('grunt', 300 + 24, 418);
+      g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 }; g.hp = 3;
+      Enemies.list().push(g); window.__g = g;
+      __scene.player.x = 300; __scene.player.y = 418; __scene.player.facing = 1;
+    }),
+    check: (p) => p.evaluate(() => __g.dead), want: true,
+  },
+  {
     name: 'rat scurry (S) walks faster', who: 'rat', key: 'KeyS', hold: 'ArrowRight', wait: 200,
     setup: (p) => placeAt(p, 200, 418),
     check: (p) => p.evaluate(() => __scene.player.vx), want: 220,
@@ -350,7 +361,7 @@ for (const a of abilities) {
     } else {
       // The game clock runs slower than wall time in headless Chromium, so wait for the charge to set its speed.
       // Shots and beams release on a game-time frame (0.1 s and 0.3 s in), so those wait on the game clock too.
-      const gameWait = a.name.includes('charge') ? 0.08 : /ranger shoot|ranger volley|mage beam|mage nova|mage spell bolt|weaver bone toss/.test(a.name) ? 0.6 : null;
+      const gameWait = a.name.includes('charge') ? 0.08 : /ranger shoot|ranger volley|mage beam|mage nova|rat gnaw|mage spell bolt|weaver bone toss/.test(a.name) ? 0.6 : null;
       const t0 = gameWait !== null ? await page.evaluate(() => __scene.time) : null;
       await page.keyboard.press(a.key); await wait(page, a.wait);
       if (t0 !== null) await page.waitForFunction((t) => __scene.time >= t, t0 + gameWait);
