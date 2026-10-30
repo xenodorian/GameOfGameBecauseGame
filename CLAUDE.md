@@ -63,6 +63,8 @@ On a network error retry after 2 s, 4 s, 8 s, 16 s. If rejected because `main` m
 - Closest safe space: nearest grounded tile with a clear 2 by 3 tile area, no enemy or hazard within 3 tiles, search out to 20 tiles. A spot is unsafe if a `^` is within 3 columns on its row.
 - Face badges (L2): a level's optional `hints: [{ col, row, face }]` draws a bobbing face card over the secret at that tile (it follows the live pickup, which falls) until it is taken; gold glow while you wear that face. Pick hint spots from `validate_gates.py --level N` (secrets reachable by one face). A badge up to about 6 rows overhead pins just under the HUD with an up pointer. Badges now: L1 45,7 ranger; L2 96,8 rat; L3 66,21 ranger, 96,11 mage; L4 64,15 knight; L5 104,8 rat.
 - Looks (V7): a level's optional `look` (L6 "crypt", L7 "hall"; L4 is "marsh" by index) picks sky colours, parallax layers, tile tint and ledge edge in `World.visual()` / `layersFor` / `LOOK_TINT` (world.js). Game rules still read `theme`. Buried solid tiles darken with depth (all looks).
+- Music per look (A4): `MUSIC_SONGS.crypt` and `.hall` in music.js; PlayScene plays the song named by `World.visual()` if one exists, else the theme's. A bar may carry a third value (layer) passed to `bar()`.
+- Runes (H2): a level's optional `runes: [{ col, row, len }]` draws faint blink-coloured motes across a blink-only gap (L3 cols 91 to 95), brighter while the mage is worn.
 - Boss arena (B6): one-way ledges at row 10 (cols 10, 23, 33) any face can jump onto; respawn keeps 7 tiles from the warlord (`closestSafeSpace`), 3 from other enemies.
 - Abilities: 4 per character on A, S, Z, X (gamepad X, Y, A, B). Every character must be able to finish the main route of every level. Secrets (`c` cards, `p` power-ups) need a specific character.
 - 8 levels. 1 to 4 outdoors (theme `field`), 5 to 7 castle (theme `dungeon`), 8 the Warlord arena: 1 Greenwood Road, 2 Bramble Hollow, 3 Old Watchtower, 4 Rotting Marsh, 5 Castle Gate, 6 Undercroft, 7 Hall of Faces, 8 Warlord's Throne.
@@ -155,6 +157,7 @@ Open work:
 | 2026-10-29 | d146e51 (session 2 close) | exit 0 | 63 passed, 0 failed | full suite; playtest.js 4 passed (apex 65.8 px, beam kills grounded grunt, no errors) |
 | 2026-10-29 | f171abe (session 3) | exit 0 | 63 passed, 0 failed | full suite; tour.js L6 and L7 done (37.2 s, 39.9 s); probe.js checks of the L1, L3, L5 side paths |
 | 2026-10-29 | a38b354 (session 4) | exit 0 | 63 passed, 0 failed | full suite; tour.js L1 to L5 unchanged times; respawn spot check (death col 38 to col 28) |
+| 2026-10-29 | 47f6154 (session 5) | exit 0 | 64 passed, 0 failed | full suite incl. new shockwave check; L4 tour done, no deaths; crypt and hall music play in browser |
 
 ## 9. Decisions log (append one line per decision)
 

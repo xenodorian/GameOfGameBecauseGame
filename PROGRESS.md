@@ -2,6 +2,21 @@
 
 Read `research.md` first (pillars in section 2, task list in section 9). Newest entry on top. Use the handoff format in research.md section 7 item 9.
 
+## 2026-10-29 Director session 5 (Grok Bot): L4 pit, music per look, feel audit
+Done (47f6154):
+- L4 rat king moved from col 100 to 95, away from the 2-wide pit at 105-106. Tour: done 33.4 s, no deaths.
+- Music: crypt (L6, eerie, sparse, 66 bpm) and hall (L7, D minor march that builds over three passes, 96 bpm). Code only, about 2 KB. Checked playing in the browser; not yet heard by a person.
+- Feel audit (no human available; measured with probe.js, the suite and the tell numbers in ENEMY_DEFS). Human reaction is about 250 to 400 ms, plus a key press:
+  - Grunt: 0.4 s wind-up, then a 0.2 s lunge; about 0.6 s from tell to contact at its 64 px trigger range. OK. Walking into it shortens this, but that is the player's choice.
+  - Rat king: 0.3 s crouch, then a visible hop (vy -330), so about 0.6 s or more before contact. OK.
+  - Archer: 0.4 s aim line plus the arrow at 240 px/s; at least 0.8 s at its usual range. OK.
+  - Revenant: 0.5 s rise plus a lobbed blob. OK.
+  - Warlord: raise 0.5 s, stamp 0.6/0.4 s. Phase 3 sword raise was 0.35 s, the only tell under 0.4 s, and its swing reaches 56 px at close range. Raised to 0.4 s (light; the rest of the fight is untouched).
+  - Shockwaves (12 px tall, 190 px/s): every face's plain jump clears one when the jump is pressed 350 ms after it appears, about 110 px away. Now a suite check, with a negative control (no jump: hit).
+  - L3 blink gap was unreadable: a too-wide gap with no cue that blink crosses it. Added faint blink-coloured motes across it (`runes` level field), brighter while you wear the mage.
+Suite 64 passed, 0 failed; validator exit 0. Screen: /workspace/GameOfGameBecauseGame-shots/s5_l3_gap2.png. Music renders: music_crypt.wav, music_hall.wav in the same folder (this box only).
+Director view: the demo is at the point of diminishing returns without human feedback. What is left is taste and feel (music by ear, jump and float feel, boss difficulty, whether the side paths get found), which the bots cannot judge. Next: H1 human playtest of all 8 levels with notes, then tune from those notes; Q2 device check.
+
 ## 2026-10-29 Director session 4 (Grok Bot): two places, badges, boss arena, polish
 Done (a38b354, one commit for four linked tasks; evidence in the body):
 - V7 L6 and L7 look like two places: a per-level `look` field. L6 crypt (cold teal, bone niches with skulls, drip fog). L7 hall (warm, lit windows, red banners with gold masks, flickering torches, red carpet).
