@@ -251,6 +251,8 @@ const abilities = [
     // C4: the bone arcs up and drops onto a grunt about three tiles ahead on the same floor.
     name: 'weaver bone toss (Z) lobs onto a grunt ahead', who: 'weaver', key: 'KeyZ', wait: 900,
     setup: (p) => p.evaluate(() => {
+      // Only this grunt: since L1 another grunt patrols the step at col 29, in the bone's path.
+      Enemies.list().length = 0;
       const g = new Enemy('grunt', 950, 386);
       g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 };
       Enemies.list().push(g); window.__g = g;
@@ -538,7 +540,9 @@ check('enemy: rat king hops toward a nearby player', async (browser) => {
   const page = await newPage(browser);
   await startPlay(page, { hand: [], freeze: false });
   await page.evaluate(() => {
-    window.__j = Enemies.list().find((e) => e.kind === 'rat_king');
+    // L1: level 1 has no rat king any more, so place one (only enemy alive).
+    Enemies.list().length = 0;
+    window.__j = new Enemy('rat_king', 0, 0); Enemies.list().push(__j);
     // Start far enough away that the first hop comes before contact (contact now knocks the player back).
     __j.x = __scene.player.x + 110; __j.y = __scene.player.y;
   });
