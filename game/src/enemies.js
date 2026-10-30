@@ -59,7 +59,7 @@ const ENEMY_DEFS = {
     fireY: 41,
     // E5 phases by hp: 1 (8 to 6) walk, sword swing, arrows; 2 (5 to 3) adds a charge that stuns
     // itself at the arena edge; 3 (2 to 1) adds a jump slam with floor shockwaves, and tells get faster.
-    boss: { raise: 0.5, raiseFast: 0.35, swingReach: 56, stamp: 0.6, stampFast: 0.4, chargeSpeed: 270, stun: 1.4, slamVy: -440, waveSpeed: 190, between: 1.1 },
+    boss: { raise: 0.5, raiseFast: 0.4, swingReach: 56, stamp: 0.6, stampFast: 0.4, chargeSpeed: 270, stun: 1.4, slamVy: -440, waveSpeed: 190, between: 1.1 },
   },
   archer: {
     idle: true,

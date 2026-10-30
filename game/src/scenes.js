@@ -458,7 +458,9 @@ const HIT_DAMAGE = 2;
 class PlayScene {
   constructor(levelIndex = 0, active = "knight") {
     World.load(levelIndex);
-    Music.setTheme(World.level.boss ? "boss" : World.level.theme);
+    // A look with its own song (crypt, hall) plays it; other levels play their theme's song.
+    const look = World.visual();
+    Music.setTheme(World.level.boss ? "boss" : MUSIC_SONGS[look] ? look : World.level.theme);
     Attacks.reset();
     // Seconds of play. Idle animation and blinks read it; draw never advances it.
     this.time = 0;
@@ -1174,6 +1176,18 @@ class PlayScene {
   // L2: a small face badge bobs over a secret that needs that face. It glows gold while you wear it,
   // so the level tells you which face to swap to. Gone once the card is taken.
   drawHints(ctx, cx, cy) {
+    // Session 5: `runes: [{ col, row, len }]` draws a faint line of twinkling blink-coloured motes across
+    // a gap only a blink can cross (L3), brighter while the mage is worn.
+    for (const r of World.level.runes || []) {
+      const mage = this.active === "mage";
+      for (let i = 0; i < r.len * 4; i++) {
+        const x = Math.round(r.col * World.TILE + 4 + i * 8 - cx);
+        const y = Math.round(r.row * World.TILE + 14 - cy + Math.sin(this.time * 2 + i * 0.7) * 3);
+        const a = (mage ? 0.85 : 0.35) * (0.45 + 0.55 * Math.abs(Math.sin(this.time * 2.5 + i * 0.9)));
+        ctx.fillStyle = `rgba(185, 162, 240, ${a.toFixed(2)})`;
+        ctx.fillRect(x, y, 2, 2);
+      }
+    }
     const hints = World.level.hints;
     if (!hints) return;
     const T = World.TILE;

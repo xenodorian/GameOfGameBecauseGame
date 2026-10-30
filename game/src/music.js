@@ -29,6 +29,11 @@ const MUSIC_CHORDS = {
   Am: { bass: -3, arp: [0, 4, 9] },
   F: { bass: -7, arp: [0, 5, 9] },
   Em: { bass: -8, arp: [-1, 4, 7] },
+  // Session 5: crypt and hall songs.
+  Dm: { bass: 2, arp: [2, 5, 9] },
+  Bb: { bass: -2, arp: [-2, 2, 5] },
+  E: { bass: -8, arp: [-1, 4, 8] },
+  A: { bass: -3, arp: [1, 4, 9] },
 };
 
 // One bar is 16 slots (sixteenth notes). These helpers fill a 16 slot channel.
@@ -107,6 +112,54 @@ const MUSIC_SONGS = {
       ["C", [16, null, 19, null, 24, null, 19, null]],
       ["G", [14, null, 11, null, 14, null, null, null]],
     ],
+  },
+  // Crypt (L6): A Phrygian, Am Bb Am E, very slow and sparse. A drone, a lone bell on beats 1 and 3,
+  // a few high lead notes, a distant tom. 8 bars at 66 bpm = 29 s.
+  crypt: {
+    bpm: 66,
+    bar(chord, melody) {
+      const c = MUSIC_CHORDS[chord];
+      const r = c.bass + 12;
+      return [
+        musicLead("lead", melody),
+        [MI.arp, 0.4, ...musicSlots((i) => (i === 0 ? c.arp[2] + 24 : i === 8 ? c.arp[1] + 24 : 0))],
+        [MI.drone, -0.2, r, ...musicSlots(() => 0).slice(1)],
+        musicBass(chord, { 0: 0 }),
+        musicDrums("tom", [12], -0.3),
+      ];
+    },
+    bars: [
+      ["Am", [null, null, null, null, 24, null, null, null]],
+      ["Bb", [null, null, 22, null, null, null, 17, null]],
+      ["Am", [null, null, null, null, 16, null, null, null]],
+      ["E", [null, null, 20, null, null, null, 23, null]],
+      ["Am", [28, null, null, null, 24, null, null, null]],
+      ["Bb", [26, null, null, null, 22, null, 17, null]],
+      ["Dm", [null, null, 21, null, null, null, 14, null]],
+      ["E", [20, null, null, null, 16, null, null, null]],
+    ],
+  },
+  // Hall (L7, the march to the throne): D minor, Dm Bb C A. Snare march and horn first; the second pass
+  // adds the arp and hats, the third doubles the bass. A bar's third value is its layer (0, 1, 2).
+  // 12 bars at 96 bpm = 30 s.
+  hall: {
+    bpm: 96,
+    bar(chord, melody, layer) {
+      return [
+        musicLead("horn", melody),
+        layer >= 1 ? musicArp(chord, 2) : [MI.arp, 0.3, ...musicSlots(() => 0)],
+        musicBass(chord, layer >= 2 ? { 0: 0, 4: 0, 8: 7, 10: 0, 12: 0 } : { 0: 0, 8: 7 }),
+        musicDrums("kick", [0, 8]),
+        musicDrums("snare", [4, 12, 14], 0.1),
+        musicDrums("hat", layer >= 1 ? [2, 6, 10, 14] : [], 0.2),
+      ];
+    },
+    bars: [0, 1, 2].flatMap((layer) => [
+      ["Dm", [14, null, 14, 17, 21, null, 17, null], layer],
+      ["Bb", [17, null, 14, null, 10, null, 14, null], layer],
+      ["C", [16, null, 19, null, 24, null, 19, 16], layer],
+      ["A", [13, null, 16, null, 21, null, layer === 2 ? 25 : null, null], layer],
+    ]),
   },
   // Boss: A minor, Am F G Am three times, fast and driving. 12 bars at 150 bpm = 19.2 s.
   boss: {
@@ -191,7 +244,7 @@ function musicBuild(name) {
     // The first channel sets the length, so put the longest row first.
     return [MUSIC_ORDER.map((k) => MUSIC_INSTR[k]), [channels], [0], s.bpm];
   }
-  const patterns = s.bars.map(([chord, melody]) => s.bar(chord, melody));
+  const patterns = s.bars.map(([chord, melody, layer]) => s.bar(chord, melody, layer || 0));
   return [MUSIC_ORDER.map((k) => MUSIC_INSTR[k]), patterns, patterns.map((_, i) => i), s.bpm];
 }
 

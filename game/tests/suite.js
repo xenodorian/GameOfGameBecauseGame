@@ -967,6 +967,32 @@ check('boss: warlord takes 8 hits, then the exit opens', async (browser) => {
   await page.close();
 });
 
+// Session 5 feel audit: a shockwave seen late (jump pressed 350 ms after it appears, about 110 px
+// away) can still be jumped by every face with a plain jump.
+check('boss: every face can jump a shockwave with a human reaction time', async (browser) => {
+  for (const face of ['knight', 'ranger', 'rat', 'weaver', 'mage']) {
+    const page = await newPage(browser);
+    await startPlay(page, { active: face });
+    await placeAt(page, 300, 13 * 32 + 2);
+    await wait(page, 400);
+    const hp0 = await page.evaluate(() => {
+      Enemies.list().forEach((e) => { e.x = -9999; });
+      const p = __scene.player;
+      Attacks.fireHostile(p.x - 120, p.y + p.h - 12, 1, { kind: 'wave', vx: 190, w: 12, h: 12, life: 1.6 });
+      return __scene.hp;
+    });
+    await wait(page, 350);
+    await page.keyboard.down('ArrowUp');
+    await wait(page, 300);
+    await page.keyboard.up('ArrowUp');
+    await wait(page, 900);
+    const hp1 = await page.evaluate(() => __scene.hp);
+    assert.equal(hp1, hp0, face + ' was hit by the shockwave');
+    assert.deepEqual(page.errors, []);
+    await page.close();
+  }
+});
+
 check('boss: a hit knocks the warlord back', async (browser) => {
   const page = await newPage(browser);
   await page.keyboard.press('Enter'); await wait(page, 120);
