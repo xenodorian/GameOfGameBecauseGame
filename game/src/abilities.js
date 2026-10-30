@@ -5,28 +5,33 @@
 const CHARACTERS = {
   knight: {
     name: "Knight",
+    role: "Tank. Breaks walls.",
     sprite: "knight",
     abilities: ["shield_bash", "charge", "slash", "thrust"],
   },
   ranger: {
     name: "Ranger",
+    role: "Hits high. Ropes gaps.",
     sprite: "ranger_right",
     abilities: ["shoot", "arrow_anchor", "volley", "hop"],
   },
   // Ability ids here are defined in C2 and C3. Until then they do nothing.
   rat: {
     name: "Rat",
+    role: "Fast. Leaps high.",
     sprite: "rat_king",
     abilities: ["leap", "scurry", "gnaw", "thrust"],
   },
   weaver: {
     name: "Bone Weaver",
+    role: "Lobs bones. Bridges.",
     sprite: "bone_weaver",
     abilities: ["shoot", "bone_bridge", "bone_toss", "ghost"],
   },
   // Mage art is the Knight sprite tinted purple (see main.js).
   mage: {
     name: "Mage",
+    role: "Beam. Clears crowds.",
     sprite: "mage_right",
     abilities: ["spell_bolt", "float", "nova", "blink"],
   },

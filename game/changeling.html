@@ -3073,28 +3073,33 @@ const Enemies = (() => {
 const CHARACTERS = {
   knight: {
     name: "Knight",
+    role: "Tank. Breaks walls.",
     sprite: "knight",
     abilities: ["shield_bash", "charge", "slash", "thrust"],
   },
   ranger: {
     name: "Ranger",
+    role: "Hits high. Ropes gaps.",
     sprite: "ranger_right",
     abilities: ["shoot", "arrow_anchor", "volley", "hop"],
   },
   // Ability ids here are defined in C2 and C3. Until then they do nothing.
   rat: {
     name: "Rat",
+    role: "Fast. Leaps high.",
     sprite: "rat_king",
     abilities: ["leap", "scurry", "gnaw", "thrust"],
   },
   weaver: {
     name: "Bone Weaver",
+    role: "Lobs bones. Bridges.",
     sprite: "bone_weaver",
     abilities: ["shoot", "bone_bridge", "bone_toss", "ghost"],
   },
   // Mage art is the Knight sprite tinted purple (see main.js).
   mage: {
     name: "Mage",
+    role: "Beam. Clears crowds.",
     sprite: "mage_right",
     abilities: ["spell_bolt", "float", "nova", "blink"],
   },
@@ -5239,18 +5244,18 @@ class PlayScene {
     ctx.fillStyle = "#e8e4d8";
     ctx.font = "16px GameFont, system-ui, sans-serif";
     ctx.textAlign = "center";
-    drawText(ctx, title, Engine.W / 2, 70);
+    drawText(ctx, title, Engine.W / 2, 62);
     ctx.font = "11px GameFont, system-ui, sans-serif";
-    drawText(ctx, "Choose a card to become. Left/Right to choose, Z or A to confirm.", Engine.W / 2, 90);
+    drawText(ctx, "Choose a card to become. Left/Right to choose, Z or A to confirm.", Engine.W / 2, 82);
     ctx.textAlign = "left";
 
     // Three cards, 116 px wide with 12 px gaps. The highlighted card lifts 4 px and gets a gold border.
     Hand.slots().forEach((cardId, i) => {
       const x = Engine.W / 2 - 186 + i * 128;
       const lift = i === this.sel ? 4 : 0;
-      const y = 104 - lift;
+      const y = 96 - lift;
       const w = 116;
-      const h = 140;
+      const h = 152;
       if (cardId) {
         ctx.fillStyle = CARD_DEFS[cardId].color;
         ctx.fillRect(x, y, w, h);
@@ -5262,9 +5267,14 @@ class PlayScene {
         ctx.fillStyle = "#f4efe2";
         ctx.font = "bold 12px GameFont, system-ui, sans-serif";
         drawText(ctx, CARD_DEFS[cardId].name, x + w / 2, y + 90);
+        // C6: one line on what this face is for, then its four powers with their keys.
+        ctx.font = "9px GameFont, system-ui, sans-serif";
+        ctx.fillStyle = "#f2d04a";
+        drawText(ctx, CHARACTERS[cardId].role, x + w / 2, y + 103);
+        ctx.fillStyle = "#f4efe2";
         ctx.font = "10px GameFont, system-ui, sans-serif";
         CHARACTERS[cardId].abilities.forEach((id, k) => {
-          drawText(ctx, ABILITY_NAMES[id], x + w / 2, y + 104 + k * 11);
+          drawText(ctx, "ASZX"[k] + "  " + ABILITY_NAMES[id], x + w / 2, y + 117 + k * 11);
         });
         ctx.textAlign = "left";
       } else {

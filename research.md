@@ -214,7 +214,7 @@ Each line is a brief seed. The director or the worker expands it with the templa
 - [x] C3 Rat `gnaw` on Z.
 - [x] C4 Weaver `bone_toss` on Z.
 - [x] C5 Face swap on D (5.3), with HUD cooldown and first-time prompt.
-- [ ] C6 Selection and swap strip show each face's four ability names and a one-line identity.
+- [x] C6 Selection and swap strip show each face's four ability names and a one-line identity.
 
 ### Round 4: threats you can read
 - [x] E1 Grunt wind-up lunge.
