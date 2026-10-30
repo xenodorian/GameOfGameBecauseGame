@@ -582,12 +582,14 @@ check('warlord: an arrow flies at the standing player centre height', async (bro
   const page = await newPage(browser);
   await startPlay(page, { hand: [], freeze: false });
   const r = await page.evaluate(() => {
-    const w = new Enemy('warlord', 600, 418 - 28);
+    // E5: start far enough away that the warlord is still out of sword range (70 px) when its first arrow is due.
+    const w = new Enemy('warlord', 820, 418 - 28);
     Enemies.list().length = 0; Enemies.list().push(w);
     __scene.player.x = 500; __scene.player.y = 418; __scene.player.vy = 0; __scene.player.vx = 0;
     const list = [];
     const orig = Attacks.fireHostile;
-    Attacks.fireHostile = (x, y, d) => { list.push({ y, wy: w.y, wh: w.h, grounded: w.grounded }); orig(x, y, d); };
+    // E5: only arrows (no opts); sword swings and shockwaves also go through fireHostile.
+    Attacks.fireHostile = (x, y, d, o) => { if (!o) list.push({ y, wy: w.y, wh: w.h, grounded: w.grounded }); orig(x, y, d, o); };
     window.__fired = list; window.__w = w;
     return 0;
   });
@@ -954,7 +956,8 @@ check('boss: warlord takes 8 hits, then the exit opens', async (browser) => {
   }
   assert.equal(await page.evaluate(() => Enemies.list().some((e) => e.kind === 'warlord' && !e.dead)), false);
   await page.evaluate(() => { const f = World.exit(); __scene.player.x = f.x; __scene.player.y = f.y; });
-  await wait(page, 100);
+  // E5: the final blow freezes 0.4 s and then runs slow motion, so wait on the game, not 100 ms.
+  await page.waitForFunction(() => __scene.mode === 'complete', null, { timeout: 4000 }).catch(() => {});
   assert.equal(await page.evaluate(() => __scene.mode), 'complete');
   assert.deepEqual(page.errors, []);
   await page.close();

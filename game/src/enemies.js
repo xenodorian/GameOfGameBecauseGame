@@ -57,6 +57,9 @@ const ENEMY_DEFS = {
     fireEvery: 2.2,
     // Arrow top at 41 px so its centre is at standing player centre height (feet - 15).
     fireY: 41,
+    // E5 phases by hp: 1 (8 to 6) walk, sword swing, arrows; 2 (5 to 3) adds a charge that stuns
+    // itself at the arena edge; 3 (2 to 1) adds a jump slam with floor shockwaves, and tells get faster.
+    boss: { raise: 0.5, raiseFast: 0.35, swingReach: 56, stamp: 0.6, stampFast: 0.4, chargeSpeed: 270, stun: 1.4, slamVy: -440, waveSpeed: 190, between: 1.1 },
   },
   archer: {
     idle: true,
@@ -160,6 +163,7 @@ class Enemy {
       return;
     }
 
+    if (d.boss) { this.updateBoss(dt, chasing, dx); return; }
     if (d.jumpVy) this.tryJump(dt, chasing);
     if (d.fireEvery) this.tryFire(dt, chasing, dx);
     if (this.crouchT > 0) {
@@ -227,6 +231,99 @@ class Enemy {
     return true;
   }
 
+  // E5 warlord. state: "" (walk and shoot), roar (phase change), raise then swing (sword), stamp then
+  // charge (phase 2+), slam (phase 3 jump), recover (punish window). Every tell blinks.
+  updateBoss(dt, chasing, dx) {
+    const B = this.def.boss;
+    const phase = this.hp >= 6 ? 1 : this.hp >= 3 ? 2 : 3;
+    if (this.phase === undefined) { this.phase = 1; this.bossCd = 1.0; }
+    if (phase !== this.phase) {
+      this.phase = phase;
+      this.state = "roar"; this.stateT = 0.6; this.tellT = 0.6;
+      Effects.shake(0.5, 3); Effects.flash(0.08); Sfx.play("boss");
+    }
+    if (this.bossCd > 0) this.bossCd -= dt;
+    const fast = phase === 3;
+    const toward = dx >= 0 ? 1 : -1;
+    this.stateT -= dt;
+    const before = this.x;
+    switch (this.state) {
+      case "roar":
+      case "recover":
+        this.vx = 0;
+        if (this.stateT <= 0) this.state = "";
+        break;
+      case "raise":
+        this.vx = 0;
+        if (this.stateT <= 0) {
+          this.state = "swing"; this.stateT = 0.2;
+          const reach = B.swingReach;
+          const x = this.dir > 0 ? this.x + this.w - 8 : this.x + 8 - reach;
+          Attacks.fireHostile(x, this.y + 4, this.dir, { kind: "swing", w: reach, h: this.h - 4, life: 0.15 });
+          Effects.shake(0.1, 2);
+          Sfx.play("hit");
+        }
+        break;
+      case "swing":
+        this.vx = 0;
+        if (this.stateT <= 0) { this.state = "recover"; this.stateT = fast ? 0.35 : 0.55; }
+        break;
+      case "stamp":
+        this.vx = 0;
+        if (Math.random() < 0.4) Effects.dust(this.x + this.w / 2 - this.dir * 14, this.y + this.h, "#8a7a66", 2, 2, 0.3, -30);
+        if (this.stateT <= 0) { this.state = "charge"; this.stateT = 2.5; }
+        break;
+      case "charge":
+        this.vx = this.dir * B.chargeSpeed;
+        if (Math.random() < 0.6) Effects.dust(this.x + this.w / 2 - this.dir * 18, this.y + this.h, "#8a7a66", 1, 2, 0.25);
+        break;
+      case "slam":
+        if (this.grounded && this.vy >= 0 && this.stateT < 0.5) {
+          // Landing: shockwaves run along the floor both ways. Jump over them.
+          for (const s of [-1, 1]) Attacks.fireHostile(this.x + this.w / 2 - 6 + s * 20, this.y + this.h - 12, s, { kind: "wave", vx: s * B.waveSpeed, w: 12, h: 12, life: 1.6 });
+          Effects.shake(0.3, 4);
+          Effects.dust(this.x + this.w / 2, this.y + this.h, "#8a7a66", 9, 3, 0.4, -80);
+          Sfx.play("boss");
+          this.vx = 0;
+          this.state = "recover"; this.stateT = 0.6;
+        }
+        break;
+      default: {
+        // Walk and shoot, and pick the next attack when ready.
+        this.state = "";
+        this.dir = toward;
+        if (this.def.fireEvery) this.tryFire(dt, chasing, dx);
+        this.vx = this.aiming ? 0 : this.dir * (chasing ? this.def.chaseSpeed : this.def.speed);
+        if (this.bossCd <= 0 && this.grounded && chasing && !this.aiming) {
+          const far = Math.abs(dx);
+          if (far < 70) {
+            this.state = "raise"; this.stateT = this.tellT = fast ? B.raiseFast : B.raise;
+            Sfx.play("tell");
+          } else if (phase >= 3 && Math.random() < 0.5) {
+            this.state = "slam"; this.stateT = 1.5;
+            this.vy = B.slamVy; this.vx = Math.max(-160, Math.min(160, dx / 0.9));
+            this.tellT = 0.2;
+          } else if (phase >= 2 && far > 90) {
+            this.state = "stamp"; this.stateT = this.tellT = fast ? B.stampFast : B.stamp;
+            Sfx.play("tell");
+          }
+          if (this.state) this.bossCd = B.between;
+        }
+      }
+    }
+    this.vy = Math.min(this.vy + 900 * dt, 600);
+    World.moveBody(this, dt);
+    // A charge that hits the arena edge or a wall stuns the warlord: the punish window.
+    if (this.state === "charge" && (Math.abs(this.x - before) < 0.5 || this.stateT <= 0)) {
+      this.state = "";
+      this.stunT = B.stun;
+      this.vx = 0;
+      Effects.shake(0.3, 3);
+      Effects.dust(this.x + this.w / 2 + this.dir * 20, this.y + this.h / 2, "#cfc6b0", 6, 3, 0.4, -40);
+      Sfx.play("hit");
+    }
+  }
+
   // E4 mud revenant: every few seconds it stops, rises with bubbles, and lobs a blob in an arc
   // timed to land where the player stands.
   updateLob(dt, chasing, dx, player) {
@@ -259,7 +356,10 @@ class Enemy {
     let frame;
     if (this.hurtT > 0) frame = { row: ANIM_ROWS.hurt[0], col: 0 };
     else if (this.aiming) frame = { row: ANIM_ROWS.shoot[0], col: Math.min(ANIM_ROWS.shoot[1] - 1, 4) };
-    else if (this.state === "windup" || this.state === "recover" || this.crouchT > 0) frame = { row: ANIM_ROWS.idle[0], col: 0 };
+    else if (this.state === "raise" || this.state === "roar") frame = { row: ANIM_ROWS.slash[0], col: 1 };
+    else if (this.state === "swing") frame = { row: ANIM_ROWS.slash[0], col: 4 };
+    else if (this.state === "charge") frame = { row: ANIM_ROWS.walk[0], col: 1 + Math.floor(this.animT * 14) % (ANIM_ROWS.walk[1] - 1) };
+    else if (this.state === "windup" || this.state === "recover" || this.state === "stamp" || this.crouchT > 0) frame = { row: ANIM_ROWS.idle[0], col: 0 };
     else if (this.def.idle) frame = { row: ANIM_ROWS.idle[0], col: Math.floor(this.animT * 3) % ANIM_ROWS.idle[1] };
     else frame = { row: ANIM_ROWS.walk[0], col: 1 + Math.floor(this.animT * 6) % (ANIM_ROWS.walk[1] - 1) };
     let sheet = IMG["lpc_" + this.kind];

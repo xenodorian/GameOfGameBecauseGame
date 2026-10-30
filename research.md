@@ -221,7 +221,7 @@ Each line is a brief seed. The director or the worker expands it with the templa
 - [x] E2 Rat king crouch tell.
 - [x] E3 Archer draw pose plus aim line, aims at body.
 - [x] E4 Mud revenant lob.
-- [ ] E5 Warlord phases, tells, punish window, final hit boss stop (5.6). May split into E5a to E5c.
+- [x] E5 Warlord phases, tells, punish window, final hit boss stop (5.6). May split into E5a to E5c.
 
 ### Round 5: sound
 - [x] A1 ZzFXM player in code (`game/src/music.js`), field and dungeon loops, mute in pause menu.

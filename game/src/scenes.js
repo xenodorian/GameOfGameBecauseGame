@@ -434,6 +434,11 @@ class PlayScene {
       this.hitstopT -= dt;
       return;
     }
+    // E5: slow motion after the final blow on the warlord.
+    if (this.slowT > 0) {
+      this.slowT -= dt;
+      dt *= 0.3;
+    }
     if (Input.pressed("debug")) Attacks.debug.on = !Attacks.debug.on;
     this.handleDiscardKeys(dt);
     if (this.mode !== "play") return;
@@ -562,7 +567,18 @@ class PlayScene {
     Attacks.update(dt);
     // F4: a kill freezes longer than a plain hit and kicks the screen a little.
     const landed = Attacks.consumeHit();
-    if (Enemies.consumeKill()) { this.hitstopT = 0.08; Effects.shake(0.1, 2); }
+    if (Enemies.consumeKill()) {
+      this.hitstopT = 0.08;
+      Effects.shake(0.1, 2);
+      // E5: the final blow on the warlord: a long freeze, a big flash, then slow motion.
+      if (World.level.boss && !this.bossDone && !Enemies.list().some((e) => e.kind === "warlord" && !e.dead)) {
+        this.bossDone = true;
+        this.hitstopT = 0.4;
+        this.slowT = 0.5;
+        Effects.flash(0.35);
+        Effects.shake(0.6, 4);
+      }
+    }
     else if (landed) this.hitstopT = 0.05;
     World.updatePlatforms(dt);
     if (this.ghostT > 0) this.ghostT -= dt;

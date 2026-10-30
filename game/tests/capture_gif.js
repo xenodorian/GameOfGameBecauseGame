@@ -23,6 +23,10 @@ const SETUP = {
   grunt: { who: 'knight', enemies: [[90, 'grunt', true]], keys: [], ms: 2000 },
   rat: { who: 'knight', enemies: [[110, 'rat_king', true]], keys: [], ms: 2200 },
   archer: { who: 'knight', enemies: [[150, 'archer', true]], keys: [], ms: 2400 },
+  // Warlord at the given hp (phase 1: 8 to 6, 2: 5 to 3, 3: 2 to 1), knight 150 px away.
+  boss1: { who: 'knight', level: 7, bossHp: 8, keys: [], ms: 3500 },
+  boss2: { who: 'knight', level: 7, bossHp: 5, keys: [], ms: 3500 },
+  boss3: { who: 'knight', level: 7, bossHp: 2, keys: [], ms: 3500 },
   revenant: { who: 'knight', enemies: [[120, 'mud_revenant', true]], keys: [], ms: 2600 },
 }[scenario];
 
@@ -34,17 +38,24 @@ const SETUP = {
   await page.waitForTimeout(300);
   await page.keyboard.press('Enter');
   await page.waitForTimeout(100);
-  await page.evaluate(([who, enemies]) => {
-    const s = new PlayScene(0, who); Engine.setScene(s); s.bannerT = 0;
-    Enemies.list().length = 0;
+  await page.evaluate(([who, enemies, level, bossHp]) => {
+    const s = new PlayScene(level || 0, who); Engine.setScene(s); s.bannerT = 0;
     const p = s.player;
+    if (bossHp) {
+      const w = Enemies.list().find((e) => e.kind === 'warlord');
+      w.hp = bossHp; w.x = p.x + 150; w.y = p.y + p.h - w.h;
+      s.updateCamera(0, true);
+      s.hp = 99;
+      return;
+    }
+    Enemies.list().length = 0;
     for (const [dx, kind, live] of enemies) {
       const e = new Enemy(kind, p.x + p.w + dx, p.y + p.h - ENEMY_DEFS[kind].h);
       e.dir = -1;
       if (!live) e.def = { ...e.def, speed: 0, chaseSpeed: 0, sight: 0 };
       Enemies.list().push(e);
     }
-  }, [SETUP.who, SETUP.enemies]);
+  }, [SETUP.who, SETUP.enemies || [], SETUP.level, SETUP.bossHp]);
   const t0 = Date.now();
   const pending = SETUP.keys.slice();
   let n = 0;

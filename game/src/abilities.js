@@ -338,6 +338,8 @@ const Attacks = (() => {
     for (const h of hostile) {
       h.life -= dt;
       h.x += h.vx * dt;
+      if (h.t !== undefined) h.t += dt;
+      if (h.kind === "swing") continue;
       if (h.gravity) { h.vy += h.gravity * dt; h.y += h.vy * dt; }
       if (World.overlapping(h.x, h.y, h.w, h.h).some((c) => World.isSolid(c.ch))) {
         if (h.kind === "mud") Effects.dust(h.x + 4, h.y + 4, "#6b5a3a", 5, 2, 0.3, -40);
@@ -727,6 +729,39 @@ const Attacks = (() => {
       } else drawArrow(ctx, Math.round(q.x - cx), Math.round(q.y - cy), dir, "#c8a46a", "#d8d8e0", "#e8e4d8");
     }
     for (const h of hostile) {
+      if (h.kind === "swing") {
+        // Warlord sword arc: ember bands over the hit area, fading over its 0.15 s.
+        const k = Math.min(1, h.t / 0.15);
+        const ox = Math.round(h.x - cx + (h.dir > 0 ? 0 : h.w));
+        const oy = Math.round(h.y - cy + h.h / 2);
+        const c = Glow.RAMPS.ember;
+        ctx.globalAlpha = 1 - k * 0.7;
+        for (let b = 0; b < 3; b++) {
+          ctx.strokeStyle = c[b + 1];
+          ctx.lineWidth = 3 - b;
+          ctx.beginPath();
+          const r = h.w - 6 - b * 4;
+          if (h.dir > 0) ctx.arc(ox, oy, r, -1.2 + k * 0.6, 1.0 + k * 0.4);
+          else ctx.arc(ox, oy, r, Math.PI - 1.0 - k * 0.4, Math.PI + 1.2 - k * 0.6);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = 1;
+        continue;
+      }
+      if (h.kind === "wave") {
+        // Floor shockwave: a flickering ember spike with a glow.
+        const x = Math.round(h.x - cx);
+        const y = Math.round(h.y - cy);
+        Glow.disc(ctx, x + 6, y + 8, 7, "ember", 0.6);
+        const c = Glow.RAMPS.ember;
+        const hgt = 8 + (Math.floor(h.t * 30) % 2) * 3;
+        ctx.fillStyle = c[2];
+        ctx.beginPath(); ctx.moveTo(x, y + 12); ctx.lineTo(x + 6, y + 12 - hgt); ctx.lineTo(x + 12, y + 12); ctx.fill();
+        ctx.fillStyle = c[0];
+        ctx.fillRect(x + 5, y + 12 - hgt + 3, 2, hgt - 3);
+        continue;
+      }
       if (h.kind === "mud") {
         const x = Math.round(h.x - cx);
         const y = Math.round(h.y - cy);
@@ -741,6 +776,10 @@ const Attacks = (() => {
 
   // opts (E4 mud blob): { vx, vy, gravity, kind: "mud" }. Default is a straight arrow.
   function fireHostile(x, y, dir, opts) {
+    if (opts && (opts.kind === "swing" || opts.kind === "wave")) {
+      hostile.push({ x, y, w: opts.w, h: opts.h, vx: opts.vx || 0, kind: opts.kind, life: opts.life, dir, t: 0 });
+      return;
+    }
     if (opts && opts.kind === "mud") {
       hostile.push({ x, y, w: 8, h: 8, vx: opts.vx, vy: opts.vy, gravity: opts.gravity, kind: "mud", life: 3 });
       return;
