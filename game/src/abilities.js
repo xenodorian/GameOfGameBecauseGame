@@ -28,7 +28,7 @@ const CHARACTERS = {
   mage: {
     name: "Mage",
     sprite: "mage_right",
-    abilities: ["spell_bolt", "float", "slash", "blink"],
+    abilities: ["spell_bolt", "float", "nova", "blink"],
   },
 };
 
@@ -37,6 +37,7 @@ const ABILITY_NAMES = {
   charge: "Charge",
   slash: "Slash",
   volley: "Volley",
+  nova: "Nova",
   thrust: "Thrust",
   shoot: "Shoot",
   arrow_anchor: "Arrow anchor",
@@ -61,6 +62,9 @@ const Attacks = (() => {
   const MAX_PROJECTILES = 2;
   // Mage beam (spell_bolt). One at a time. Phases in seconds: charge, fire, sustain, fade.
   let beam = null;
+  // Mage nova rings, each { x, y, t, hit }. Radius grows to NOVA.radius over NOVA.grow seconds, then fades.
+  const novas = [];
+  const NOVA = { radius: 40, grow: 0.18, end: 0.3 };
   // A ranger or weaver shot waiting for its release frame (see releaseShot).
   let pendingShot = null;
   // After the release, the shot pose holds for a short follow-through (shotHold seconds on shotBody).
@@ -72,7 +76,7 @@ const Attacks = (() => {
   // Seconds before each ability can fire again.
   const COOLDOWN = {
     slash: 0.18, thrust: 0.28, shield_bash: 0.45, charge: 0.6, shoot: 0.25, spell_bolt: 0.5,
-    arrow_anchor: 0.8, volley: 1.0, bone_bridge: 1.0, hop: 0, float: 0, blink: 0.4, leap: 0, scurry: 3.0, ghost: 4.0,
+    arrow_anchor: 0.8, volley: 1.0, nova: 1.2, bone_bridge: 1.0, hop: 0, float: 0, blink: 0.4, leap: 0, scurry: 3.0, ghost: 4.0,
   };
 
   function faceRect(p, reach, h, dy) {
@@ -111,6 +115,10 @@ const Attacks = (() => {
         break;
       case "spell_bolt":
         if (!beam) beam = { body: p, dir: p.facing, t: -0.2, len: 0, hitWall: false, hit: new Set(), seed: 1, motes: [] };
+        break;
+      case "nova":
+        novas.push({ x: p.x + p.w / 2, y: p.y + p.h / 2, t: 0, hit: new Set(), body: p });
+        Effects.shake(0.12, 2);
         break;
       case "shoot":
         // The arrow leaves the bowstring on the release frame, not when the key is pressed.
@@ -221,6 +229,35 @@ const Attacks = (() => {
     }
     for (let i = hitboxes.length - 1; i >= 0; i--) {
       if (hitboxes[i].t <= 0) hitboxes.splice(i, 1);
+    }
+
+    for (const n of novas) {
+      n.t += dt;
+      // The ring follows the mage while it grows.
+      n.x = n.body.x + n.body.w / 2;
+      n.y = n.body.y + n.body.h / 2;
+      if (n.t > NOVA.grow) continue;
+      const r = NOVA.radius * Math.min(1, n.t / NOVA.grow);
+      for (const e of Enemies.list()) {
+        if (e.dead || n.hit.has(e)) continue;
+        // Distance from the ring centre to the nearest point of the enemy's box.
+        const dx = Math.max(e.x - n.x, 0, n.x - (e.x + e.w));
+        const dy = Math.max(e.y - n.y, 0, n.y - (e.y + e.h));
+        if (Math.hypot(dx, dy) > r) continue;
+        n.hit.add(e);
+        hitThisStep = true;
+        const side = e.x + e.w / 2 >= n.x ? 1 : -1;
+        Effects.spark(e.x + e.w / 2, e.y + e.h / 2, side, "arcane");
+        Enemies.defeat(e, n.x);
+        // Survivors are pushed away from the mage.
+        if (!e.dead) {
+          e.knockT = 0.2;
+          e.knockVx = side * 200;
+        }
+      }
+    }
+    for (let i = novas.length - 1; i >= 0; i--) {
+      if (novas[i].t >= NOVA.end) novas.splice(i, 1);
     }
 
     if (beam) updateBeam(dt);
@@ -464,6 +501,31 @@ const Attacks = (() => {
     Glow.light(ctx, x, y, r + 6, c[3], 0.25 * (1 - prog));
   }
 
+  // Mage nova: a ring in the arcane bands that grows to the full radius, then fades.
+  function drawNova(ctx, n, cx, cy) {
+    const x = Math.round(n.x - cx);
+    const y = Math.round(n.y - cy);
+    const grow = Math.min(1, n.t / NOVA.grow);
+    const fade = n.t > NOVA.grow ? (n.t - NOVA.grow) / (NOVA.end - NOVA.grow) : 0;
+    const r = NOVA.radius * (1 - Math.pow(1 - grow, 2));
+    const c = Glow.RAMPS.arcane;
+    const ring = (rr, w, color, alpha) => {
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(1, rr), 0, Math.PI * 2);
+      ctx.lineWidth = w;
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = alpha;
+      ctx.stroke();
+    };
+    ring(r, 8, c[4], 0.3 * (1 - fade));
+    ring(r, 5, c[3], 0.6 * (1 - fade));
+    ring(r, 3, c[2], 1 - fade);
+    ring(r, 1, c[0], 1 - fade);
+    ctx.globalAlpha = 1;
+    Glow.light(ctx, x, y, r + 8, c[3], 0.3 * (1 - fade));
+    if (fade === 0) Glow.star(ctx, x, y, 6 * (1 - grow) + 2, Math.floor(n.t * 60), "arcane", 1 - grow);
+  }
+
   // A 14 by 3 arrow pointing along its direction: shaft, head, and two fletching pixels.
   function drawArrow(ctx, x, y, dir, shaft, head, fletch) {
     const tail = dir > 0 ? x : x + 14;
@@ -574,6 +636,7 @@ const Attacks = (() => {
       else if (hb.kind === "bash") drawBash(ctx, hb, cx, cy);
     }
     if (beam) drawBeam(ctx, beam, cx, cy);
+    for (const n of novas) drawNova(ctx, n, cx, cy);
     for (const q of projectiles) {
       const dir = q.vx > 0 ? 1 : -1;
       if (q.owner === "weaver") Glow.disc(ctx, q.x - cx + (dir > 0 ? 0 : 14), q.y - cy + 1, 4, "bone", 0.6);
@@ -619,6 +682,7 @@ const Attacks = (() => {
     projectiles.length = 0;
     hostile.length = 0;
     beam = null;
+    novas.length = 0;
     pendingShot = null;
     shotHold = 0;
     shotBody = null;

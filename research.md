@@ -210,7 +210,7 @@ Each line is a brief seed. The director or the worker expands it with the templa
 
 ### Round 3: every face plays differently
 - [x] C1 Ranger `volley` on Z.
-- [ ] C2 Mage `nova` on Z.
+- [x] C2 Mage `nova` on Z.
 - [ ] C3 Rat `gnaw` on Z.
 - [ ] C4 Weaver `bone_toss` on Z.
 - [ ] C5 Face swap on D (5.3), with HUD cooldown and first-time prompt.

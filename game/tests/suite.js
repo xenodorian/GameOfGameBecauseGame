@@ -292,6 +292,20 @@ const abilities = [
     check: (p) => p.evaluate(() => __g.dead && __g2.dead), want: true,
   },
   {
+    name: 'mage nova (Z) defeats a grunt on each side', who: 'mage', key: 'KeyZ', wait: 300,
+    setup: (p) => p.evaluate(() => {
+      const list = [];
+      for (const dx of [26, -40]) {
+        const g = new Enemy('grunt', 300 + dx, 418);
+        g.def = { ...g.def, speed: 0, chaseSpeed: 0, sight: 0 };
+        Enemies.list().push(g); list.push(g);
+      }
+      window.__g = list[0]; window.__g2 = list[1];
+      __scene.player.x = 300; __scene.player.y = 418; __scene.player.facing = 1;
+    }),
+    check: (p) => p.evaluate(() => __g.dead && __g2.dead), want: true,
+  },
+  {
     name: 'mage float (S) hovers while Up is held', who: 'mage', key: 'KeyS', wait: 300, hold: 'ArrowUp',
     setup: (p) => placeAt(p, 200, 40),
     check: (p) => p.evaluate(() => __scene.player.vy), want: -120,
@@ -336,7 +350,7 @@ for (const a of abilities) {
     } else {
       // The game clock runs slower than wall time in headless Chromium, so wait for the charge to set its speed.
       // Shots and beams release on a game-time frame (0.1 s and 0.3 s in), so those wait on the game clock too.
-      const gameWait = a.name.includes('charge') ? 0.08 : /ranger shoot|ranger volley|mage beam|mage spell bolt|weaver bone toss/.test(a.name) ? 0.6 : null;
+      const gameWait = a.name.includes('charge') ? 0.08 : /ranger shoot|ranger volley|mage beam|mage nova|mage spell bolt|weaver bone toss/.test(a.name) ? 0.6 : null;
       const t0 = gameWait !== null ? await page.evaluate(() => __scene.time) : null;
       await page.keyboard.press(a.key); await wait(page, a.wait);
       if (t0 !== null) await page.waitForFunction((t) => __scene.time >= t, t0 + gameWait);

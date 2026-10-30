@@ -20,7 +20,7 @@ const ACTION_LENGTH = { slash: 0.2, thrust: 0.24, spellcast: 0.3, shoot: 0.3, ju
 const ACTION_FOR_ABILITY = {
   slash: "slash", thrust: "thrust", shield_bash: "slash", charge: "thrust",
   shoot: "shoot", arrow_anchor: "shoot", volley: "shoot", spell_bolt: "slash", bone_bridge: "spellcast",
-  blink: "spellcast", float: "spellcast", ghost: "spellcast",
+  blink: "spellcast", nova: "spellcast", float: "spellcast", ghost: "spellcast",
   leap: "jump", hop: "jump", scurry: "walk",
 };
 
