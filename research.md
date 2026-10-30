@@ -237,7 +237,7 @@ Each line is a brief seed. The director or the worker expands it with the templa
 
 ### Round 7: levels
 - [x] L1 Level 1 first 30 seconds (5.9) and enemy introduction order across levels 1 to 4 (move or swap enemy spawns only). Done for level 1 only: grunts plus one mud revenant at the end (it drops the Mage, so the beam shows up early). Levels 2 to 4 unchanged (rat kings and archers already arrive there).
-- [ ] L2 Optional face routes in levels 1, 3, 5 (5.5) with face-icon signs.
+- [x] L2 Optional face routes in levels 1, 3, 5 (5.5) with face-icon signs. Done as face badges over existing face-gated secrets (no new routes): L1 col 47 row 8 ranger, L3 col 66 row 17 ranger and col 76 row 8 mage, L5 col 104 row 8 rat. Badge glows gold while you wear that face. New routes are a possible follow-up.
 - [ ] L3 Trim dead stretches in levels 6 and 7 if the round GIF shows them dragging. Otherwise skip and log.
 
 ### Round 8: close out

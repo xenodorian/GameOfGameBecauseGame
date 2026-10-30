@@ -982,6 +982,7 @@ class PlayScene {
     for (const pickup of Enemies.pickups()) {
       if (pickup.state !== "done") pickup.draw(ctx, cx, cy, pickup.target || { x: 0, y: 0 });
     }
+    this.drawHints(ctx, cx, cy);
 
     if (this.mode === "play" || this.mode === "discardCard") this.drawBody(ctx, cx, cy);
     // F0: backquote toggles hitbox outlines (player green, enemies orange, attacks red).
@@ -1112,6 +1113,35 @@ class PlayScene {
     }
     drawFrame(ctx, big || sheet, frame, sx, sy, p.facing, size);
     ctx.restore();
+  }
+
+  // L2: a small face badge bobs over a secret that needs that face. It glows gold while you wear it,
+  // so the level tells you which face to swap to. Gone once the card is taken.
+  drawHints(ctx, cx, cy) {
+    const hints = World.level.hints;
+    if (!hints) return;
+    const T = World.TILE;
+    for (const h of hints) {
+      const hx = h.col * T;
+      const hy = h.row * T;
+      // Secret cards fall onto the floor below their tile, so follow the live pickup.
+      const q = Enemies.pickups().find((c) => c.state === "ground" && c.secret && Math.abs(c.x - hx) < T && c.y >= hy - T);
+      if (!q) continue;
+      const x = Math.round(q.x + q.w / 2 - cx);
+      const y = Math.round(q.y - 16 - cy + Math.sin(this.time * 3 + h.col) * 2);
+      if (x < -20 || x > Engine.W + 20 || y < -30 || y > Engine.H + 10) continue;
+      const wearing = this.active === h.face;
+      if (wearing) Glow.light(ctx, x, y, 18, "#f2d04a", 0.35);
+      ctx.fillStyle = "rgba(10, 12, 18, 0.8)";
+      ctx.fillRect(x - 8, y - 10, 16, 20);
+      ctx.strokeStyle = wearing ? "#f2d04a" : CARD_DEFS[h.face].color;
+      ctx.strokeRect(x - 7.5, y - 9.5, 15, 19);
+      ctx.drawImage(IMG[LPC_KEY[h.face]], 22, 10, 20, 26, x - 6, y - 8, 12, 16);
+      // A small pointer down at the secret.
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.fillRect(x - 1, y + 11, 3, 1);
+      ctx.fillRect(x, y + 12, 1, 1);
+    }
   }
 
   // V1: HP as five pixel hearts under the character name, each heart 2 HP (half hearts for odd HP).

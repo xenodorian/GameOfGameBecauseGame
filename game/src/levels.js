@@ -28,6 +28,8 @@ const LEVELS = [
       "Beat a foe to win its card. Cards wait in your hand.",
       "D swaps to the next face in your hand. Lose all your hearts and you pick a new face.",
     ],
+    // L2: face badges over secrets only that face can reach (from validate_gates.py).
+    hints: [{ col: 47, row: 8, face: "ranger" }],
   },
   {
     name: "Bramble Hollow",
@@ -92,6 +94,8 @@ const LEVELS = [
       "Archers shoot when you line up with them.",
       "You can jump up through thin ledges.",
     ],
+    // L2: face badges over secrets only that face can reach (from validate_gates.py).
+    hints: [{ col: 66, row: 17, face: "ranger" }, { col: 76, row: 8, face: "mage" }],
   },
   {
     name: "Rotting Marsh",
@@ -149,6 +153,8 @@ const LEVELS = [
     signs: [
       "The castle. The Warlord waits at the top.",
     ],
+    // L2: face badges over secrets only that face can reach (from validate_gates.py).
+    hints: [{ col: 104, row: 8, face: "rat" }],
   },
 
   {
