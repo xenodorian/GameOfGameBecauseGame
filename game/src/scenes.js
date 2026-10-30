@@ -1028,6 +1028,7 @@ class PlayScene {
     // Screen shake after a warlord hit (the engine resets the transform each frame).
     if (Effects.shakeT > 0) ctx.translate(Effects.shakeX, Effects.shakeY);
     World.drawSigns(ctx, cx, cy);
+    World.drawGrounding(ctx, cx, cy);
     World.drawPlatforms(ctx, cx, cy);
     // Same modes as before (play and dying). The banner now draws under the sprites.
     if (this.mode === "play" || this.mode === "dying") this.drawBanner2(ctx);

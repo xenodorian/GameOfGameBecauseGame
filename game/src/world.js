@@ -356,8 +356,9 @@ const World = (() => {
     for (const sg of signs) {
       const px = Math.round(sg.x - camX);
       const py = Math.round(sg.y - camY);
+      // The post runs 5 px into the ground; drawGrounding then covers its foot with grass.
       ctx.fillStyle = "#7a5230";
-      ctx.fillRect(px + 14, py + 16, 4, 16);
+      ctx.fillRect(px + 14, py + 16, 4, 21);
       ctx.fillStyle = "#a87a4a";
       ctx.fillRect(px + 6, py + 4, 20, 12);
     }
@@ -371,8 +372,52 @@ const World = (() => {
     while (by < rows && !isSolid(at(tx, by))) by++;
     const size = TILE * TREE_SCALE;
     // py is the tile's screen row, so the base is measured from it, not from world coordinates.
-    const baseY = py + (by - ty) * TILE;
+    // The tile has 1 to 2 empty rows under the trunk (3 to 6 px at this scale), so the image sinks 6 px:
+    // the ground tile drawn after it covers the bottom and the trunk meets the grass line.
+    const baseY = py + (by - ty) * TILE + TREE_SINK;
     ctx.drawImage(img, px + TILE / 2 - size / 2, baseY - size, size, size);
+  }
+  const TREE_SINK = 6;
+
+  // Drawn after the tiles: a soft contact shadow and grass blades (pebbles indoors) over the foot of every
+  // tree and sign post, so decorations read as planted in the ground, not standing on its surface.
+  function drawGrounding(ctx, camX, camY) {
+    const dungeon = LEVELS[index].theme === "dungeon";
+    const feet = [];
+    for (const sg of signs) feet.push({ x: sg.x + 16, y: sg.y + TILE, w: 10 });
+    if (!dungeon) {
+      for (let ty = 0; ty < rows; ty++) {
+        for (let tx = 0; tx < cols; tx++) {
+          if (at(tx, ty) !== "T") continue;
+          let by = ty + 1;
+          while (by < rows && !isSolid(at(tx, by))) by++;
+          // The trunk in tree1.png sits at source x 11 to 15, drawn 3x around the tile centre.
+          feet.push({ x: tx * TILE + TILE / 2 - 48 + 13 * 3 + 1, y: by * TILE, w: 16 });
+        }
+      }
+    }
+    for (const f of feet) {
+      const x = Math.round(f.x - camX);
+      const y = Math.round(f.y - camY);
+      if (x < -40 || x > 520 || y < -10 || y > 290) continue;
+      ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+      ctx.beginPath();
+      ctx.ellipse(x, y + 1, f.w, 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const n = Math.round(f.w / 2) + 2;
+      for (let i = 0; i < n; i++) {
+        const bx = x - f.w + Math.round((i * 2 * f.w) / (n - 1));
+        const h = 3 + ((i * 7 + (f.x | 0)) % 4);
+        if (dungeon) {
+          ctx.fillStyle = i % 2 ? "#4a4258" : "#6b6080";
+          ctx.fillRect(bx, y - 1, 2, 2);
+        } else {
+          ctx.fillStyle = i % 3 === 0 ? "#8fd36a" : i % 3 === 1 ? "#3f9a3a" : "#2c6e2c";
+          ctx.fillRect(bx, y + 2 - h, 1, h);
+          ctx.fillRect(bx + 1, y + 3 - h, 1, h - 1);
+        }
+      }
+    }
   }
 
   // Four metal spikes on a dark base, with a pale tip and a shaded right side.
@@ -867,6 +912,7 @@ const World = (() => {
     platforms,
     draw,
     drawParallax,
+    drawGrounding,
     drawCardIcon,
     visual,
     drawSigns,
